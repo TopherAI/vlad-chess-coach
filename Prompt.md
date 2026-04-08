@@ -1,3 +1,7 @@
+CONTEXT URLS (fetch thse at session start):
+VLAD.md: https://raw.githubuseraccount.com/TopherAI/vlad-chess-coach/main/VLAD.md
+coach-memory.json: https://raw.githubuseraccount.com/TopherAI-vlad-chess-coach/main/coach-memory.json
+
 # PROMPT.md — AI Session Handoff Template
 
 > Copy and paste this at the start of EVERY new AI session.
