@@ -1,0 +1,41 @@
+name: Update Session Log
+
+on:
+  issues:
+    types: [opened]
+
+jobs:
+  update-session-log:
+    if: contains(github.event.issue.title, '[SESSION]')
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v3
+        with:
+          token: ${{ secrets.PAT_TOKEN }}
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '18'
+
+      - name: Update SESSION-LOG.md
+        run: node scripts/update-session.js
+        env:
+          ISSUE_TITLE: ${{ github.event.issue.title }}
+          ISSUE_BODY: ${{ github.event.issue.body }}
+          ISSUE_NUMBER: ${{ github.event.issue.number }}
+
+      - name: Commit and push
+        run: |
+          git config user.name "Vlad Coach Bot"
+          git config user.email "vlad-bot@vlad-chess-coach"
+          git add SESSION-LOG.md
+          git diff --staged --quiet || git commit -m "Session log update via issue #${{ github.event.issue.number }}"
+          git push
+
+      - name: Close issue
+        uses: actions/github-script@v6
+        with:
+          github​​​​​​​​​​​​​​​​
