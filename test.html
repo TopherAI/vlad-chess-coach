@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Vlad Chess Coach — API Test</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      background: #0d1117;
+      color: #e6edf3;
+      font-family: 'Courier New', monospace;
+      padding: 24px;
+    }
+    h1 { color: #f0c040; margin-bottom: 8px; font-size: 1.4rem; }
+    p.sub { color: #8b949e; margin-bottom: 24px; font-size: 0.85rem; }
+    .key-row {
+      display: flex; gap: 8px; margin-bottom: 24px;
+    }
+    input {
+      flex: 1;
+      background: #161b22;
+      border: 1px solid #30363d;
+      color: #e6edf3;
+      padding: 10px 14px;
+      border-radius: 6px;
+      font-family: monospace;
+      font-size: 0.9rem;
+    }
+    button {
+      background: #238636;
+      color: white;
+      border: none;
+      padding: 10px 20px;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 0.9rem;
+      font-weight: bold;
+    }
+    button:hover { background: #2ea043; }
+    button:disabled { background: #333; cursor: not-allowed; }
+    .coaches { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 16px; margin-top: 16px; }
+    @media (max-width: 768px) { .coaches { grid-template-columns: 1fr; } }
+    .coach-card {
+      background: #161b22;
+      border: 1px solid #30363d;
+      border-radius: 8px;
+      padding: 16px;
+    }
+    .coach-card h2 { font-size: 1rem; margin-bottom: 4px; }
+    .coach-card .role { color: #8b949e; font-size: 0.75rem; margin-bottom: 12px; }
+    .vlad h2 { color: #f0c040; }
+    .fabiano h2 { color: #58a6ff; }
+    .magnus h2 { color: #3fb950; }
+    .response {
+      background: #0d1117;
+      border: 1px solid #21262d;
+      border-radius: 6px;
+      padding: 12px;
+      font-size: 0.8rem;
+      line-height: 1.6;
+      min-height: 200px;
+      white-space: pre-wrap;
+      color: #c9d1d9;
+    }
+    .status { color: #8b949e; font-style: italic; }
+    .error { color: #f85149; }
+    .pgn-row { margin-bottom: 16px; }
+    textarea {
+      width: 100%;
+      background: #161b22;
+      border: 1px solid #30363d;
+      color: #e6edf3;
+      padding: 10px 14px;
+      border-radius: 6px;
+      font-family: monospace;
+      font-size: 0.8rem;
+      resize: vertical;
+    }
+    label { display: block; color: #8b949e; font-size: 0.8rem; margin-bottom: 6px; }
+  </style>
+</head>
+<body>
+
+  <h1>♟️ Vlad Chess Coach — Live API Test</h1>
+  <p class="sub">Tests all 3 coach personas via Gemini 1.5 Pro. Enter your API key and a sample PGN.</p>
+
+  <div class="key-row">
+    <input type="password" id="apiKey" placeholder="Paste your GEMINI_API_KEY here..." />
+    <button id="testBtn" onclick="runTest()">▶ Run Test</button>
+  </div>
+
+  <div class="pgn-row">
+    <label>Sample PGN (or leave default)</label>
+    <textarea id="pgn" rows="3">1.e4 e5 2.Nf3 Nc6 3.Bc4 Bc5 4.c3 Nf6 5.d3 d6 6.a4 O-O 7.O-O h6 8.h3 Re8 9.Re1 a6 10.Nbd2 Ba7 11.Nf1 d5 12.exd5 Nxd5 13.Ng3 Nf4 14.Bxf4 exf4 15.Ne4 Qd6 16.Ned2 f3 17.gxf3 Bxh3 18.Kh2 Bg4 19.Ng5 Nd4 20.Nde4 Qf4+ 21.Kg1 Nxf3+ 22.Nxf3 Bxf3 0-1</textarea>
+  </div>
+
+  <div class="coaches">
+    <div class="coach-card vlad">
+      <h2>🎖️ Vlad</h2>
+      <div class="role">Post-game debrief · Drill prescription</div>
+      <div class="response status" id="vladResponse">Waiting to run test...</div>
+    </div>
+    <div class="coach-card fabiano">
+      <h2>♟️ Fabiano</h2>
+      <div class="role">Opening analysis · Positional benchmarking</div>
+      <div class="response status" id="fabianoResponse">Waiting to run test...</div>
+    </div>
+    <div class="coach-card magnus">
+      <h2>👑 Magnus</h2>
+      <div class="role">Endgame conversion · Reality check</div>
+      <div class="response status" id="magnusResponse">Waiting to run test...</div>
+    </div>
+  </div>
+
+<script>
+const GEMINI_URL = "https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-pro:generateContent";
+
+const PERSONAS = {
+  vlad: `You are Vlad, a chess coach based on Vladimir Chuchelov. Calm, precise, slightly intimidating. Military analogies. You believe in TopherBettis's potential but won't tolerate laziness. Player: TopherBettis, 609 ELO, target 2000. Opening: Italian Cage with Spanish Styling. Keep response under 200 words.`,
+  fabiano: `You are Fabiano, a chess coach based on Fabiano Caruana. Methodical, preparation-obsessed. Speak in terms of piece activity and structural integrity. Player: TopherBettis, 609 ELO, target 2000. Keep response under 200 words.`,
+  magnus: `You are Magnus, a chess coach based on Magnus Carlsen. Slightly arrogant, always right. Focus on endgame and intuition. Relentless. Player: TopherBettis, 609 ELO, target 2000. Keep response under 200 words.`
+};
+
+async function callCoach(coach, pgn, apiKey) {
+  const prompt = `${PERSONAS[coach]}\n\nAnalyze this game (Black wins):\n${pgn}\n\nGive a brief debrief in your voice.`;
+  const res = await fetch(`${GEMINI_URL}?key=${apiKey}`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      contents: [{ parts: [{ text: prompt }] }],
+      generationConfig: { temperature: 0.7, maxOutputTokens: 400 }
+    })
+  });
+  if (!res.ok) throw new Error(`HTTP ${res.status}`);
+  const data = await res.json();
+  return data?.candidates?.[0]?.content?.parts?.[0]?.text || "No response.";
+}
+
+async function runTest() {
+  const apiKey = document.getElementById("apiKey").value.trim();
+  const pgn = document.getElementById("pgn").value.trim();
+  const btn = document.getElementById("testBtn");
+
+  if (!apiKey) { alert("Please enter your GEMINI_API_KEY"); return; }
+
+  btn.disabled = true;
+  btn.textContent = "⏳ Running...";
+
+  const coaches = ["vlad", "fabiano", "magnus"];
+  for (const coach of coaches) {
+    document.getElementById(`${coach}Response`).textContent = "⏳ Calling " + coach + "...";
+    document.getElementById(`${coach}Response`).className = "response status";
+  }
+
+  for (const coach of coaches) {
+    try {
+      const response = await callCoach(coach, pgn, apiKey);
+      document.getElementById(`${coach}Response`).textContent = response;
+      document.getElementById(`${coach}Response`).className = "response";
+    } catch (err) {
+      document.getElementById(`${coach}Response`).textContent = "❌ Error: " + err.message;
+      document.getElementById(`${coach}Response`).className = "response error";
+    }
+  }
+
+  btn.disabled = false;
+  btn.textContent = "▶ Run Test";
+}
+</script>
+
+</body>
+</html>
