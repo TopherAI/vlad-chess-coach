@@ -1,0 +1,154 @@
+{
+  "meta": {
+    "player": "TopherBettis",
+    "platform": "Chess.com",
+    "last_updated": "2025-04-07",
+    "current_elo": 609,
+    "target_elo": 2000,
+    "primary_time_control": "15|10 Rapid",
+    "version": "1.0.0"
+  },
+
+  "opening_system": {
+    "as_white": {
+      "name": "Italian Cage with Spanish Styling",
+      "alias": "Gentleman Assassin",
+      "move_order": ["e4", "Nf3", "Bc4", "c3", "d3", "a4", "O-O", "h3", "Re1"],
+      "philosophy": "Coiled Spring — feign quiet positional play, induce overextension, then strike",
+      "arsenal": [
+        "Queenside expansion (b4)",
+        "Strangler knight maneuver (Nbd2-f1-g3-f5)",
+        "Toxic baiting (Bg5 pins)",
+        "High-velocity sacrifice (Bxh6)",
+        "Central explosion (d4 break)"
+      ]
+    },
+    "as_black": {
+      "name": "TBD",
+      "notes": "To be defined — next priority after core system stable"
+    }
+  },
+
+  "strengths": [
+    {
+      "id": "S1",
+      "name": "Endgame Stamina",
+      "description": "Converts 60+ move marathons — GM-level patience for 600 ELO",
+      "examples": ["ladder mates", "box mates", "K+R coordination", "passed pawn promotion"]
+    },
+    {
+      "id": "S2",
+      "name": "Tactical Aggression",
+      "description": "Excellent eye for knight sacrifices and king hunts",
+      "examples": ["16.Nhxg7+! style sacrifices"]
+    },
+    {
+      "id": "S3",
+      "name": "Fighter's Mindset",
+      "description": "Never resigns early. Stays in the fight regardless of material deficit."
+    },
+    {
+      "id": "S4",
+      "name": "Two-Bishop Endgame",
+      "description": "Actively mastering vs. Maximum engine level"
+    }
+  ],
+
+  "weaknesses": [
+    {
+      "id": "W1",
+      "name": "Move 9 Speed Trap",
+      "priority": "CRITICAL",
+      "description": "Returns to natural fast speed as center opens around move 9-10. Results in queen blunders to knight forks or rooks on open files.",
+      "root_cause": "Discipline failure — pattern is known, habit overrides it",
+      "trigger_condition": "Center opens, move 9-10, any open file or knight outpost",
+      "occurrences": 0,
+      "drill_prescription": "Mandatory 30-60 second pause from move 8 onward. Ask 'Is my queen safe?' before touching any piece.",
+      "vlad_note": "This is your #1 leak. One fix here is worth 100 points."
+    },
+    {
+      "id": "W2",
+      "name": "Panic Simplification",
+      "priority": "HIGH",
+      "description": "When opponent plays fast ...c5/...d5 breaks, prematurely releases tension via early exchanges",
+      "root_cause": "Fear response — releases the Coiled Spring prematurely",
+      "trigger_condition": "Opponent plays early ...c5 or ...d5 break",
+      "occurrences": 0,
+      "drill_prescription": "When opponent attacks, ask: 'Does this actually require a response?' Hold the tension. The cage is the advantage.",
+      "vlad_note": "The spring only works if you don't release it early."
+    },
+    {
+      "id": "W3",
+      "name": "Pawn Push Reflex vs. Queen Sorties",
+      "priority": "HIGH",
+      "description": "When opponent plays ...Qg5 or ...Qh4, reflex is to push g3/g4/h3 — creates permanent dark-square holes",
+      "root_cause": "Pattern mismatch — treating queen aggression as a pawn problem",
+      "trigger_condition": "Opponent queen appears on g5 or h4",
+      "occurrences": 0,
+      "drill_prescription": "Rule: Develop and Castle. Queen sorties early are a trap. Develop a piece, castle, queen has no target.",
+      "vlad_note": "In jiu-jitsu you don't grab the limb being offered. Develop and castle."
+    },
+    {
+      "id": "W4",
+      "name": "Missing Forcing Moves When Winning",
+      "priority": "MEDIUM",
+      "description": "When massively ahead, occasionally misses the most forcing continuation (e.g. 24.Bxf7+)",
+      "root_cause": "Relaxing calculation discipline when winning",
+      "trigger_condition": "Large material or positional advantage",
+      "occurrences": 0,
+      "drill_prescription": "Run CCT check (Checks, Captures, Threats) before EVERY move — especially when winning. Game isn't over until it's over.",
+      "vlad_note": "Carlsen never stops calculating. Neither do you."
+    }
+  ],
+
+  "mental_systems": {
+    "four_step_loop": [
+      "1. OPPONENT'S INTENT — What does my opponent want? Is my queen safe?",
+      "2. CCT CHECK — All Checks, Captures, and Threats available?",
+      "3. LAZY PIECE UPGRADE — What is my worst piece? Can this move improve it?",
+      "4. PRE-MOVE VERIFY — After I move, can they take anything for free?"
+    ],
+    "time_discipline": {
+      "moves_1_to_8": "Normal pace",
+      "move_9_plus": "Minimum 30-60 second pause enforced",
+      "trigger": "Any open file, any knight outpost, any queen exposed"
+    },
+    "biofeedback": {
+      "device": "Apple Watch",
+      "setting": "Outdoor Walk",
+      "green_zone_bpm": "70-95",
+      "red_zone_bpm": "100+",
+      "red_zone_protocol": "Look Away — stop, look away from board, breathe, reset vision, return fresh"
+    }
+  },
+
+  "training_system": {
+    "cycle_length_days": 23,
+    "daily_minutes": 150,
+    "schedule": [
+      { "block": "Tactics", "minutes": 30, "focus": "Pattern recognition reps" },
+      { "block": "Game Review", "minutes": 30, "focus": "Vlad debrief on previous game" },
+      { "block": "Endgame Study", "minutes": 30, "focus": "Magnus mode — conversion technique" },
+      { "block": "Rapid Play", "minutes": 60, "focus": "15|10 — apply what was drilled" }
+    ]
+  },
+
+  "phase_roadmap": [
+    { "phase": 1, "name": "Triage", "elo_range": "609-1000", "mission": "Zero hanging pieces. Pre-move checklist automated.", "key_metric": "Blunder rate per game" },
+    { "phase": 2, "name": "Structure", "elo_range": "1000-1400", "mission": "Piece activity. Pawn structure. Repertoire locked.", "key_metric": "Accuracy % per game" },
+    { "phase": 3, "name": "Weaponize", "elo_range": "1400-1800", "mission": "Deep opening prep. Endgame technique. 500+ patterns.", "key_metric": "Win rate from equal positions" },
+    { "phase": 4, "name": "Mastery", "elo_range": "1800-2000", "mission": "Candidate moves discipline. Time management. Psychology.", "key_metric": "Tournament performance" }
+  ],
+
+  "rating_history": [
+    { "date": "2025-04-07", "elo": 609, "note": "Project start" }
+  ],
+
+  "games_analyzed": [],
+
+  "drill_performance": {
+    "total_puzzles_solved": 0,
+    "accuracy_by_pattern": {},
+    "weakest_patterns": []
+  }
+}
