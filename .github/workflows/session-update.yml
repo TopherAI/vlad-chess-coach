@@ -36,6 +36,9 @@ jobs:
           git push
 
       - name: Close issue
-        uses: actions/github-script@v6
-        with:
-          github​​​​​​​​​​​​​​​​
+        run: |
+          gh issue close ${{ github.event.issue.number }}
+        env:
+          GH_TOKEN: ${{ secrets.PAT_TOKEN }}
+
+​​​​​​​​​​
