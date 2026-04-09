@@ -13,21 +13,20 @@
 // Constants
 // ---------------------------------------------------------------------------
 
-const STOCKFISH_CDN = 'https://cdnjs.cloudflare.com/ajax/libs/stockfish.js/10.0.2/stockfish.js';
+const STOCKFISH_CDN = 'https://unpkg.com/stockfish.js@10.0.2/stockfish.js';
 
 const DEFAULTS = {
-  depth: 15,          // Reduced for faster analysis (was 18)
-  multiPV: 3,         // Number of alternate lines
-  moveTime: 8000,     // Increased to 8s for complex positions (was 2000)
-  threads: 1,         // Web Workers are single-threaded; Stockfish.js handles internally
+  depth: 15,
+  multiPV: 3,
+  moveTime: 8000,
+  threads: 1,
 };
 
-// Evaluation thresholds for narrative labels (centipawns)
 const EVAL_LABELS = {
-  WINNING:    100,    // +1.0 or better
-  ADVANTAGE:  50,     // +0.5 to +1.0
-  EQUAL:      20,     // -0.2 to +0.2 (dead equal)
-  SLIGHT_ADV: 50,     // 0.2 to 0.5
+  WINNING:    100,
+  ADVANTAGE:  50,
+  EQUAL:      20,
+  SLIGHT_ADV: 50,
 };
 
 // ---------------------------------------------------------------------------
@@ -36,12 +35,8 @@ const EVAL_LABELS = {
 
 let _engine = null;
 let _engineReady = false;
-let _engineQueue = [];   // pending resolve/reject while engine initializes
+let _engineQueue = [];
 
-/**
- * Initialize (or return cached) Stockfish Worker instance.
- * @returns {Promise<Worker>}
- */
 function getEngine() {
   return new Promise((resolve, reject) => {
     if (_engineReady && _engine) {
@@ -51,12 +46,11 @@ function getEngine() {
 
     _engineQueue.push({ resolve, reject });
 
-    if (_engine) return; // already loading, just queued
+    if (_engine) return;
 
     try {
       _engine = new Worker(STOCKFISH_CDN);
     } catch (err) {
-      // Some environments block CDN workers — fall back to importScripts blob
       try {
         const blob = new Blob(
           [`importScripts('${STOCKFISH_CDN}');`],
@@ -96,14 +90,10 @@ function getEngine() {
       _engineReady = false;
     };
 
-    // Kick off UCI handshake
     _engine.postMessage('uci');
   });
 }
 
-/**
- * Terminate the engine instance (call on component unmount to free memory).
- */
 export function terminateEngine() {
   if (_engine) {
     _engine.postMessage('quit');
@@ -118,18 +108,6 @@ export function terminateEngine() {
 // Core Analysis
 // ---------------------------------------------------------------------------
 
-/**
- * Run Stockfish analysis on a FEN position.
- *
- * @param {string} fen         - FEN string of position to analyze
- * @param {object} options
- * @param {number} options.depth    - Search depth (default 15)
- * @param {number} options.multiPV  - Number of lines (default 3)
- * @param {number} options.moveTime - Max ms (default 8000)
- * @param {function} options.onInfo - Optional callback for live 'info' lines
- *
- * @returns {Promise<AnalysisResult>}
- */
 export async function analyzePosition(fen, options = {}) {
   const depth    = options.depth    ?? DEFAULTS.depth;
   const multiPV  = options.multiPV  ?? DEFAULTS.multiPV;
@@ -147,7 +125,7 @@ export async function analyzePosition(fen, options = {}) {
         engine.onmessage = null;
         reject(new Error(`Stockfish timed out after ${moveTime + 2000}ms on FEN: ${fen}`));
       }
-    }, moveTime + 2000);  // increased buffer from 1000 to 2000
+    }, moveTime + 2000);
 
     engine.onmessage = (event) => {
       const msg = event.data;
@@ -180,20 +158,13 @@ export async function analyzePosition(fen, options = {}) {
   });
 }
 
-/**
- * Get only the best move for a position (lightweight — no full analysis).
- *
- * @param {string} fen
- * @param {number} depth
- * @returns {Promise<string>} UCI move string, e.g. "e2e4"
- */
 export async function getBestMove(fen, depth = 12) {
   const engine = await getEngine();
 
   return new Promise((resolve, reject) => {
     const timeout = setTimeout(() => {
       reject(new Error('getBestMove timed out'));
-    }, 12000);  // increased from 5000 to 12000
+    }, 12000);
 
     engine.onmessage = (event) => {
       if (typeof event.data === 'string' && event.data.startsWith('bestmove')) {
@@ -208,19 +179,8 @@ export async function getBestMove(fen, depth = 12) {
   });
 }
 
-/**
- * Analyze a full game from PGN move list.
- * Returns per-move evaluations + blunder/mistake/inaccuracy classification.
- *
- * @param {string[]} moves  - Array of UCI moves, e.g. ["e2e4", "e7e5", ...]
- * @param {object}   options
- * @param {number}   options.depth       - Analysis depth per move (default 12 for speed)
- * @param {function} options.onProgress  - Called with (moveIndex, total) for UI progress bar
- *
- * @returns {Promise<GameAnalysis>}
- */
 export async function analyzeGame(moves, options = {}) {
-  const depth      = options.depth      ?? 12;  // reduced from 14 for full game speed
+  const depth      = options.depth      ?? 12;
   const onProgress = options.onProgress ?? null;
 
   const results = [];
@@ -401,12 +361,11 @@ function applyMove(fen, uciMove) {
 }
 
 // ---------------------------------------------------------------------------
-// Export summary for GameAutopsy / Vlad debrief integration
+// Export
 // ---------------------------------------------------------------------------
 
 export function buildVladContext(gameAnalysis, playerSide) {
   const { summary, moves } = gameAnalysis;
-  const playerMoves = moves.filter(m => m.side === playerSide);
 
   const worstStr = summary.worstMoves
     .map(m => `Move ${m.moveNumber} (${m.actualMove}): ${m.classification.toUpperCase()} — CP loss: ${m.cpLoss}, best was ${m.bestMove}`)
