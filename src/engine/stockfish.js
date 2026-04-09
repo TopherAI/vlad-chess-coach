@@ -16,9 +16,9 @@
 const STOCKFISH_CDN = 'https://cdnjs.cloudflare.com/ajax/libs/stockfish.js/10.0.2/stockfish.js';
 
 const DEFAULTS = {
-  depth: 18,          // Analysis depth (18 = strong, fast enough for UI)
+  depth: 15,          // Reduced for faster analysis (was 18)
   multiPV: 3,         // Number of alternate lines
-  moveTime: 2000,     // Max ms per move (fallback if depth not reached)
+  moveTime: 8000,     // Increased to 8s for complex positions (was 2000)
   threads: 1,         // Web Workers are single-threaded; Stockfish.js handles internally
 };
 
@@ -77,7 +77,6 @@ function getEngine() {
 
     _engine.onmessage = (event) => {
       if (event.data === 'uciok' || event.data.includes('Stockfish')) {
-        // Engine is ready after 'uciok'
         if (event.data === 'uciok') {
           _engineReady = true;
           _engine.postMessage('isready');
@@ -124,9 +123,9 @@ export function terminateEngine() {
  *
  * @param {string} fen         - FEN string of position to analyze
  * @param {object} options
- * @param {number} options.depth    - Search depth (default 18)
+ * @param {number} options.depth    - Search depth (default 15)
  * @param {number} options.multiPV  - Number of lines (default 3)
- * @param {number} options.moveTime - Max ms (default 2000)
+ * @param {number} options.moveTime - Max ms (default 8000)
  * @param {function} options.onInfo - Optional callback for live 'info' lines
  *
  * @returns {Promise<AnalysisResult>}
@@ -140,22 +139,21 @@ export async function analyzePosition(fen, options = {}) {
   const engine = await getEngine();
 
   return new Promise((resolve, reject) => {
-    const lines = {};   // keyed by multipv index
+    const lines = {};
     let finished = false;
 
     const timeout = setTimeout(() => {
       if (!finished) {
         engine.onmessage = null;
-        reject(new Error(`Stockfish timed out after ${moveTime + 1000}ms on FEN: ${fen}`));
+        reject(new Error(`Stockfish timed out after ${moveTime + 2000}ms on FEN: ${fen}`));
       }
-    }, moveTime + 1000);
+    }, moveTime + 2000);  // increased buffer from 1000 to 2000
 
     engine.onmessage = (event) => {
       const msg = event.data;
 
       if (typeof msg !== 'string') return;
 
-      // Live info streaming
       if (msg.startsWith('info') && msg.includes('score')) {
         const parsed = parseInfoLine(msg);
         if (parsed) {
@@ -164,7 +162,6 @@ export async function analyzePosition(fen, options = {}) {
         }
       }
 
-      // Final bestmove signal
       if (msg.startsWith('bestmove')) {
         clearTimeout(timeout);
         finished = true;
@@ -177,7 +174,6 @@ export async function analyzePosition(fen, options = {}) {
       }
     };
 
-    // Send position + go command
     engine.postMessage(`setoption name MultiPV value ${multiPV}`);
     engine.postMessage(`position fen ${fen}`);
     engine.postMessage(`go depth ${depth} movetime ${moveTime}`);
@@ -197,7 +193,7 @@ export async function getBestMove(fen, depth = 12) {
   return new Promise((resolve, reject) => {
     const timeout = setTimeout(() => {
       reject(new Error('getBestMove timed out'));
-    }, 5000);
+    }, 12000);  // increased from 5000 to 12000
 
     engine.onmessage = (event) => {
       if (typeof event.data === 'string' && event.data.startsWith('bestmove')) {
@@ -218,17 +214,17 @@ export async function getBestMove(fen, depth = 12) {
  *
  * @param {string[]} moves  - Array of UCI moves, e.g. ["e2e4", "e7e5", ...]
  * @param {object}   options
- * @param {number}   options.depth       - Analysis depth per move (default 14 for speed)
+ * @param {number}   options.depth       - Analysis depth per move (default 12 for speed)
  * @param {function} options.onProgress  - Called with (moveIndex, total) for UI progress bar
  *
  * @returns {Promise<GameAnalysis>}
  */
 export async function analyzeGame(moves, options = {}) {
-  const depth      = options.depth      ?? 14;
+  const depth      = options.depth      ?? 12;  // reduced from 14 for full game speed
   const onProgress = options.onProgress ?? null;
 
   const results = [];
-  let fen = 'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1'; // starting FEN
+  let fen = 'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1';
 
   for (let i = 0; i < moves.length; i++) {
     const result = await analyzePosition(fen, { depth, multiPV: 1 });
@@ -236,7 +232,6 @@ export async function analyzeGame(moves, options = {}) {
     const actualMove = moves[i];
     const evalBefore = result.lines[0]?.cp ?? 0;
 
-    // Advance position
     fen = applyMove(fen, actualMove);
 
     const evalAfter = (await analyzePosition(fen, { depth, multiPV: 1 })).lines[0]?.cp ?? 0;
@@ -253,8 +248,8 @@ export async function analyzeGame(moves, options = {}) {
       evalBefore,
       evalAfter,
       cpLoss,
-      classification,   // 'best' | 'excellent' | 'good' | 'inaccuracy' | 'mistake' | 'blunder'
-      label:            getEvalLabel(evalAfter),
+      classification,
+      label:          getEvalLabel(evalAfter),
     });
 
     if (onProgress) onProgress(i + 1, moves.length);
@@ -267,10 +262,6 @@ export async function analyzeGame(moves, options = {}) {
 // Parsers
 // ---------------------------------------------------------------------------
 
-/**
- * Parse a Stockfish 'info' line into structured data.
- * Example: "info depth 18 seldepth 25 multipv 1 score cp 43 nodes 123456 pv e2e4 e7e5"
- */
 function parseInfoLine(line) {
   const tokens = line.split(' ');
   const get = (key) => {
@@ -287,7 +278,6 @@ function parseInfoLine(line) {
 
   const scoreVal = parseInt(get(scoreType)) || 0;
 
-  // Extract PV line
   const pvIdx = tokens.indexOf('pv');
   const pv    = pvIdx !== -1 ? tokens.slice(pvIdx + 1) : [];
 
@@ -297,14 +287,12 @@ function parseInfoLine(line) {
     cp:      scoreType === 'cp'   ? scoreVal : null,
     mate:    scoreType === 'mate' ? scoreVal : null,
     pv,
-    // Human-readable eval string: "+0.43" or "M5"
     evalString: scoreType === 'mate'
       ? `M${Math.abs(scoreVal)}`
       : formatCP(scoreVal),
   };
 }
 
-/** Parse "bestmove e2e4 ponder d7d5" → "e2e4" */
 function parseBestMove(line) {
   const parts = line.split(' ');
   return parts[1] ?? null;
@@ -314,10 +302,6 @@ function parseBestMove(line) {
 // Move classification
 // ---------------------------------------------------------------------------
 
-/**
- * Classify a move by centipawn loss vs best move.
- * Thresholds from standard chess analysis conventions.
- */
 function classifyMove(cpLoss, bestMove, actualMove) {
   if (actualMove === bestMove) return 'best';
   if (cpLoss <= 10)  return 'excellent';
@@ -328,12 +312,12 @@ function classifyMove(cpLoss, bestMove, actualMove) {
 }
 
 const CLASSIFICATION_COLORS = {
-  best:       '#76b9f5',  // blue
-  excellent:  '#2ecc71',  // green
-  good:       '#a8e6cf',  // light green
-  inaccuracy: '#f39c12',  // orange
-  mistake:    '#e67e22',  // dark orange
-  blunder:    '#e74c3c',  // red
+  best:       '#76b9f5',
+  excellent:  '#2ecc71',
+  good:       '#a8e6cf',
+  inaccuracy: '#f39c12',
+  mistake:    '#e67e22',
+  blunder:    '#e74c3c',
 };
 
 export function getClassificationColor(classification) {
@@ -359,11 +343,10 @@ function buildAnalysisResult(fen, bestMove, lines, depth) {
 }
 
 function buildGameAnalysis(moves, moveResults) {
-  const blunders    = moveResults.filter(m => m.classification === 'blunder');
-  const mistakes    = moveResults.filter(m => m.classification === 'mistake');
+  const blunders     = moveResults.filter(m => m.classification === 'blunder');
+  const mistakes     = moveResults.filter(m => m.classification === 'mistake');
   const inaccuracies = moveResults.filter(m => m.classification === 'inaccuracy');
 
-  // Accuracy approximation: 100 - weighted error rate
   const totalMoves  = moveResults.length;
   const weightedErr = (blunders.length * 3 + mistakes.length * 2 + inaccuracies.length) / totalMoves;
   const accuracy    = Math.max(0, Math.min(100, Math.round(100 - weightedErr * 10)));
@@ -376,7 +359,6 @@ function buildGameAnalysis(moves, moveResults) {
       mistakes:     mistakes.length,
       inaccuracies: inaccuracies.length,
       accuracy,
-      // Worst blunders sorted by cp loss for Vlad debrief
       worstMoves: moveResults
         .filter(m => ['blunder','mistake'].includes(m.classification))
         .sort((a, b) => b.cpLoss - a.cpLoss)
@@ -389,34 +371,22 @@ function buildGameAnalysis(moves, moveResults) {
 // Helpers
 // ---------------------------------------------------------------------------
 
-/** Format centipawns as "+1.23" or "-0.45" */
 function formatCP(cp) {
   const pawns = cp / 100;
   return (pawns >= 0 ? '+' : '') + pawns.toFixed(2);
 }
 
-/** Get human label for a centipawn value (from White's perspective) */
 function getEvalLabel(cp) {
   if (cp === null) return 'Unknown';
   const abs = Math.abs(cp);
   const side = cp > 0 ? 'White' : cp < 0 ? 'Black' : null;
-  if (abs <= EVAL_LABELS.EQUAL)     return 'Equal';
+  if (abs <= EVAL_LABELS.EQUAL)      return 'Equal';
   if (abs <= EVAL_LABELS.SLIGHT_ADV) return side ? `${side} slightly better` : 'Slight advantage';
-  if (abs <= EVAL_LABELS.WINNING)   return side ? `${side} better` : 'Advantage';
+  if (abs <= EVAL_LABELS.WINNING)    return side ? `${side} better` : 'Advantage';
   return side ? `${side} winning` : 'Winning';
 }
 
-/**
- * Minimal FEN position updater — applies a UCI move to a FEN string.
- * NOTE: This is a lightweight helper. For full legality checking,
- * wire in chess.js (already likely in your dependency tree via GameAutopsy).
- *
- * For now: relies on chess.js being available globally OR imported by caller.
- * GameAutopsy will import chess.js and pass pre-updated FENs directly
- * to analyzeGame() instead of using this helper.
- */
 function applyMove(fen, uciMove) {
-  // If chess.js is globally available (loaded via CDN in index.html)
   if (typeof Chess !== 'undefined') {
     const game = new Chess(fen);
     game.move({
@@ -426,7 +396,6 @@ function applyMove(fen, uciMove) {
     });
     return game.fen();
   }
-  // Fallback: caller is responsible for FEN progression
   console.warn('chess.js not found — applyMove() is a no-op. Pass FEN array to analyzeGame().');
   return fen;
 }
@@ -435,14 +404,6 @@ function applyMove(fen, uciMove) {
 // Export summary for GameAutopsy / Vlad debrief integration
 // ---------------------------------------------------------------------------
 
-/**
- * Generate a Vlad-ready summary string from game analysis results.
- * This gets injected into the Vlad prompt as context.
- *
- * @param {GameAnalysis} gameAnalysis
- * @param {string} playerSide - 'white' | 'black'
- * @returns {string}
- */
 export function buildVladContext(gameAnalysis, playerSide) {
   const { summary, moves } = gameAnalysis;
   const playerMoves = moves.filter(m => m.side === playerSide);
