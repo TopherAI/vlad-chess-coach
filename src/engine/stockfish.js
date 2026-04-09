@@ -13,7 +13,7 @@
 // Constants
 // ---------------------------------------------------------------------------
 
-const STOCKFISH_CDN = 'https://unpkg.com/stockfish.js@10.0.2/stockfish.js';
+const STOCKFISH_CDN = '/stockfish.js';
 
 const DEFAULTS = {
   depth: 15,
