@@ -19,10 +19,6 @@ const EVAL_LABELS = {
   SLIGHT_ADV: 50,
 };
 
-// ---------------------------------------------------------------------------
-// Engine Singleton
-// ---------------------------------------------------------------------------
-
 let _engine = null;
 let _engineReady = false;
 let _engineQueue = [];
@@ -39,23 +35,13 @@ function getEngine() {
     if (_engine) return;
 
     try {
-      _engine = new Worker(STOCKFISH_CDN);
+      _engine = new Worker('/stockfish.js');
     } catch (err) {
-      try {
-        const blob = new Blob(
-          [`importScripts('${STOCKFISH_CDN}');`],
-          { type: 'application/javascript' }
-        );
-        _engine = new Worker(URL.createObjectURL(blob));
-      } catch (fallbackErr) {
-        const error = new Error(
-          'Stockfish Worker failed to load.\n' + fallbackErr.message
-        );
-        _engineQueue.forEach(({ reject }) => reject(error));
-        _engineQueue = [];
-        _engine = null;
-        return;
-      }
+      const error = new Error('Stockfish Worker failed to load.\n' + err.message);
+      _engineQueue.forEach(({ reject }) => reject(error));
+      _engineQueue = [];
+      _engine = null;
+      return;
     }
 
     _engine.onmessage = (event) => {
@@ -64,7 +50,7 @@ function getEngine() {
 
       if (msg.includes('uciok')) {
         _engineReady = true;
-        _engine.postMessage('isready');
+        _engine.postMessage({cmd: 'isready'});
       }
 
       if (msg.includes('readyok')) {
@@ -82,23 +68,19 @@ function getEngine() {
       _engineReady = false;
     };
 
-    _engine.postMessage('uci');
+    _engine.postMessage({cmd: 'uci'});
   });
 }
 
 export function terminateEngine() {
   if (_engine) {
-    _engine.postMessage('quit');
+    _engine.postMessage({cmd: 'quit'});
     _engine.terminate();
     _engine = null;
     _engineReady = false;
     _engineQueue = [];
   }
 }
-
-// ---------------------------------------------------------------------------
-// Core Analysis
-// ---------------------------------------------------------------------------
 
 export async function analyzePosition(fen, options = {}) {
   const depth    = options.depth    ?? DEFAULTS.depth;
@@ -140,9 +122,9 @@ export async function analyzePosition(fen, options = {}) {
       }
     };
 
-    engine.postMessage(`setoption name MultiPV value ${multiPV}`);
-    engine.postMessage(`position fen ${fen}`);
-    engine.postMessage(`go depth ${depth} movetime ${moveTime}`);
+    engine.postMessage({cmd: `setoption name MultiPV value ${multiPV}`});
+    engine.postMessage({cmd: `position fen ${fen}`});
+    engine.postMessage({cmd: `go depth ${depth} movetime ${moveTime}`});
   });
 }
 
@@ -161,9 +143,9 @@ export async function getBestMove(fen, depth = 12) {
       }
     };
 
-    engine.postMessage('setoption name MultiPV value 1');
-    engine.postMessage(`position fen ${fen}`);
-    engine.postMessage(`go depth ${depth}`);
+    engine.postMessage({cmd: 'setoption name MultiPV value 1'});
+    engine.postMessage({cmd: `position fen ${fen}`});
+    engine.postMessage({cmd: `go depth ${depth}`});
   });
 }
 
@@ -206,10 +188,6 @@ export async function analyzeGame(moves, options = {}) {
   return buildGameAnalysis(moves, results);
 }
 
-// ---------------------------------------------------------------------------
-// Parsers
-// ---------------------------------------------------------------------------
-
 function parseInfoLine(line) {
   const tokens = line.split(' ');
   const get = (key) => {
@@ -245,10 +223,6 @@ function parseBestMove(line) {
   return parts[1] ?? null;
 }
 
-// ---------------------------------------------------------------------------
-// Move classification
-// ---------------------------------------------------------------------------
-
 function classifyMove(cpLoss, bestMove, actualMove) {
   if (actualMove === bestMove) return 'best';
   if (cpLoss <= 10)  return 'excellent';
@@ -270,10 +244,6 @@ const CLASSIFICATION_COLORS = {
 export function getClassificationColor(classification) {
   return CLASSIFICATION_COLORS[classification] ?? '#aaaaaa';
 }
-
-// ---------------------------------------------------------------------------
-// Result builders
-// ---------------------------------------------------------------------------
 
 function buildAnalysisResult(fen, bestMove, lines, depth) {
   const topLine = lines[0] ?? {};
@@ -314,10 +284,6 @@ function buildGameAnalysis(moves, moveResults) {
   };
 }
 
-// ---------------------------------------------------------------------------
-// Helpers
-// ---------------------------------------------------------------------------
-
 function formatCP(cp) {
   const pawns = cp / 100;
   return (pawns >= 0 ? '+' : '') + pawns.toFixed(2);
@@ -346,10 +312,6 @@ function applyMove(fen, uciMove) {
   console.warn('chess.js not found — applyMove() is a no-op.');
   return fen;
 }
-
-// ---------------------------------------------------------------------------
-// Export
-// ---------------------------------------------------------------------------
 
 export function buildVladContext(gameAnalysis, playerSide) {
   const { summary } = gameAnalysis;
