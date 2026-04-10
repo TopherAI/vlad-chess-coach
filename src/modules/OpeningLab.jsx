@@ -9,13 +9,13 @@
  *   <script src="https://cdnjs.cloudflare.com/ajax/libs/chess.js/0.10.3/chess.min.js"></script>
  *   <script src="https://cdnjs.cloudflare.com/ajax/libs/chessboard-js/1.0.0/chessboard-1.0.0.min.js"></script>
  *   Italian Cage knowledge base via data/italianCage.js
- *   Coach personas via src/coaches/fabiano.js, vlad.js
+ *   Coach personas via src/coaches/fabiano.jsx, vlad.js
  */
 
 import { useState, useEffect, useCallback, useRef } from "react";
 import { ITALIAN_CAGE } from "../../data/italianCage.js";
-import { askFabiano } from "../coaches/fabiano.js";
-import { askVlad } from "../coaches/vlad.js";
+import { askFabiano } from "../coaches/fabiano.jsx";
+import { askVlad } from "../coaches/vlad.jsx";
 
 // ---------------------------------------------------------------------------
 // Constants

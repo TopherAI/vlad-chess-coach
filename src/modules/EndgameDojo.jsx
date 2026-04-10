@@ -10,12 +10,12 @@
  *   <script src="https://cdnjs.cloudflare.com/ajax/libs/chess.js/0.10.3/chess.min.js"></script>
  *   <script src="https://cdnjs.cloudflare.com/ajax/libs/chessboard-js/1.0.0/chessboard-1.0.0.min.js"></script>
  *   Stockfish engine via src/engine/stockfish.js
- *   Coach personas via src/coaches/magnus.js
+ *   Coach personas via src/coaches/magnus.jsx
  */
 
 import { useState, useCallback, useRef } from "react";
 import { analyzePosition, getBestMove, getClassificationColor } from "../engine/stockfish.js";
-import { askMagnus } from "../coaches/magnus.js";
+import { askMagnus } from "../coaches/magnus.jsx";
 
 // ---------------------------------------------------------------------------
 // Endgame position library

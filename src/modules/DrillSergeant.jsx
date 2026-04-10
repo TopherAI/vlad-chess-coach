@@ -9,12 +9,12 @@
  *   <script src="https://cdnjs.cloudflare.com/ajax/libs/chess.js/0.10.3/chess.min.js"></script>
  *   <script src="https://cdnjs.cloudflare.com/ajax/libs/chessboard-js/1.0.0/chessboard-1.0.0.min.js"></script>
  *   Stockfish engine via src/engine/stockfish.js
- *   Coach personas via src/coaches/vlad.js
+ *   Coach personas via src/coaches/vlad.jsx
  */
 
 import { useState, useEffect, useCallback, useRef } from "react";
 import { getBestMove, getClassificationColor } from "../engine/stockfish.js";
-import { askVlad } from "../coaches/vlad.js";
+import { askVlad } from "../coaches/vlad.jsx";
 
 // ---------------------------------------------------------------------------
 // Constants

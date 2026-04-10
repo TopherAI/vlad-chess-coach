@@ -9,14 +9,14 @@
  *   <script src="https://cdnjs.cloudflare.com/ajax/libs/chess.js/0.10.3/chess.min.js"></script>
  *   Gemini API via src/api/gemini.js
  *   Stockfish engine via src/engine/stockfish.js
- *   Coach personas via src/coaches/vlad.js, fabiano.js, magnus.js
+ *   Coach personas via src/coaches/vlad.jsx, fabiano.js, magnus.js
  */
 
 import { useState, useCallback, useRef } from "react";
 import { analyzeGame, terminateEngine, getClassificationColor, buildVladContext } from "../engine/stockfish.js";
-import { askVlad } from "../coaches/vlad.js";
-import { askFabiano } from "../coaches/fabiano.js";
-import { askMagnus } from "../coaches/magnus.js";
+import { askVlad } from "../coaches/vlad.jsx";
+import { askFabiano } from "../coaches/fabiano.jsx";
+import { askMagnus } from "../coaches/magnus.jsx";
 
 // ---------------------------------------------------------------------------
 // Constants
