@@ -5,7 +5,7 @@
 // ─── Default Memory Structure ─────────────────────────────────────────────────
 
 export const DEFAULT_MEMORY = {
-player: “TopherBettis”,
+player: "TopherBettis",
 currentElo: 609,
 targetElo: 2000,
 lastUpdated: null,
@@ -13,59 +13,59 @@ gamesAnalyzed: 0,
 
 weaknesses: {
 move9SpeedTrap: {
-label: “Move 9 Speed Trap”,
+label: "Move 9 Speed Trap",
 occurrences: 0,
 lastSeen: null,
-severity: “CRITICAL”,
-trend: “unknown”,
-notes: “Blunders queen to knight forks when center opens around move 9-10.”
+severity: "CRITICAL",
+trend: "unknown",
+notes: "Blunders queen to knight forks when center opens around move 9-10."
 },
 panicSimplification: {
-label: “Panic Simplification”,
+label: "Panic Simplification",
 occurrences: 0,
 lastSeen: null,
-severity: “HIGH”,
-trend: “unknown”,
-notes: “Releases tension too early under pressure. Coiled Spring released prematurely.”
+severity: "HIGH",
+trend: "unknown",
+notes: "Releases tension too early under pressure. Coiled Spring released prematurely."
 },
 pawnPushingVsQueenSorties: {
-label: “Pawn-Pushing vs Queen Sorties”,
+label: "Pawn-Pushing vs Queen Sorties",
 occurrences: 0,
 lastSeen: null,
-severity: “HIGH”,
-trend: “unknown”,
-notes: “Pushes pawns at opponent queen instead of developing and castling.”
+severity: "HIGH",
+trend: "unknown",
+notes: "Pushes pawns at opponent queen instead of developing and castling."
 },
 missingForcingMoves: {
-label: “Missing Forcing Moves When Winning”,
+label: "Missing Forcing Moves When Winning",
 occurrences: 0,
 lastSeen: null,
-severity: “MEDIUM”,
-trend: “unknown”,
-notes: “Relaxes calculation when ahead. Misses CCT in winning positions.”
+severity: "MEDIUM",
+trend: "unknown",
+notes: "Relaxes calculation when ahead. Misses CCT in winning positions."
 }
 },
 
 strengths: {
 endgameStamina: {
-label: “Endgame Stamina”,
+label: "Endgame Stamina",
 confirmed: true,
-notes: “Converts 60+ move marathons. Unusual and elite for 600 ELO.”
+notes: "Converts 60+ move marathons. Unusual and elite for 600 ELO."
 },
 passedPawnPromotion: {
-label: “Passed Pawn Promotion”,
+label: "Passed Pawn Promotion",
 confirmed: true,
-notes: “GM-level patience. Ladder mates, box mates, K+R coordination.”
+notes: "GM-level patience. Ladder mates, box mates, K+R coordination."
 },
 tacticalAggression: {
-label: “Tactical Aggression”,
+label: "Tactical Aggression",
 confirmed: true,
-notes: “Excellent eye for knight sacrifices and king hunts.”
+notes: "Excellent eye for knight sacrifices and king hunts."
 },
 fightersMindset: {
-label: “Fighter’s Mindset”,
+label: "Fighter's Mindset",
 confirmed: true,
-notes: “Never resigns early. Stays in the fight.”
+notes: "Never resigns early. Stays in the fight."
 }
 },
 
@@ -109,7 +109,7 @@ averageMoveOrderAccuracy: 0
   // Merge with defaults to ensure all keys exist
   return deepMerge(DEFAULT_MEMORY, parsed);
   } catch {
-  console.warn(’[coachMemory] Could not parse memory. Using defaults.’);
+  console.warn('[coachMemory] Could not parse memory. Using defaults.');
   return { …DEFAULT_MEMORY };
   }
   }
@@ -160,9 +160,9 @@ updated.weeklyStats = updateWeeklyStats(updated.weeklyStats, gameData);
 // Update opening stats
 if (gameData.openingExecuted) {
 updated.openingStats.italianCage.gamesPlayed += 1;
-if (gameData.result === ‘win’) updated.openingStats.italianCage.wins += 1;
-if (gameData.result === ‘loss’) updated.openingStats.italianCage.losses += 1;
-if (gameData.result === ‘draw’) updated.openingStats.italianCage.draws += 1;
+if (gameData.result === 'win') updated.openingStats.italianCage.wins += 1;
+if (gameData.result === 'loss') updated.openingStats.italianCage.losses += 1;
+if (gameData.result === 'draw') updated.openingStats.italianCage.draws += 1;
 }
 
 return updated;
@@ -227,19 +227,19 @@ return updated;
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
 function calculateTrend(occurrences, totalGames) {
-if (totalGames === 0) return ‘unknown’;
+if (totalGames === 0) return 'unknown';
 const rate = occurrences / totalGames;
-if (rate > 0.6) return ‘frequent’;
-if (rate > 0.3) return ‘occasional’;
-return ‘rare’;
+if (rate > 0.6) return 'frequent';
+if (rate > 0.3) return 'occasional';
+return 'rare';
 }
 
 function updateWeeklyStats(weeklyStats, gameData) {
 const updated = { …weeklyStats };
 updated.gamesPlayed = (updated.gamesPlayed || 0) + 1;
-if (gameData.result === ‘win’) updated.wins = (updated.wins || 0) + 1;
-if (gameData.result === ‘loss’) updated.losses = (updated.losses || 0) + 1;
-if (gameData.result === ‘draw’) updated.draws = (updated.draws || 0) + 1;
+if (gameData.result === 'win') updated.wins = (updated.wins || 0) + 1;
+if (gameData.result === 'loss') updated.losses = (updated.losses || 0) + 1;
+if (gameData.result === 'draw') updated.draws = (updated.draws || 0) + 1;
 
 if (gameData.accuracy) {
 const acc = parseFloat(gameData.accuracy);
@@ -263,7 +263,7 @@ const result = { …defaults };
 for (const key in overrides) {
 if (
 overrides[key] &&
-typeof overrides[key] === ‘object’ &&
+typeof overrides[key] === 'object' &&
 !Array.isArray(overrides[key])
 ) {
 result[key] = deepMerge(defaults[key] || {}, overrides[key]);
