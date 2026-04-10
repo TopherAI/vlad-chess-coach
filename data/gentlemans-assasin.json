@@ -1,30 +1,142 @@
 {
-  "philosophy": "Play like a gentleman for the first 10 moves to build your cage, then execute like an assassin.",
-  "coreCage": {
-    "moves1to10": ["e4", "Nf3", "Bc4", "d3/c3", "c3/d3", "O-O", "a4 (before castling in some lines)", "h3", "Re1", "Nbd2 → Nf1"],
-    "prophylaxis": ["a4 before O-O to secure Ba2 escape", "h3 before Nbd2 to prevent ...Bg4 pin"],
-    "mentalLoop": ["Opponent’s Intent (anti-blunder + ghost check)", "CCT Scan", "Lazy Piece Upgrade (e.g. Nf1-g3-f5)", "Pre-Move Check"]
+  "name": "Gentleman's Assassin",
+  "philosophy": "Quiet development through the Pianissimo Cage, then precise kingside strike via Nf1→Ng3→Nf5.",
+  "coiledSpring": {
+    "label": "The 9-Move Coiled Spring",
+    "description": "The ideal main line. Play this when Black cooperates.",
+    "moves": [
+      { "move": 1, "notation": "e4", "note": "Control center, open lines for bishop." },
+      { "move": 2, "notation": "Nf3", "note": "Develop knight, attack e5." },
+      { "move": 3, "notation": "Bc4", "note": "Italian setup — eye on f7." },
+      { "move": 4, "notation": "c3", "note": "Prep d4 push, solidify center." },
+      { "move": 5, "notation": "d3", "note": "Pianissimo — no rush, build the cage." },
+      { "move": 6, "notation": "a4", "note": "Queenside space, prevents b5 bishop kick." },
+      { "move": 7, "notation": "O-O", "note": "King safety before the attack begins." },
+      { "move": 8, "notation": "h3", "note": "Prevent Bg4 pin, prep Ng3 route." },
+      { "move": 9, "notation": "Re1", "note": "Rook to open file, supports e4 and e5 push." }
+    ]
   },
-  "resolvedMoveOrders": {
-    "GiuocoPianissimo": "1.e4 e5 2.Nf3 Nc6 3.Bc4 Bc5 4.c3 Nf6 5.d3 ... (then O-O, h3, a4, Re1, Nbd2, Nf1)",
-    "TwoKnights": "1.e4 e5 2.Nf3 Nc6 3.Bc4 Nf6 4.d3 ... (consistent cage)",
-    "SicilianBypass": "1.e4 c5 2.Nf3 3.Bc4 ... (avoid early 2.Bc4 because of ...e6)",
-    "PetrovRefusal": "1.e4 e5 2.Nf3 Nf6 3.d3 ... (steers into Italian cage)"
+  "assassinChecklist": {
+    "label": "Assassin Activation Checklist",
+    "description": "All 7 must be true before launching the kingside attack.",
+    "items": [
+      { "id": 1, "condition": "Knight on f1", "note": "Rerouting for the Ng3→Nf5 maneuver." },
+      { "id": 2, "condition": "h3 is played", "note": "Secured against Bg4 pin." },
+      { "id": 3, "condition": "Bishop secure on b3", "note": "Retreated safely, still eyeing f7." },
+      { "id": 4, "condition": "Rook on e1", "note": "Central support and future Re3 swing." },
+      { "id": 5, "condition": "King castled", "note": "King safety confirmed." },
+      { "id": 6, "condition": "Zero hanging pieces", "note": "No loose pieces before attacking." },
+      { "id": 7, "condition": "Ng3 square is clear", "note": "Path open for the knight maneuver." }
+    ]
   },
-  "drillSergeantFENs": [
-    {"id": 1, "phase": "Anchor", "fen": "r1bqr1k1/bpp2pp1/p1np1n1p/4p3/4P3/1BPP1N1P/PP1N1PP1/R1BQR1K1 w - - 1 11", "goal": "Start Nd2-f1-g3-f5 without breaking cage"},
-    {"id": 2, "phase": "Anchor", "fen": "r1bq1rk1/pp2bppp/2np1n2/2p1p3/P3P3/2PP1N2/BP1N1PPP/R1BQR1K1 b - - 0 10", "goal": "Queenside cramp with a4, begin knight tour"},
-    // ... add all 10 FENs exactly as provided, with coach notes
-    {"id": 10, "phase": "Pianissimo Purge", "fen": "r1bqr1k1/bpp2pp1/p1np1n1p/4pN2/4P3/1BPP3P/PP1Q1PP1/R1B1R1K1 w - - 0 15", "goal": "Bxh6! sacrifice with Nf5 + Qd2 aligned"}
+  "strikeSequence": {
+    "label": "Strike Sequence",
+    "description": "Execute after all 7 checklist items are confirmed.",
+    "steps": [
+      "Nf1 → Ng3",
+      "Bb3",
+      "Be3 or Bg5",
+      "Qe2",
+      "Ng3 → Nf5",
+      "Re1 → Re3",
+      "d4 break"
+    ]
+  },
+  "repertoireLines": [
+    {
+      "id": 1,
+      "name": "Giuoco Pianissimo",
+      "moves": "1.e4 e5 2.Nf3 Nc6 3.Bc4 Bc5 4.d3",
+      "note": "Main line. Black mirrors development. Stay patient, execute the cage."
+    },
+    {
+      "id": 2,
+      "name": "Two Knights d3",
+      "moves": "1.e4 e5 2.Nf3 Nc6 3.Bc4 Nf6 4.d3",
+      "note": "Black plays Nf6 instead of Bc5. Avoid complications, keep d3 solid."
+    },
+    {
+      "id": 3,
+      "name": "Sicilian Bc4 Bypass",
+      "moves": "1.e4 c5 2.Nf3 3.Bc4",
+      "note": "Black plays Sicilian. Bypass theory with Bc4, steer into familiar territory."
+    },
+    {
+      "id": 4,
+      "name": "Petrov d3 Refusal",
+      "moves": "1.e4 e5 2.Nf3 Nf6 3.d3",
+      "note": "Black plays Petrov. Refuse symmetry with d3, maintain initiative."
+    }
   ],
-  "triageQuiz": [
-    {"q": "Petrov 3rd move?", "a": "3.d3"},
-    // paste all 10 questions + answers exactly
+  "tactics": [
+    {
+      "id": 1,
+      "name": "The Strangler",
+      "description": "Slowly restrict Black's pieces until they have no good moves. Use pawn advances to choke space."
+    },
+    {
+      "id": 2,
+      "name": "Queenside Expansion",
+      "description": "Use a4-a5 to gain queenside space and fix Black's pawns as targets."
+    },
+    {
+      "id": 3,
+      "name": "Toxic Baiting",
+      "description": "Offer material that is poisoned — capture leads to a decisive positional or tactical loss."
+    },
+    {
+      "id": 4,
+      "name": "High-Velocity Sacrifice",
+      "description": "Once Nf5 is established, sacrifice material to rip open the kingside and deliver checkmate."
+    },
+    {
+      "id": 5,
+      "name": "Central Explosion",
+      "description": "The d4 break at the right moment destroys Black's center and opens lines for all pieces."
+    }
   ],
-  "fiveTacticArsenal": [
-    {"name": "Search and Destroy", "trigger": "Black's dark bishop blocked", "execute": "b4"},
-    {"name": "The Strangler Knight", "trigger": "f5 hole or ...h6 played", "execute": "Nf5"},
-    // ... add all 5
+  "deviations": [
+    {
+      "trigger": "Black plays d5 early",
+      "response": "Don't panic. Maintain c3/d3 structure. Exchange on d5 only if it opens your pieces favorably."
+    },
+    {
+      "trigger": "Black attacks your Bc4 with b5",
+      "response": "Retreat to Bb3. The bishop is still active and aims at f7 from b3."
+    },
+    {
+      "trigger": "Black launches early kingside attack",
+      "response": "Delay Ng3. Prioritize Re1 and solidify before counter-attacking."
+    },
+    {
+      "trigger": "Black exchanges on e4 early",
+      "response": "Recapture with d-pawn if possible to maintain center. Keep the cage intact."
+    },
+    {
+      "trigger": "Black avoids castling",
+      "response": "Shift to central pressure. Use d4 break earlier to open files against the uncastled king."
+    }
   ],
-  "chaosProtocol": "Under 1000 Elo: Do NOT abandon the cage to grab material unless 100% safe. Run CCT first."
+  "coachDialogue": {
+    "quizWrongAnswer": {
+      "coach": "Vlad",
+      "trigger": "Wrong move order in quiz",
+      "message": "Nyet. The cage must be built in order. Patience before power. Try again."
+    },
+    "checklistIncomplete": {
+      "coach": "Vlad",
+      "trigger": "Player attempts strike before checklist complete",
+      "message": "You are not ready. The assassin does not strike until the conditions are perfect. Check your list."
+    },
+    "tacticsDeepDive": {
+      "coach": "Fabiano",
+      "trigger": "Player clicks a tactic for explanation",
+      "message": "Let me show you exactly how this weapon works at a technical level."
+    },
+    "blackResponseCoaching": {
+      "coach": "Fabiano",
+      "trigger": "Player selects a Black response line",
+      "message": "Here is how Black is trying to punish you — and here is the precise refutation."
+    }
+  }
 }
