@@ -132,3 +132,4 @@ One sentence. Deliver it like Magnus would.
 `;
 return await askMagnus(prompt, { pgn, result, accuracy });
 }
+export { askMagnus } from '../api/gemini.js';

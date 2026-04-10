@@ -118,3 +118,4 @@ ${pgn}
 }
 
 export { WEAKNESS_KEYS };
+export { askVlad } from '../api/gemini.js';

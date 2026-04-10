@@ -132,3 +132,4 @@ List only the 5 most instructive deviations. No filler.
 `;
 return await askFabiano(prompt, { pgn, result });
 }
+export { askFabiano } from '../api/gemini.js';
