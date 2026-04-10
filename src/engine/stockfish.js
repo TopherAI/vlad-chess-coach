@@ -8,7 +8,7 @@ const STOCKFISH_CDN = 'https://cdnjs.cloudflare.com/ajax/libs/stockfish.js/10.0.
 const DEFAULTS = {
   depth: 15,
   multiPV: 3,
-  moveTime: 8000,
+  moveTime: 15000,
   threads: 1,
 };
 
@@ -106,8 +106,16 @@ export async function analyzePosition(fen, options = {}) {
 
     const timeout = setTimeout(() => {
       if (!finished) {
+        finished = true;
         engine.onmessage = null;
-        reject(new Error(`Stockfish timed out after ${moveTime + 2000}ms on FEN: ${fen}`));
+        // Graceful timeout — return best partial result instead of crashing
+        const sortedLines = Object.values(lines).sort((a, b) => a.multiPV - b.multiPV);
+        if (sortedLines.length > 0) {
+          console.warn(`Stockfish timeout on FEN: ${fen} — using partial result`);
+          resolve(buildAnalysisResult(fen, sortedLines[0]?.pv?.[0] ?? null, sortedLines, depth));
+        } else {
+          reject(new Error(`Stockfish timed out after ${moveTime + 2000}ms on FEN: ${fen}`));
+        }
       }
     }, moveTime + 2000);
 
@@ -167,30 +175,41 @@ export async function analyzeGame(moves, options = {}) {
   let fen = 'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1';
 
   for (let i = 0; i < moves.length; i++) {
-    const result = await analyzePosition(fen, { depth, multiPV: 1 });
-    const bestMove = result.bestMove;
-    const actualMove = moves[i];
-    const evalBefore = result.lines[0]?.cp ?? 0;
+    try {
+      const result = await analyzePosition(fen, { depth, multiPV: 1 });
+      const bestMove = result.bestMove;
+      const actualMove = moves[i];
+      const evalBefore = result.lines[0]?.cp ?? 0;
 
-    fen = applyMove(fen, actualMove);
+      fen = applyMove(fen, actualMove);
 
-    const evalAfter = (await analyzePosition(fen, { depth, multiPV: 1 })).lines[0]?.cp ?? 0;
+      let evalAfter = 0;
+      try {
+        evalAfter = (await analyzePosition(fen, { depth, multiPV: 1 })).lines[0]?.cp ?? 0;
+      } catch (e) {
+        console.warn(`Skipping evalAfter for move ${i} — ${e.message}`);
+        fen = applyMove(fen, actualMove);
+      }
 
-    const cpLoss = Math.abs(evalBefore) - Math.abs(evalAfter);
-    const classification = classifyMove(cpLoss, bestMove, actualMove);
+      const cpLoss = Math.abs(evalBefore) - Math.abs(evalAfter);
+      const classification = classifyMove(cpLoss, bestMove, actualMove);
 
-    results.push({
-      moveIndex:      i,
-      moveNumber:     Math.floor(i / 2) + 1,
-      side:           i % 2 === 0 ? 'white' : 'black',
-      actualMove,
-      bestMove,
-      evalBefore,
-      evalAfter,
-      cpLoss,
-      classification,
-      label:          getEvalLabel(evalAfter),
-    });
+      results.push({
+        moveIndex:      i,
+        moveNumber:     Math.floor(i / 2) + 1,
+        side:           i % 2 === 0 ? 'white' : 'black',
+        actualMove,
+        bestMove,
+        evalBefore,
+        evalAfter,
+        cpLoss,
+        classification,
+        label:          getEvalLabel(evalAfter),
+      });
+    } catch (e) {
+      console.warn(`Skipping move ${i} analysis — ${e.message}`);
+      fen = applyMove(fen, moves[i]);
+    }
 
     if (onProgress) onProgress(i + 1, moves.length);
   }
@@ -275,8 +294,10 @@ function buildGameAnalysis(moves, moveResults) {
   const inaccuracies = moveResults.filter(m => m.classification === 'inaccuracy');
 
   const totalMoves  = moveResults.length;
-  const weightedErr = (blunders.length * 3 + mistakes.length * 2 + inaccuracies.length) / totalMoves;
-  const accuracy    = Math.max(0, Math.min(100, Math.round(100 - weightedErr * 10)));
+  const weightedErr = totalMoves > 0
+    ? (blunders.length * 3 + mistakes.length * 2 + inaccuracies.length) / totalMoves
+    : 0;
+  const accuracy = Math.max(0, Math.min(100, Math.round(100 - weightedErr * 10)));
 
   return {
     moves: moveResults,
