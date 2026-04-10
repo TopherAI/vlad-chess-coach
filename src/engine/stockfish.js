@@ -3,8 +3,6 @@
  * vlad-chess-coach — Stockfish WASM Engine Wrapper
  */
 
-const STOCKFISH_CDN = '/stockfish.js';
-
 const DEFAULTS = {
   depth: 15,
   multiPV: 3,
@@ -31,50 +29,43 @@ function getEngine() {
     }
 
     _engineQueue.push({ resolve, reject });
-
     if (_engine) return;
 
-    try {
-      _engine = new Worker('/stockfish.js');
-    } catch (err) {
-      const error = new Error('Stockfish Worker failed to load.\n' + err.message);
-      _engineQueue.forEach(({ reject }) => reject(error));
-      _engineQueue = [];
-      _engine = null;
-      return;
-    }
-
-    _engine.onmessage = (event) => {
-      const msg = typeof event.data === 'string' ? event.data : null;
-      if (!msg) return;
-
-      if (msg.includes('uciok')) {
-        _engineReady = true;
-        _engine.postMessage({cmd: 'isready'});
-      }
-
-      if (msg.includes('readyok')) {
-        _engineQueue.forEach(({ resolve }) => resolve(_engine));
+    // Load Stockfish.wasm as a module (Emscripten style)
+    const script = document.createElement('script');
+    script.src = '/stockfish.js';
+    script.onload = () => {
+      window.Stockfish().then((sf) => {
+        _engine = sf;
+        sf.addMessageListener((msg) => {
+          if (msg.includes('uciok')) {
+            _engineReady = true;
+            sf.postMessage('isready');
+          }
+          if (msg.includes('readyok')) {
+            _engineQueue.forEach(({ resolve }) => resolve(sf));
+            _engineQueue = [];
+          }
+        });
+        sf.postMessage('uci');
+      }).catch((err) => {
+        _engineQueue.forEach(({ reject }) => reject(err));
         _engineQueue = [];
-      }
+        _engine = null;
+      });
     };
-
-    _engine.onerror = (err) => {
-      console.error('Stockfish load error:', err);
-      const error = new Error('Stockfish Worker error: ' + err.message);
+    script.onerror = (err) => {
+      const error = new Error('Failed to load stockfish.js');
       _engineQueue.forEach(({ reject }) => reject(error));
       _engineQueue = [];
       _engine = null;
-      _engineReady = false;
     };
-
-    _engine.postMessage({cmd: 'uci'});
+    document.head.appendChild(script);
   });
 }
 
 export function terminateEngine() {
   if (_engine) {
-    _engine.postMessage({cmd: 'quit'});
     _engine.terminate();
     _engine = null;
     _engineReady = false;
@@ -96,13 +87,11 @@ export async function analyzePosition(fen, options = {}) {
 
     const timeout = setTimeout(() => {
       if (!finished) {
-        engine.onmessage = null;
         reject(new Error(`Stockfish timed out after ${moveTime + 2000}ms on FEN: ${fen}`));
       }
     }, moveTime + 2000);
 
-    engine.onmessage = (event) => {
-      const msg = event.data;
+    const listener = (msg) => {
       if (typeof msg !== 'string') return;
 
       if (msg.startsWith('info') && msg.includes('score')) {
@@ -116,15 +105,17 @@ export async function analyzePosition(fen, options = {}) {
       if (msg.startsWith('bestmove')) {
         clearTimeout(timeout);
         finished = true;
+        engine.removeMessageListener(listener);
         const bestMove = parseBestMove(msg);
         const sortedLines = Object.values(lines).sort((a, b) => a.multiPV - b.multiPV);
         resolve(buildAnalysisResult(fen, bestMove, sortedLines, depth));
       }
     };
 
-    engine.postMessage({cmd: `setoption name MultiPV value ${multiPV}`});
-    engine.postMessage({cmd: `position fen ${fen}`});
-    engine.postMessage({cmd: `go depth ${depth} movetime ${moveTime}`});
+    engine.addMessageListener(listener);
+    engine.postMessage(`setoption name MultiPV value ${multiPV}`);
+    engine.postMessage(`position fen ${fen}`);
+    engine.postMessage(`go depth ${depth} movetime ${moveTime}`);
   });
 }
 
@@ -136,16 +127,18 @@ export async function getBestMove(fen, depth = 12) {
       reject(new Error('getBestMove timed out'));
     }, 12000);
 
-    engine.onmessage = (event) => {
-      if (typeof event.data === 'string' && event.data.startsWith('bestmove')) {
+    const listener = (msg) => {
+      if (typeof msg === 'string' && msg.startsWith('bestmove')) {
         clearTimeout(timeout);
-        resolve(parseBestMove(event.data));
+        engine.removeMessageListener(listener);
+        resolve(parseBestMove(msg));
       }
     };
 
-    engine.postMessage({cmd: 'setoption name MultiPV value 1'});
-    engine.postMessage({cmd: `position fen ${fen}`});
-    engine.postMessage({cmd: `go depth ${depth}`});
+    engine.addMessageListener(listener);
+    engine.postMessage('setoption name MultiPV value 1');
+    engine.postMessage(`position fen ${fen}`);
+    engine.postMessage(`go depth ${depth}`);
   });
 }
 
