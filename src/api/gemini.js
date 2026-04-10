@@ -41,14 +41,6 @@ Focus on: endgame fundamentals, converting advantages, never giving up.`,
 
 // ─── Core API Call (routed through LLM Gateway) ───────────────────────────────
 
-/**
- * Ask a coach a question with optional chess context.
- *
- * @param {string} coachId     - 'vlad' | 'fabiano' | 'magnus'
- * @param {string} userMessage - The player's question or position context
- * @param {string} context     - Optional game analysis context (from buildVladContext)
- * @returns {Promise<string>}  - Coach response text
- */
 export async function askCoach(coachId, userMessage, context = '') {
   const persona = COACH_PERSONAS[coachId];
   if (!persona) throw new Error(`Unknown coach: ${coachId}`);
@@ -65,7 +57,7 @@ export async function askCoach(coachId, userMessage, context = '') {
     },
     body: JSON.stringify({
       message: fullMessage,
-      model: 'gemini-1.5-pro',
+      model: 'gemini-2.0-flash',
     }),
   });
 
@@ -78,33 +70,14 @@ export async function askCoach(coachId, userMessage, context = '') {
   return data.response;
 }
 
-/**
- * Ask Vlad for a post-game debrief using game analysis context.
- *
- * @param {string} vladContext - Output from buildVladContext()
- * @param {string} userMessage - Optional follow-up question
- * @returns {Promise<string>}
- */
 export async function askVlad(vladContext, userMessage = 'Give me your full debrief.') {
   return askCoach('vlad', userMessage, vladContext);
 }
 
-/**
- * Ask Fabiano for opening/tactical advice.
- *
- * @param {string} userMessage
- * @returns {Promise<string>}
- */
 export async function askFabiano(userMessage) {
   return askCoach('fabiano', userMessage);
 }
 
-/**
- * Ask Magnus for endgame/practical advice.
- *
- * @param {string} userMessage
- * @returns {Promise<string>}
- */
 export async function askMagnus(userMessage) {
   return askCoach('magnus', userMessage);
 }
