@@ -1,0 +1,373 @@
+# VLAD CHESS COACH — GENTLEMAN’S ASSASSIN SUPER PLAN
+
+## 4-AI Synthesis: Claude + Grok + ChatGPT + Gemini
+
+**Player:** TopherBettis | **ELO:** 609 → 2000 | **April 2026**
+
+-----
+
+## ⚠️ SYNTHESIS INTEGRITY NOTE
+
+Before using this document, NotebookLM and VLAD coaches should know:
+
+**Grok and ChatGPT produced word-for-word identical outputs.** This is not two independent opinions — it is one. The true synthesis is Claude + Grok/ChatGPT (as one voice) + Gemini = 3 independent perspectives. Consensus items have been weighted accordingly.
+
+-----
+
+## PART 1: WHAT THE AIs AGREED ON (High-Confidence Consensus)
+
+These items appeared consistently across all sources and are treated as canonical:
+
+### The Two-Phase System
+
+Every AI independently identified the same architecture:
+
+**PHASE A — THE CAGE (Moves 1–10)**
+The exact structure to build in every line:
+
+- Pawns: e4 + d3 + c3
+- Bishop: Bc4 → Bb3 (preserve on the a2-g8 diagonal — never trade for a knight without a structural fight)
+- King: Castled by move 6–7
+- h3: Non-negotiable. Stops Bg4 pins. Enables safe Be3.
+- Rook: Re1 (supports e4, eyes e-file)
+- Knight: Nbd2 → Nf1 (loaded and ready)
+
+**PHASE B — THE ASSASSIN (Moves 11+)**
+The strike sequence — identical across all lines:
+
+```
+Nf1 → Ng3 → Nf5
+Bb3 (hold the diagonal)
+Be3 or Bg5 (activate second bishop)
+Qe2 (centralize, support e4)
+Re1 → Re3 → Rg3/Rh3 (rook lift)
+d4 break ONLY when Ng3 is ready
+Pressure target sequence: f7 → g7 → h7
+```
+
+-----
+
+## PART 2: CONFLICTS IDENTIFIED AND RESOLVED
+
+### CONFLICT 1 — Petrov Defense Response
+
+- Grok/ChatGPT: 3.Nxe5 (classical main line)
+- Gemini: 3.d3 (quiet, cage-style)
+- Claude: 3.d4 (Steinitz Attack, sharp)
+
+**VERDICT: 3.d3 wins.**
+
+3.Nxe5 leads to early piece trades and drawish endgames — directly against Gentleman’s Assassin philosophy. 3.d4 (Steinitz) is too tactically complex for Phase 1 (609→1000) and creates positions we haven’t studied. 3.d3 is the only choice that preserves the Italian cage identity and steers the game into familiar territory.
+
+### CONFLICT 2 — Sicilian Move Order
+
+- Grok/ChatGPT: 2.Bc4 directly
+- Gemini: 2.Nc3 first, then Bc4
+- Claude: 2.Nf3 first, then Bc4
+
+**VERDICT: 2.Nf3 → 3.Bc4 wins.**
+
+2.Bc4 directly can be met by …e6 immediately, blocking the diagonal before we develop the knight. 2.Nc3 allows …d5 with tempo hitting the c3 knight. 2.Nf3 develops naturally and keeps all options open.
+
+### CONFLICT 3 — Two Knights Line 2 (4th move choice)
+
+- Grok/ChatGPT: 4.c3 immediately
+- Gemini: 4.d3 with a4/Ba2 defensive posture
+- Claude: 4.c3
+
+**VERDICT: 4.d3 is more cage-consistent.**
+
+4.c3 signals d4 intent and invites sharper play. 4.d3 is the true Pianissimo — same structure as Line 1, just reached via different Black move order. Treat all Italian lines as the same cage.
+
+-----
+
+## PART 3: CANONICAL MOVE ORDERS (Final, Definitive)
+
+### LINE 1: Giuoco Pianissimo — “The Anchor”
+
+```
+1.e4 e5 2.Nf3 Nc6 3.Bc4 Bc5 4.d3 d6 5.c3 Nf6
+6.O-O O-O 7.h3 a6 8.Re1 Ba7 9.Nbd2 Re8 10.Nf1
+```
+
+**Terminal FEN:** `r1bqr1k1/bpp2pp1/p1np1n1p/4p3/4P3/1BPP1N1P/PP1N1PP1/R1BQR1K1 w - - 1 11`
+
+**Assassin Continuation:**
+
+```
+11.Ng3 Be6 12.Bb3 Qd7 13.Be3 Bxe3 14.Rxe3 d5
+15.exd5 Nxd5 → Nf5 outpost dominant
+```
+
+**Coach Note:** “The cage is locked. Your knight maneuver is the key to the sting.”
+
+-----
+
+### LINE 2: Two Knights — “The Misdirect”
+
+```
+1.e4 e5 2.Nf3 Nc6 3.Bc4 Nf6 4.d3 Be7 5.O-O O-O
+6.Re1 d6 7.a4 Na5 8.Ba2 c5 9.c3 Nc6 10.Nbd2
+```
+
+**Terminal FEN:** `r1bq1rk1/pp2bppp/2np1n2/2p1p3/P3P3/2PP1N2/BP1N1PPP/R1BQR1K1 b - - 0 10`
+
+**Key adjustment:** a4 + Ba2 neutralizes the Na5 queenside expansion. Bishop retreats to a2, still on the diagonal. This is Gemini’s best contribution — the a4/Ba2 defensive posture is elegant and on-brand.
+
+**Coach Note:** “Black wants chaos. Give them a structural headache instead.”
+
+-----
+
+### LINE 3: Sicilian — “The Bypass”
+
+```
+1.e4 c5 2.Nf3 Nc6 3.Bc4 e6 4.d3 d6 5.c3 Nf6
+6.O-O Be7 7.Re1 O-O 8.Nbd2 h6 9.Bb3 Qc7 10.Qe2
+```
+
+**Assassin Phase Ideas:**
+
+- Watch for …d5 break → exd5 or Bb3 retreat and continue cage
+- If Black castles kingside → same Nf1-g3-f5 plan as Lines 1 and 2
+- Queenside expansion a3-b4 if Black goes queenside
+- f4 option (Gemini contribution): f4 space grab as secondary assassin lever — valid if Black is passive
+
+**Coach Note:** “They expected 15 moves of Najdorf theory. You gave them an Italian structure they’ve never studied.”
+
+**⚠️ Development Priority:** This line needs the most work. Study order: vs …d6, vs …a6, vs …g6 (Dragon), vs …e5.
+
+-----
+
+### LINE 4: Petrov — “The Refusal”
+
+```
+1.e4 e5 2.Nf3 Nf6 3.d3 Nc6 4.Be2 d5 5.Nbd2 Bc5
+6.O-O O-O 7.c3 a5 8.a4 Re8 9.h3 h6 10.Re1
+```
+
+**Terminal FEN:** `r1bqr1k1/1pp2pp1/2n2n1p/p1bpp3/P3P3/2PP1N1P/1P1NBPP1/R1BQR1K1 w - - 1 11`
+
+**Why 3.d3 over other options:**
+
+- 3.Nxe5: Leads to piece trades and drawish play — not our identity
+- 3.d4 (Steinitz): Too sharp, tactically complex, wrong for Phase 1
+- 3.d3: Steers into Italian cage. Petrov player gets unfamiliar territory. We get home.
+
+**Coach Note:** “They studied the drawish main line. You’re playing for the full point in your cage.”
+
+-----
+
+## PART 4: THE ASSASSIN ACTIVATION CHECKLIST
+
+*(Grok’s best contribution, refined by Claude)*
+
+**Before launching any attack, ALL of the following must be true:**
+
+```
+☐ Knight has reached f1 (loaded)
+☐ h3 is played (pins stopped)
+☐ Bb3 is secure on the diagonal (not traded)
+☐ Re1 is on the e-file (rook active)
+☐ King is castled (king safe)
+☐ No hanging pieces (zero tactical liability)
+☐ Ng3 square is available (not blocked by own pawns)
+```
+
+**If any box is unchecked — fix it before attacking.**
+
+The assassin does not rush. The assassin waits until every weapon is loaded.
+
+-----
+
+## PART 5: WHAT ALL 4 AIs MISSED — NEW CONTENT
+
+### 5A: WHEN OPPONENT BREAKS THE SCRIPT
+
+*(Nobody wrote this. ELO 609 opponents play bad moves. This is the most important section for Phase 1.)*
+
+**Scenario: Black plays an early blunder (hangs a piece, plays …Ng4 without prep, advances pawns recklessly)**
+
+Rule: **Do NOT abandon the cage to grab material unless it is completely safe.**
+The Gentleman’s Assassin takes free material like a gentleman — calmly, completely, without overextending.
+
+Checklist when opponent breaks script:
+
+1. Is the piece genuinely free? Run CCT check (Checks, Captures, Threats) first.
+1. Does taking it break the cage? If yes — evaluate whether the material gain justifies it.
+1. Does taking it expose our king? If yes — decline and continue building.
+1. Does taking it accelerate our development? Then take it immediately.
+
+**Specific early deviations:**
+
+- Black plays …Ng4 before h3: Play h3 immediately. The knight retreats with a loss of tempo.
+- Black plays …d5 before castling: exd5 with tempo. Open lines favor our better development.
+- Black plays …f5 (early aggression): Do not panic. Castle. Let them overextend. Strike the f5 pawn later.
+- Black plays …Qf6/Qh4 early: h3 + g3 if needed. Close the attack. They’re telegraphing.
+- Black plays …Bxf2+: Only valid if we haven’t castled. This is why we castle by move 6–7.
+
+-----
+
+### 5B: TRAP LINES — PUNISHING COMMON BAD MOVES
+
+*(None of the AIs provided these. Opponents at 609 will fall into these.)*
+
+**TRAP 1 — The f7 Fork (Line 1, if Black neglects castling)**
+After 1.e4 e5 2.Nf3 Nc6 3.Bc4 Bc5 4.d3 Nf6 5.c3 0-0 6.0-0 d6 — if Black ever plays …Ng4 carelessly:
+→ Ng5! threatens Nxf7 forking queen and rook. Black must give back material.
+
+**TRAP 2 — The Smothered Knight (Line 2, Two Knights)**
+If Black plays …Ng4 before h3:
+→ h3! Nxf2?? (greedy) → Rxf2 Bxf2+ → Kh1, Black loses a piece with no compensation.
+
+**TRAP 3 — The d5 Overextension (Sicilian Line 3)**
+If Black plays …d5 too early before completing development:
+→ exd5 exd5 → Bb5+! forks king and knight. Black is immediately worse.
+
+**TRAP 4 — The Petrov Trap (Line 4)**
+If Black plays passively and allows our full cage to complete:
+→ After Nf5 lands, if Black plays …g6 to kick it: Nxh6+! gxh6 → Qh5 with mating threats on h6/h7.
+
+-----
+
+### 5C: THE 5 MOST COMMON WHITE MISTAKES IN THIS SYSTEM
+
+*(Nobody documented this. This belongs in Game Autopsy.)*
+
+1. **Playing d4 before Ng3 is ready** — opens the center before the attack is launched. Result: Black equalizes or gets counterplay.
+1. **Trading the Italian Bishop for a knight on c6** — loses the a2-g8 diagonal permanently. The bishop is worth more than the knight here.
+1. **Skipping h3** — allows Bg4 pinning the Nf3. The whole maneuver is disrupted.
+1. **Attacking before castling** — one tactical shot from Black and the king is exposed.
+1. **Moving the same piece twice in the opening without a forcing reason** — gifts Black a tempo to equalize or counterattack.
+
+-----
+
+## PART 6: GEMINI’S JSON — CORRECTED AND EXPANDED
+
+```json
+{
+  "repertoire": "Gentleman's Assassin",
+  "version": "2.0-synthesis",
+  "theme": "The Pianissimo Cage → Spanish Knife",
+  "phase_map": {
+    "cage": "moves_1_to_10",
+    "activation": "move_10_to_12",
+    "assassin": "move_12_plus"
+  },
+  "activation_checklist": [
+    "knight_on_f1",
+    "h3_played",
+    "bishop_on_b3",
+    "rook_on_e1",
+    "king_castled",
+    "zero_hanging_pieces",
+    "ng3_square_clear"
+  ],
+  "paths": [
+    {
+      "id": "path_01_giuoco_pianissimo",
+      "name": "The Anchor",
+      "line": "Giuoco Pianissimo",
+      "moves": "1.e4 e5 2.Nf3 Nc6 3.Bc4 Bc5 4.d3 d6 5.c3 Nf6 6.O-O O-O 7.h3 a6 8.Re1 Ba7 9.Nbd2 Re8 10.Nf1",
+      "terminal_fen": "r1bqr1k1/bpp2pp1/p1np1n1p/4p3/4P3/1BPP1N1P/PP1N1PP1/R1BQR1K1 w - - 1 11",
+      "drill_objective": "Execute Nf1→Ng3→Nf5. Do not attack before all 7 checklist items are true.",
+      "coach_note": "The cage is locked. Your knight maneuver is the key to the sting.",
+      "stockfish_trigger": "eval_drop_0.5_before_move_10",
+      "coach_dialogue_on_breach": "Structural Breach detected. The cage was opened before the assassin was ready.",
+      "trap_lines": ["Ng5 if Black neglects castling", "h3 punish if Black plays Ng4"]
+    },
+    {
+      "id": "path_02_two_knights",
+      "name": "The Misdirect",
+      "line": "Two Knights Defense",
+      "moves": "1.e4 e5 2.Nf3 Nc6 3.Bc4 Nf6 4.d3 Be7 5.O-O O-O 6.Re1 d6 7.a4 Na5 8.Ba2 c5 9.c3 Nc6 10.Nbd2",
+      "terminal_fen": "r1bq1rk1/pp2bppp/2np1n2/2p1p3/P3P3/2PP1N2/BP1N1PPP/R1BQR1K1 b - - 0 10",
+      "drill_objective": "Neutralize Na5 with a4/Ba2 then complete the standard cage and launch Nf5.",
+      "coach_note": "Black wants chaos. Give them a structural headache instead.",
+      "stockfish_trigger": "eval_drop_0.5_before_move_10",
+      "coach_dialogue_on_breach": "Structural Breach. You abandoned the cage to chase queenside complications."
+    },
+    {
+      "id": "path_03_sicilian_bypass",
+      "name": "The Bypass",
+      "line": "Anti-Sicilian Bc4",
+      "moves": "1.e4 c5 2.Nf3 Nc6 3.Bc4 e6 4.d3 d6 5.c3 Nf6 6.O-O Be7 7.Re1 O-O 8.Nbd2 h6 9.Bb3 Qc7 10.Qe2",
+      "terminal_fen": "r1b2rk1/ppq1bppp/2nppn2/8/4P3/1BPPBN2/PP1N1PPP/R2QR1K1 b - - 0 11",
+      "drill_objective": "Handle the ...d5 break correctly. Then execute standard cage plans.",
+      "coach_note": "They expected Najdorf theory. You gave them an Italian structure they've never studied.",
+      "stockfish_trigger": "eval_drop_0.5_before_move_10",
+      "development_note": "Most work needed here. Expand vs d6, a6, g6 setups."
+    },
+    {
+      "id": "path_04_petrov_refusal",
+      "name": "The Refusal",
+      "line": "Petrov Defense — d3 System",
+      "moves": "1.e4 e5 2.Nf3 Nf6 3.d3 Nc6 4.Be2 d5 5.Nbd2 Bc5 6.O-O O-O 7.c3 a5 8.a4 Re8 9.h3 h6 10.Re1",
+      "terminal_fen": "r1bqr1k1/1pp2pp1/2n2n1p/p1bpp3/P3P3/2PP1N1P/1P1NBPP1/R1BQR1K1 w - - 1 11",
+      "drill_objective": "Transpose into Italian structure. Land Nf5 from an unexpected direction.",
+      "coach_note": "They studied the drawish main line. You're playing for the full point in your cage.",
+      "move_choice_rationale": "3.d3 chosen over 3.Nxe5 (drawish) and 3.d4 (too sharp for Phase 1)"
+    }
+  ]
+}
+```
+
+-----
+
+## PART 7: VLAD WIRING SPEC
+
+*(How all modules connect — the missing piece from all 3 AI outputs)*
+
+### Opening Lab → Game Autopsy Connection
+
+When Game Autopsy processes a PGN:
+
+1. Identify opening by ECO code or move sequence
+1. Match to the 4 paths in `gentlemans-assassin.json`
+1. Compare game moves to canonical cage move order
+1. Flag every deviation with one of three tags:
+- `CAGE_BREACH`: Left the cage structure before move 10
+- `ASSASSIN_EARLY`: Attacked before all 7 checklist items were true
+- `ASSASSIN_LATE`: All 7 items were true but attack wasn’t launched
+1. Pass flags to coach persona for debrief dialogue
+
+### Stockfish Integration
+
+- Eval drop of 0.5+ before move 10 → trigger `Structural Breach` dialogue
+- Eval drop of 0.5+ between move 10–15 → trigger `Assassin Timing` review
+- Knight lands on f5 → trigger positive `Activation Complete` feedback
+
+### Coach-memory.json Updates
+
+After each game, store:
+
+```json
+{
+  "opening_line_played": "path_01",
+  "cage_maintained": true/false,
+  "assassin_activated": true/false,
+  "activation_move": 14,
+  "breach_type": null,
+  "common_mistake_triggered": "skipped_h3"
+}
+```
+
+### Drill Sergeant Integration
+
+Extract FEN at move 10 (terminal_fen from JSON) as drill starting position.
+Drill goal: Land knight on f5 within 6 moves against Stockfish level 3.
+Success = positive reinforcement + log to Coach-memory.
+Failure = replay with coach hint overlay.
+
+### Campaign Phase Mapping
+
+```
+Phase 1 (609→1000) — TRIAGE:    Learn the 4 move orders cold.
+Phase 2 (1000→1400) — STRUCTURE: Master the cage. Zero structural breaches.
+Phase 3 (1400→1800) — WEAPONIZE: Land Nf5 in every applicable game.
+Phase 4 (1800→2000) — MASTERY:   Handle all deviations. Play blindfold cage.
+```
+
+-----
+
+*VLAD Super Plan v2.0 | Claude Synthesis | TopherBettis Opening Lab Project | April 2026*
+EOF
