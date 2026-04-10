@@ -3,7 +3,7 @@
  * vlad-chess-coach — Stockfish WASM Engine Wrapper
  */
 
-const STOCKFISH_CDN = 'https://lichess1.org/assets/vendor/stockfish/stockfish.js';
+const STOCKFISH_CDN = '/stockfish.js';
 
 const DEFAULTS = {
   depth: 15,
