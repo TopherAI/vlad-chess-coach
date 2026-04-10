@@ -2,7 +2,7 @@
 // Fabiano — Positional analysis engine based on Fabiano Caruana
 // Opening prep, style mirroring, structural benchmarking
 
-import { askFabiano } from ‘../api/gemini.js’;
+import { askFabiano } from '../api/gemini.js';
 
 const OPENING_ANALYSIS_PROMPT = (pgn, result) => `
 Analyze this game for TopherBettis from a positional and opening preparation standpoint.
@@ -36,7 +36,7 @@ Which pieces were active? Which were lazy?
 Were any trades made that gave up long-term advantage for short-term gain?
 Identify the exact move and explain the positional cost.
 
-## FABIANO’S BENCHMARK
+## FABIANO'S BENCHMARK
 
 What would a 2000 ELO player have done differently?
 Give 2-3 specific move improvements with explanations.

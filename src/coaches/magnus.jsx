@@ -2,7 +2,7 @@
 // Magnus — Endgame conversion engine based on Magnus Carlsen
 // Endgame technique, intuition training, reality checks
 
-import { askMagnus } from ‘../api/gemini.js’;
+import { askMagnus } from '../api/gemini.js';
 
 const ENDGAME_DEBRIEF_PROMPT = (pgn, result) => `
 Analyze the endgame phase of this game for TopherBettis.
@@ -54,7 +54,7 @@ Provide endgame guidance:
 ## POSITION ASSESSMENT
 
 Is this won, drawn, or lost with correct play?
-Be definitive. No “it depends.”
+Be definitive. No "it depends."
 
 ## THE PLAN
 
@@ -126,7 +126,7 @@ One paragraph. Honest. No flattery.
 The single most important thing to improve before the next game.
 Not a list. One thing.
 
-## MAGNUS’S VERDICT
+## MAGNUS'S VERDICT
 
 One sentence. Deliver it like Magnus would.
 `;
