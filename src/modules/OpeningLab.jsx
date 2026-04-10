@@ -13,7 +13,7 @@
  */
 
 import { useState, useEffect, useCallback, useRef } from "react";
-import { ITALIAN_CAGE } from "../../data/italianCage.js";
+import { CAGE_MOVE_ORDER as ITALIAN_CAGE } from "../../data/italianCage.js";
 import { askFabiano } from "../coaches/fabiano.jsx";
 import { askVlad } from "../coaches/vlad.jsx";
 
