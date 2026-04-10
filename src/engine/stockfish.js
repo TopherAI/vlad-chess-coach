@@ -1,19 +1,9 @@
 /**
  * src/engine/stockfish.js
  * vlad-chess-coach — Stockfish WASM Engine Wrapper
- *
- * Loads Stockfish via CDN Worker, exposes a clean promise-based API.
- * Used by GameAutopsy, DrillSergeant, and EndgameDojo.
- *
- * Usage:
- *   import { analyzePosition, getBestMove, getMultiPV } from './engine/stockfish.js';
  */
 
-// ---------------------------------------------------------------------------
-// Constants
-// ---------------------------------------------------------------------------
-
-const STOCKFISH_CDN = '/stockfish.js';
+const STOCKFISH_CDN = 'https://lichess1.org/assets/vendor/stockfish/stockfish.js';
 
 const DEFAULTS = {
   depth: 15,
@@ -59,8 +49,7 @@ function getEngine() {
         _engine = new Worker(URL.createObjectURL(blob));
       } catch (fallbackErr) {
         const error = new Error(
-          'Stockfish Worker failed to load. Check CDN or use a local stockfish.js file.\n' +
-          fallbackErr.message
+          'Stockfish Worker failed to load.\n' + fallbackErr.message
         );
         _engineQueue.forEach(({ reject }) => reject(error));
         _engineQueue = [];
@@ -70,19 +59,22 @@ function getEngine() {
     }
 
     _engine.onmessage = (event) => {
-      if (event.data === 'uciok' || event.data.includes('Stockfish')) {
-        if (event.data === 'uciok') {
-          _engineReady = true;
-          _engine.postMessage('isready');
-        }
+      const msg = typeof event.data === 'string' ? event.data : null;
+      if (!msg) return;
+
+      if (msg.includes('uciok')) {
+        _engineReady = true;
+        _engine.postMessage('isready');
       }
-      if (event.data === 'readyok') {
+
+      if (msg.includes('readyok')) {
         _engineQueue.forEach(({ resolve }) => resolve(_engine));
         _engineQueue = [];
       }
     };
 
     _engine.onerror = (err) => {
+      console.error('Stockfish load error:', err);
       const error = new Error('Stockfish Worker error: ' + err.message);
       _engineQueue.forEach(({ reject }) => reject(error));
       _engineQueue = [];
@@ -129,7 +121,6 @@ export async function analyzePosition(fen, options = {}) {
 
     engine.onmessage = (event) => {
       const msg = event.data;
-
       if (typeof msg !== 'string') return;
 
       if (msg.startsWith('info') && msg.includes('score')) {
@@ -143,11 +134,8 @@ export async function analyzePosition(fen, options = {}) {
       if (msg.startsWith('bestmove')) {
         clearTimeout(timeout);
         finished = true;
-
         const bestMove = parseBestMove(msg);
-        const sortedLines = Object.values(lines)
-          .sort((a, b) => a.multiPV - b.multiPV);
-
+        const sortedLines = Object.values(lines).sort((a, b) => a.multiPV - b.multiPV);
         resolve(buildAnalysisResult(fen, bestMove, sortedLines, depth));
       }
     };
@@ -237,7 +225,6 @@ function parseInfoLine(line) {
   if (!scoreType) return null;
 
   const scoreVal = parseInt(get(scoreType)) || 0;
-
   const pvIdx = tokens.indexOf('pv');
   const pv    = pvIdx !== -1 ? tokens.slice(pvIdx + 1) : [];
 
@@ -356,7 +343,7 @@ function applyMove(fen, uciMove) {
     });
     return game.fen();
   }
-  console.warn('chess.js not found — applyMove() is a no-op. Pass FEN array to analyzeGame().');
+  console.warn('chess.js not found — applyMove() is a no-op.');
   return fen;
 }
 
@@ -365,7 +352,7 @@ function applyMove(fen, uciMove) {
 // ---------------------------------------------------------------------------
 
 export function buildVladContext(gameAnalysis, playerSide) {
-  const { summary, moves } = gameAnalysis;
+  const { summary } = gameAnalysis;
 
   const worstStr = summary.worstMoves
     .map(m => `Move ${m.moveNumber} (${m.actualMove}): ${m.classification.toUpperCase()} — CP loss: ${m.cpLoss}, best was ${m.bestMove}`)
