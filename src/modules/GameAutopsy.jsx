@@ -12,7 +12,7 @@
  *   Coach personas via src/coaches/vlad.jsx, fabiano.js, magnus.js
  */
 
-import { useState, useCallback, useRef } from "react";
+import { useState, useCallback, useRef, useEffect } from "react";
 import { analyzeGame, terminateEngine, getClassificationColor, buildVladContext } from "../engine/stockfish.js";
 import { askVlad } from "../coaches/vlad.jsx";
 import { askFabiano } from "../coaches/fabiano.jsx";
@@ -23,6 +23,7 @@ import { askMagnus } from "../coaches/magnus.jsx";
 // ---------------------------------------------------------------------------
 
 const PLAYER = "TopherBettis";
+const STORAGE_KEY = "vlad_last_autopsy";
 
 const COACH_META = {
   vlad:    { name: "Vlad",    emoji: "🎖️", title: "Head Coach",         color: "#c0392b" },
@@ -40,6 +41,23 @@ const CLASSIFICATION_LABELS = {
 };
 
 // ---------------------------------------------------------------------------
+// localStorage helpers
+// ---------------------------------------------------------------------------
+
+function saveAutopsy(pgn, gameInfo, analysis, coaches) {
+  try {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify({ pgn, gameInfo, analysis, coaches, savedAt: Date.now() }));
+  } catch { /* storage full or unavailable — fail silently */ }
+}
+
+function loadAutopsy() {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    return raw ? JSON.parse(raw) : null;
+  } catch { return null; }
+}
+
+// ---------------------------------------------------------------------------
 // Utility — parse PGN with chess.js
 // ---------------------------------------------------------------------------
 
@@ -54,7 +72,6 @@ function parsePGN(pgn) {
   const history = game.history({ verbose: true });
   const moves   = history.map(m => m.from + m.to + (m.promotion ?? ""));
 
-  // Extract metadata from PGN headers
   const white  = game.header().White  ?? "Unknown";
   const black  = game.header().Black  ?? "Unknown";
   const result = game.header().Result ?? "*";
@@ -64,7 +81,7 @@ function parsePGN(pgn) {
   const playerSide =
     white.toLowerCase().includes(PLAYER.toLowerCase()) ? "white" :
     black.toLowerCase().includes(PLAYER.toLowerCase()) ? "black" :
-    "white"; // default
+    "white";
 
   return { moves, white, black, result, date, event, playerSide, pgn };
 }
@@ -73,7 +90,6 @@ function parsePGN(pgn) {
 // Sub-components
 // ---------------------------------------------------------------------------
 
-/** Accuracy ring — circular progress */
 function AccuracyRing({ accuracy }) {
   const radius = 36;
   const circ   = 2 * Math.PI * radius;
@@ -101,7 +117,6 @@ function AccuracyRing({ accuracy }) {
   );
 }
 
-/** Single move row in the move table */
 function MoveRow({ move, isSelected, onClick }) {
   const cls   = CLASSIFICATION_LABELS[move.classification] ?? CLASSIFICATION_LABELS.good;
   const color = getClassificationColor(move.classification);
@@ -130,7 +145,6 @@ function MoveRow({ move, isSelected, onClick }) {
   );
 }
 
-/** Coach debrief card */
 function CoachCard({ coachKey, response, loading }) {
   const meta = COACH_META[coachKey];
   return (
@@ -146,9 +160,7 @@ function CoachCard({ coachKey, response, loading }) {
       <div style={styles.coachBody}>
         {loading ? (
           <div style={styles.coachLoading}>
-            <div style={styles.loadingDots}>
-              <span /><span /><span />
-            </div>
+            <div style={styles.loadingDots}><span /><span /><span /></div>
           </div>
         ) : response ? (
           <p style={styles.coachText}>{response}</p>
@@ -160,7 +172,6 @@ function CoachCard({ coachKey, response, loading }) {
   );
 }
 
-/** Summary stat pill */
 function StatPill({ label, value, color }) {
   return (
     <div style={styles.statPill}>
@@ -170,7 +181,6 @@ function StatPill({ label, value, color }) {
   );
 }
 
-/** Progress bar during engine analysis */
 function AnalysisProgress({ current, total, phase }) {
   const pct = total > 0 ? Math.round((current / total) * 100) : 0;
   return (
@@ -189,7 +199,7 @@ function AnalysisProgress({ current, total, phase }) {
 // ---------------------------------------------------------------------------
 
 export default function GameAutopsy() {
-  const [phase, setPhase]         = useState("idle");       // idle | parsing | analyzing | coaching | done | error
+  const [phase, setPhase]         = useState("idle");
   const [pgn, setPgn]             = useState("");
   const [gameInfo, setGameInfo]   = useState(null);
   const [analysis, setAnalysis]   = useState(null);
@@ -198,9 +208,23 @@ export default function GameAutopsy() {
   const [coaches, setCoaches]     = useState({ vlad: null, fabiano: null, magnus: null });
   const [coachLoading, setCoachLoading] = useState({ vlad: false, fabiano: false, magnus: false });
   const [errorMsg, setErrorMsg]   = useState("");
-  const [activeTab, setActiveTab] = useState("moves");       // moves | coaches | critical
+  const [activeTab, setActiveTab] = useState("moves");
+  const [restoredFrom, setRestoredFrom] = useState(null); // timestamp of restored save
 
   const fileRef = useRef(null);
+
+  // ---- Restore last game on mount ----
+  useEffect(() => {
+    const saved = loadAutopsy();
+    if (saved?.analysis && saved?.gameInfo) {
+      setPgn(saved.pgn ?? "");
+      setGameInfo(saved.gameInfo);
+      setAnalysis(saved.analysis);
+      setCoaches(saved.coaches ?? { vlad: null, fabiano: null, magnus: null });
+      setRestoredFrom(saved.savedAt);
+      setPhase("done");
+    }
+  }, []);
 
   // ---- File upload handler ----
   const handleFileUpload = useCallback((e) => {
@@ -209,6 +233,17 @@ export default function GameAutopsy() {
     const reader = new FileReader();
     reader.onload = (ev) => setPgn(ev.target.result ?? "");
     reader.readAsText(file);
+  }, []);
+
+  // ---- Reset to new PGN entry ----
+  const startNewPGN = useCallback(() => {
+    setPgn("");
+    setPhase("idle");
+    setAnalysis(null);
+    setGameInfo(null);
+    setCoaches({ vlad: null, fabiano: null, magnus: null });
+    setSelectedMove(null);
+    setRestoredFrom(null);
   }, []);
 
   // ---- Main analysis pipeline ----
@@ -220,6 +255,7 @@ export default function GameAutopsy() {
     setCoaches({ vlad: null, fabiano: null, magnus: null });
     setErrorMsg("");
     setSelectedMove(null);
+    setRestoredFrom(null);
 
     let parsed;
     try {
@@ -251,15 +287,19 @@ export default function GameAutopsy() {
     setPhase("coaching");
     setCoachLoading({ vlad: true, fabiano: true, magnus: true });
 
-    const vladContext   = buildVladContext(gameAnalysis, parsed.playerSide);
-    const gameContext   = { ...parsed, summary: gameAnalysis.summary };
+    const vladContext = buildVladContext(gameAnalysis, parsed.playerSide);
+    const gameContext = { ...parsed, summary: gameAnalysis.summary };
+    const finalCoaches = { vlad: null, fabiano: null, magnus: null };
 
     const fireCoach = async (key, fn) => {
       try {
         const resp = await fn(vladContext, gameContext);
+        finalCoaches[key] = resp;
         setCoaches(prev => ({ ...prev, [key]: resp }));
       } catch (err) {
-        setCoaches(prev => ({ ...prev, [key]: `[${key} unavailable: ${err.message}]` }));
+        const msg = `[${key} unavailable: ${err.message}]`;
+        finalCoaches[key] = msg;
+        setCoaches(prev => ({ ...prev, [key]: msg }));
       } finally {
         setCoachLoading(prev => ({ ...prev, [key]: false }));
       }
@@ -271,13 +311,19 @@ export default function GameAutopsy() {
       fireCoach("magnus",  askMagnus),
     ]);
 
+    // ---- Save to localStorage ----
+    saveAutopsy(pgn, parsed, gameAnalysis, finalCoaches);
+
     setPhase("done");
   }, [pgn]);
 
-  // ---- Critical moments (blunders + mistakes only) ----
   const criticalMoves = analysis?.moves?.filter(m =>
     ["blunder", "mistake"].includes(m.classification)
   ) ?? [];
+
+  const savedDate = restoredFrom
+    ? new Date(restoredFrom).toLocaleDateString("en-US", { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" })
+    : null;
 
   // ---------------------------------------------------------------------------
   // Render
@@ -303,6 +349,14 @@ export default function GameAutopsy() {
         )}
       </div>
 
+      {/* ── Restored Banner ── */}
+      {restoredFrom && phase === "done" && (
+        <div style={styles.restoredBanner}>
+          <span>📂 Last game restored — {savedDate}</span>
+          <button style={styles.btnSmall} onClick={startNewPGN}>＋ Analyze New PGN</button>
+        </div>
+      )}
+
       {/* ── Upload Zone ── */}
       {phase === "idle" && (
         <div style={styles.uploadZone} onClick={() => fileRef.current?.click()}>
@@ -324,7 +378,7 @@ export default function GameAutopsy() {
         </div>
       )}
 
-      {/* ── PGN textarea (paste option) ── */}
+      {/* ── PGN textarea ── */}
       {phase === "idle" && (
         <div style={styles.pasteSection}>
           <textarea
@@ -371,8 +425,6 @@ export default function GameAutopsy() {
       {/* ── Results ── */}
       {(phase === "coaching" || phase === "done") && analysis && (
         <div style={styles.results}>
-
-          {/* Summary row */}
           <div style={styles.summaryRow}>
             <AccuracyRing accuracy={analysis.summary.accuracy} />
             <div style={styles.statRow}>
@@ -383,7 +435,6 @@ export default function GameAutopsy() {
             </div>
           </div>
 
-          {/* Tabs */}
           <div style={styles.tabs}>
             {["moves", "coaches", "critical"].map(tab => (
               <button
@@ -391,14 +442,13 @@ export default function GameAutopsy() {
                 style={{ ...styles.tab, ...(activeTab === tab ? styles.tabActive : {}) }}
                 onClick={() => setActiveTab(tab)}
               >
-                {tab === "moves"    ? "📋 Move List" :
-                 tab === "coaches"  ? "🎓 Coaches" :
-                                     `🚨 Critical (${criticalMoves.length})`}
+                {tab === "moves"   ? "📋 Move List" :
+                 tab === "coaches" ? "🎓 Coaches" :
+                                    `🚨 Critical (${criticalMoves.length})`}
               </button>
             ))}
           </div>
 
-          {/* ── Move List Tab ── */}
           {activeTab === "moves" && (
             <div style={styles.moveList}>
               {analysis.moves.map((move, i) => (
@@ -412,7 +462,6 @@ export default function GameAutopsy() {
             </div>
           )}
 
-          {/* ── Coaches Tab ── */}
           {activeTab === "coaches" && (
             <div style={styles.coachGrid}>
               {Object.keys(COACH_META).map(key => (
@@ -426,7 +475,6 @@ export default function GameAutopsy() {
             </div>
           )}
 
-          {/* ── Critical Moments Tab ── */}
           {activeTab === "critical" && (
             <div style={styles.criticalList}>
               {criticalMoves.length === 0 ? (
@@ -459,13 +507,12 @@ export default function GameAutopsy() {
             </div>
           )}
 
-          {/* New game button */}
-          {phase === "done" && (
+          {phase === "done" && !restoredFrom && (
             <button
               style={{ ...styles.btn, marginTop: 24, alignSelf: "flex-start" }}
-              onClick={() => { setPgn(""); setPhase("idle"); setAnalysis(null); setGameInfo(null); }}
+              onClick={startNewPGN}
             >
-              + Analyze Another Game
+              ＋ Analyze Another Game
             </button>
           )}
         </div>
@@ -491,8 +538,6 @@ const styles = {
     maxWidth: 900,
     margin: "0 auto",
   },
-
-  // Header
   header: {
     display: "flex",
     justifyContent: "space-between",
@@ -516,8 +561,17 @@ const styles = {
     color: "#aaa",
     letterSpacing: "0.3px",
   },
-
-  // Upload
+  restoredBanner: {
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "space-between",
+    padding: "10px 16px",
+    backgroundColor: "#0f1f0f",
+    border: "1px solid #1a3a1a",
+    borderRadius: 6,
+    fontSize: 12,
+    color: "#4a9a4a",
+  },
   uploadZone: {
     display: "flex",
     flexDirection: "column",
@@ -535,8 +589,6 @@ const styles = {
   uploadTitle:  { margin: 0, fontSize: 18, color: "#ccc" },
   uploadSub:    { margin: 0, fontSize: 13, color: "#555" },
   uploadLoaded: { marginTop: 8, padding: "6px 14px", backgroundColor: "#1a2e1a", borderRadius: 4, fontSize: 12, color: "#27ae60" },
-
-  // Paste / textarea
   pasteSection: { display: "flex", flexDirection: "column", gap: 12 },
   pgnInput: {
     width: "100%",
@@ -551,8 +603,6 @@ const styles = {
     boxSizing: "border-box",
     outline: "none",
   },
-
-  // Button
   btn: {
     padding: "12px 24px",
     backgroundColor: "#c0392b",
@@ -569,24 +619,20 @@ const styles = {
   },
   btnSmall: {
     padding: "6px 14px",
-    backgroundColor: "#333",
-    color: "#ccc",
-    border: "none",
+    backgroundColor: "#1a3a1a",
+    color: "#4a9a4a",
+    border: "1px solid #2a5a2a",
     borderRadius: 4,
     fontSize: 12,
     cursor: "pointer",
     fontFamily: "'IBM Plex Mono', monospace",
   },
-
-  // Progress
   progressSection: { padding: "24px 0" },
   progressWrap:    { display: "flex", flexDirection: "column", gap: 8 },
   progressPhase:   { fontSize: 13, color: "#aaa", letterSpacing: "0.5px" },
   progressBar:     { height: 6, backgroundColor: "#1a1a1a", borderRadius: 3, overflow: "hidden" },
   progressFill:    { height: "100%", backgroundColor: "#c0392b", borderRadius: 3, transition: "width 0.3s ease" },
   progressPct:     { fontSize: 11, color: "#555" },
-
-  // Error
   errorBox: {
     display: "flex",
     alignItems: "center",
@@ -599,12 +645,8 @@ const styles = {
     color: "#e74c3c",
   },
   errorIcon: { fontSize: 20 },
-
-  // Results
   results:    { display: "flex", flexDirection: "column", gap: 20 },
   summaryRow: { display: "flex", alignItems: "center", gap: 24, flexWrap: "wrap" },
-
-  // Accuracy ring
   accuracyRing: { position: "relative", width: 96, height: 96, flexShrink: 0 },
   accuracyLabel: {
     position: "absolute", top: 0, left: 0,
@@ -614,8 +656,6 @@ const styles = {
   },
   accuracyNum:  { fontSize: 18, fontWeight: 700, lineHeight: 1 },
   accuracyText: { fontSize: 9, color: "#666", letterSpacing: "0.5px", marginTop: 2 },
-
-  // Stat pills
   statRow: { display: "flex", gap: 12, flexWrap: "wrap" },
   statPill: {
     display: "flex", flexDirection: "column", alignItems: "center",
@@ -627,8 +667,6 @@ const styles = {
   },
   statValue: { fontSize: 22, fontWeight: 700 },
   statLabel: { fontSize: 10, color: "#555", marginTop: 2, letterSpacing: "0.5px" },
-
-  // Tabs
   tabs: { display: "flex", gap: 0, borderBottom: "1px solid #222" },
   tab: {
     padding: "10px 20px",
@@ -646,8 +684,6 @@ const styles = {
     color: "#e8e8e8",
     borderBottom: "2px solid #c0392b",
   },
-
-  // Move list
   moveList: {
     display: "flex",
     flexDirection: "column",
@@ -668,8 +704,6 @@ const styles = {
   moveUCI:   { width: 60, fontSize: 13, fontWeight: 600, color: "#ccc", letterSpacing: "0.5px" },
   moveBadge: { padding: "2px 8px", borderRadius: 3, fontSize: 11, letterSpacing: "0.3px" },
   moveEval:  { marginLeft: "auto", fontSize: 11, color: "#666", fontVariantNumeric: "tabular-nums" },
-
-  // Coach grid
   coachGrid: { display: "flex", flexDirection: "column", gap: 16 },
   coachCard: {
     backgroundColor: "#111",
@@ -691,12 +725,8 @@ const styles = {
   coachBody:        { padding: "16px 18px" },
   coachText:        { margin: 0, fontSize: 13, lineHeight: 1.8, color: "#ccc" },
   coachPlaceholder: { margin: 0, fontSize: 12, color: "#444", fontStyle: "italic" },
-  coachLoading: {
-    display: "flex", justifyContent: "center", padding: "16px 0",
-  },
-  loadingDots: { display: "flex", gap: 6 },
-
-  // Critical
+  coachLoading:     { display: "flex", justifyContent: "center", padding: "16px 0" },
+  loadingDots:      { display: "flex", gap: 6 },
   criticalList: { display: "flex", flexDirection: "column", gap: 12 },
   noCritical:   { color: "#27ae60", fontSize: 14, padding: "16px 0" },
   criticalCard: {
