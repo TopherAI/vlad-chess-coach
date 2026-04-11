@@ -275,12 +275,26 @@ export default function GameAutopsy() {
   const [activeTab, setActiveTab]       = useState("coaches");
   const [restoredFrom, setRestoredFrom] = useState(null);
 
-  const fileRef    = useRef(null);
-  const runBtnRef  = useRef(null);
-  const pgnRef     = useRef(pgn);
+  const fileRef   = useRef(null);
+  const runBtnRef = useRef(null);
+  const pgnRef    = useRef("");
+  const phaseRef  = useRef("idle");
 
-  // Keep pgnRef in sync so the keydown handler always sees latest value
-  useEffect(() => { pgnRef.current = pgn; }, [pgn]);
+  // Keep refs in sync
+  useEffect(() => { pgnRef.current  = pgn;   }, [pgn]);
+  useEffect(() => { phaseRef.current = phase; }, [phase]);
+
+  // ── Enter key from anywhere — no stale closure, uses refs only ──
+  useEffect(() => {
+    const handler = (e) => {
+      if (e.key !== "Enter") return;
+      if (phaseRef.current !== "idle") return;
+      if (!pgnRef.current.trim()) return;
+      runBtnRef.current?.click();
+    };
+    window.addEventListener("keydown", handler);
+    return () => window.removeEventListener("keydown", handler);
+  }, []);  // empty deps — never re-registers, always reads fresh via refs
 
   // ── On mount: check for pending PGN from dashboard, else restore last game ──
   useEffect(() => {
@@ -301,19 +315,6 @@ export default function GameAutopsy() {
       setRestoredFrom(saved.savedAt);
       setPhase("done");
     }
-  }, []);
-
-  // ── Enter key — window listener using ref so no stale closure ──
-  useEffect(() => {
-    const handler = (e) => {
-      if (e.key === "Enter" && e.target.tagName !== "BUTTON") {
-        if (pgnRef.current.trim()) {
-          runBtnRef.current?.click();
-        }
-      }
-    };
-    window.addEventListener("keydown", handler);
-    return () => window.removeEventListener("keydown", handler);
   }, []);
 
   const handleFileUpload = useCallback((e) => {
@@ -485,12 +486,6 @@ export default function GameAutopsy() {
             placeholder="…or paste PGN directly here (Cmd+V from dashboard · Enter to analyze)"
             value={pgn}
             onChange={e => setPgn(e.target.value)}
-            onKeyDown={e => {
-              if (e.key === "Enter" && !e.shiftKey && pgn.trim()) {
-                e.preventDefault();
-                runBtnRef.current?.click();
-              }
-            }}
             rows={5}
           />
           <button
