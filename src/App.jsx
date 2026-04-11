@@ -174,9 +174,9 @@ function Dashboard({ onNavigate }) {
         <div style={S.loopSteps}>
           {[
             { num: "1", label: "OPPONENT'S INTENT", desc: "What does my opponent want? Is my queen safe?" },
-            { num: "2", label: "CCT CHECK",          desc: "Checks, Captures, Threats — all of them" },
-            { num: "3", label: "LAZY PIECE",         desc: "What is my worst piece? Can this move improve it?" },
-            { num: "4", label: "PRE-MOVE VERIFY",    desc: "After I move, can they take anything for free?" },
+            { num: "2", label: "CCT CHECK",          desc: "Checks, Captures, Threats" },
+            { num: "3", label: "LAZY PIECE",         desc: "Move my worst piece? Forward & central." },
+            { num: "4", label: "PRE-MOVE VERIFY",    desc: "Look away. Is this move a blunder?" },
           ].map(step => (
             <div key={step.num} style={S.loopStep}>
               <span style={S.loopNum}>{step.num}</span>
@@ -193,7 +193,7 @@ function Dashboard({ onNavigate }) {
       <p style={S.sectionTitle}>TRAINING MODULES</p>
       <div style={S.moduleGrid}>
         {[
-          { id: "autopsy",    icon: "🔬", title: "Game Autopsy",    desc: "Upload PGN → Stockfish + 3-coach debrief",    color: "#c0392b" },
+          { id: "autopsy",    icon: "🔬", title: "Game Autopsy",    desc: "Upload PGN → Coach debrief, Critical moves, Move list.",    color: "#c0392b" },
           { id: "drills",     icon: "⚔️", title: "Drill Sergeant",  desc: "Targeted puzzles from YOUR blunder positions", color: "#e67e22" },
           { id: "opening",    icon: "🏛️", title: "Opening Lab",     desc: "Italian Cage deep prep · Quiz mode",          color: "#2980b9" },
           { id: "middlegame", icon: "🗡️", title: "Middlegame Mat",  desc: "5 Assassin weapons · Hikaru tactical coaching", color: "#f39c12" },
