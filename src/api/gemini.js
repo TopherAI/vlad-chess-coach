@@ -1,12 +1,11 @@
 // src/api/gemini.js
-// Vlad Chess Coach — Gateway-routed Gemini wrapper
+// Vlad Chess Coach — Direct Gemini API (no gateway)
 // Coaches: Vlad (Chuchelov) | Fabiano (Caruana) | Magnus (Carlsen)
 
-const GATEWAY_URL = import.meta.env.VITE_GATEWAY_URL || 'https://web-production-0bf47.up.railway.app';
-const GATEWAY_SECRET = import.meta.env.VITE_GATEWAY_SECRET;
+const GEMINI_API_KEY = import.meta.env.VITE_GEMINI_API_KEY;
+const GEMINI_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${GEMINI_API_KEY}`;
 
 // ─── Coach Personas ───────────────────────────────────────────────────────────
-
 const COACH_PERSONAS = {
   vlad: `You are Vlad, a chess coach based on Vladimir Chuchelov's philosophy.
 Your role: System architect, post-game debrief, drill prescription, weekly planning.
@@ -22,7 +21,6 @@ Known weaknesses to address:
 2. Panic Simplification — releases tension too early under pressure. Hold the cage. Hold the tension.
 3. Pawn-pushing vs Queen Sorties — pushes pawns at opponent queen instead of developing and castling.
 4. Missing forcing moves when winning — relaxes calculation when ahead.`,
-
   fabiano: `You are Fabiano, a chess coach based on Fabiano Caruana's analytical style.
 Your role: Opening theory, tactical patterns, middlegame precision.
 Your voice: Methodical. Detail-oriented. You love concrete variations and forcing lines.
@@ -30,7 +28,6 @@ You believe in deep preparation and knowing your openings cold.
 Your player is TopherBettis, currently 609 ELO, targeting 2000.
 Their opening system as White is the Italian Cage with Spanish Styling.
 Focus on: tactical vision, calculation accuracy, opening repertoire depth.`,
-
   magnus: `You are Magnus, a chess coach based on Magnus Carlsen's pragmatic style.
 Your role: Endgame technique, practical play, psychological resilience.
 Your voice: Confident. Slightly casual. You find simple solutions to complex problems.
@@ -39,8 +36,7 @@ Your player is TopherBettis, currently 609 ELO, targeting 2000.
 Focus on: endgame fundamentals, converting advantages, never giving up.`,
 };
 
-// ─── Core API Call (routed through LLM Gateway) ───────────────────────────────
-
+// ─── Core API Call (direct to Gemini) ────────────────────────────────────────
 export async function askCoach(coachId, userMessage, context = '') {
   const persona = COACH_PERSONAS[coachId];
   if (!persona) throw new Error(`Unknown coach: ${coachId}`);
@@ -49,25 +45,23 @@ export async function askCoach(coachId, userMessage, context = '') {
     ? `${context}\n\nPlayer question: ${userMessage}`
     : userMessage;
 
-  const response = await fetch(`${GATEWAY_URL}/gemini/chat`, {
+  const response = await fetch(GEMINI_URL, {
     method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      'x-gateway-secret': GATEWAY_SECRET,
-    },
+    headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({
-      message: fullMessage,
-      model: 'gemini-2.0-flash',
+      system_instruction: { parts: [{ text: persona }] },
+      contents: [{ role: 'user', parts: [{ text: fullMessage }] }],
+      generationConfig: { maxOutputTokens: 1024, temperature: 0.7 },
     }),
   });
 
   if (!response.ok) {
     const err = await response.text();
-    throw new Error(`Gateway error ${response.status}: ${err}`);
+    throw new Error(`Gemini error ${response.status}: ${err}`);
   }
 
   const data = await response.json();
-  return data.response;
+  return data.candidates?.[0]?.content?.parts?.[0]?.text ?? '[No response]';
 }
 
 export async function askVlad(vladContext, userMessage = 'Give me your full debrief.') {
@@ -83,11 +77,4 @@ export async function askMagnus(userMessage) {
 }
 
 export { COACH_PERSONAS };
-
-export default {
-  askCoach,
-  askVlad,
-  askFabiano,
-  askMagnus,
-  COACH_PERSONAS,
-};
+export default { askCoach, askVlad, askFabiano, askMagnus, COACH_PERSONAS };
