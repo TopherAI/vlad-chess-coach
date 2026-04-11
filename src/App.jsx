@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import GameAutopsy from "@modules/GameAutopsy.jsx";
 import DrillSergeant from "@modules/DrillSergeant.jsx";
 import OpeningLab from "@modules/OpeningLab.jsx";
@@ -17,6 +17,70 @@ const NAV = [
 const PLAYER = "TopherBettis";
 const ELO    = 609;
 const TARGET = 2000;
+
+// ── PGN Drop Zone Card ────────────────────────────────────────────────────────
+
+function PgnDropCard({ onNavigate }) {
+  const [dragging, setDragging] = useState(false);
+  const [flash,    setFlash]    = useState(false);
+
+  const launch = (pgn) => {
+    localStorage.setItem("vlad_pending_pgn", pgn.trim());
+    setFlash(true);
+    setTimeout(() => onNavigate("autopsy"), 600);
+  };
+
+  const onDrop = (e) => {
+    e.preventDefault();
+    setDragging(false);
+    const file = e.dataTransfer.files?.[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onload = (ev) => launch(ev.target.result ?? "");
+      reader.readAsText(file);
+    } else {
+      const text = e.dataTransfer.getData("text");
+      if (text) launch(text);
+    }
+  };
+
+  useEffect(() => {
+    const handler = (e) => {
+      if ((e.ctrlKey || e.metaKey) && e.key === "v") {
+        navigator.clipboard.readText().then(text => {
+          if (text?.trim().startsWith("[") || text?.includes("1.")) launch(text);
+        }).catch(() => {});
+      }
+    };
+    window.addEventListener("keydown", handler);
+    return () => window.removeEventListener("keydown", handler);
+  }, []);
+
+  return (
+    <div
+      onDragOver={(e) => { e.preventDefault(); setDragging(true); }}
+      onDragLeave={() => setDragging(false)}
+      onDrop={onDrop}
+      style={{
+        ...S.moduleCard,
+        borderTop: `3px solid ${flash ? "#27ae60" : dragging ? "#f39c12" : "#c0392b"}`,
+        outline: dragging ? "2px dashed #f39c12" : "none",
+        backgroundColor: dragging ? "#1a1200" : flash ? "#0a1a0a" : "#111",
+        transition: "all 0.2s",
+        cursor: "default",
+        justifyContent: "center",
+        alignItems: "center",
+        textAlign: "center",
+      }}
+    >
+      <span style={S.moduleIcon}>{flash ? "✅" : dragging ? "📂" : "🎯"}</span>
+      <p style={S.moduleTitle}>{flash ? "Launching Autopsy…" : "Drop PGN Here"}</p>
+      <p style={S.moduleDesc}>
+        {dragging ? "Release to analyze" : "Drag a .pgn file · or Ctrl+V to paste"}
+      </p>
+    </div>
+  );
+}
 
 // ── Dashboard ────────────────────────────────────────────────────────────────
 
@@ -116,6 +180,7 @@ function Dashboard({ onNavigate }) {
             <span style={{ ...S.moduleArrow, color: mod.color }}>→</span>
           </div>
         ))}
+        <PgnDropCard onNavigate={onNavigate} />
       </div>
 
       {/* Coaching team */}
