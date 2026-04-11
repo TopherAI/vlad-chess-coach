@@ -275,8 +275,12 @@ export default function GameAutopsy() {
   const [activeTab, setActiveTab]       = useState("coaches");
   const [restoredFrom, setRestoredFrom] = useState(null);
 
-  const fileRef   = useRef(null);
-  const runBtnRef = useRef(null);
+  const fileRef    = useRef(null);
+  const runBtnRef  = useRef(null);
+  const pgnRef     = useRef(pgn);
+
+  // Keep pgnRef in sync so the keydown handler always sees latest value
+  useEffect(() => { pgnRef.current = pgn; }, [pgn]);
 
   // ── On mount: check for pending PGN from dashboard, else restore last game ──
   useEffect(() => {
@@ -299,16 +303,18 @@ export default function GameAutopsy() {
     }
   }, []);
 
-  // ── Enter key triggers analysis ──
+  // ── Enter key — window listener using ref so no stale closure ──
   useEffect(() => {
     const handler = (e) => {
-      if (e.key === "Enter" && phase === "idle" && pgn.trim()) {
-        runAutopsy();
+      if (e.key === "Enter" && e.target.tagName !== "BUTTON") {
+        if (pgnRef.current.trim()) {
+          runBtnRef.current?.click();
+        }
       }
     };
     window.addEventListener("keydown", handler);
     return () => window.removeEventListener("keydown", handler);
-  }, [phase, pgn, runAutopsy]);
+  }, []);
 
   const handleFileUpload = useCallback((e) => {
     const file = e.target.files?.[0];
@@ -479,6 +485,12 @@ export default function GameAutopsy() {
             placeholder="…or paste PGN directly here (Cmd+V from dashboard · Enter to analyze)"
             value={pgn}
             onChange={e => setPgn(e.target.value)}
+            onKeyDown={e => {
+              if (e.key === "Enter" && !e.shiftKey && pgn.trim()) {
+                e.preventDefault();
+                runBtnRef.current?.click();
+              }
+            }}
             rows={5}
           />
           <button
