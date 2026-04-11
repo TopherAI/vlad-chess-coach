@@ -1,11 +1,12 @@
 /**
  * src/modules/OpeningLab.jsx
- * vlad-chess-coach — Opening Lab Module (v2.0 Gentleman's Assassin)
+ * vlad-chess-coach — Opening Lab Module (v2.1 Gentleman's Assassin)
  */
 
 import { useState, useCallback } from "react";
 import { askFabiano } from "../coaches/fabiano.jsx";
 import { askVlad } from "../coaches/vlad.jsx";
+import { askMagnus } from "../api/gemini.js";
 
 const LINES = [
   {
@@ -17,21 +18,21 @@ const LINES = [
     tagline: "Build the fortress. Wait. Strike.",
     terminalFen: "r1bqr1k1/bpp2pp1/p1np1n1p/4p3/4P3/1BPP1N1P/PP1N1PP1/R1BQR1K1 w - - 1 11",
     moves: [
-      { move: "e2e4", label: "1. e4",   note: "Control the center. Non-negotiable." },
-      { move: "g1f3", label: "2. Nf3",  note: "Develop, attack e5 with tempo." },
-      { move: "f1c4", label: "3. Bc4",  note: "Italian Bishop. Target f7 — Black's eternal weakness." },
-      { move: "c2c3", label: "4. c3",   note: "Prepares d4. Creates the c3-d3 bunker." },
-      { move: "d2d3", label: "5. d3",   note: "THE Pianissimo move. Build slow. Don't tip your hand." },
-      { move: "a2a4", label: "6. a4",   note: "Prophylaxis vs Na5. Creates a2 escape hatch for bishop." },
-      { move: "e1g1", label: "7. O-O",  note: "Castle. King safe. Always by move 7." },
-      { move: "h2h3", label: "8. h3",   note: "SACRED. Stops Bg4 pin. Enables Be3. Non-negotiable." },
-      { move: "f1e1", label: "9. Re1",  note: "Rook to e-file. Supports e4. Cage is complete." },
+      { move: "e2e4", label: "1. e4",  note: "Control the center. Non-negotiable." },
+      { move: "g1f3", label: "2. Nf3", note: "Develop, attack e5 with tempo." },
+      { move: "f1c4", label: "3. Bc4", note: "Italian Bishop. Target f7 — Black's eternal weakness." },
+      { move: "c2c3", label: "4. c3",  note: "Prepares d4. Creates the c3-d3 bunker." },
+      { move: "d2d3", label: "5. d3",  note: "THE Pianissimo move. Build slow. Don't tip your hand." },
+      { move: "a2a4", label: "6. a4",  note: "Prophylaxis vs Na5. Creates a2 escape hatch for bishop." },
+      { move: "e1g1", label: "7. O-O", note: "Castle. King safe. Always by move 7." },
+      { move: "h2h3", label: "8. h3",  note: "SACRED. Stops Bg4 pin. Enables Be3. Non-negotiable." },
+      { move: "f1e1", label: "9. Re1", note: "Rook to e-file. Supports e4. Cage is complete." },
     ],
     responses: [
-      { id: "bc5",  label: "3...Bc5 (Giuoco Piano)",   fen: "r1bqk1nr/pppp1ppp/2n5/2b1p3/2B1P3/5N2/PPPP1PPP/RNBQK2R w KQkq - 4 4" },
-      { id: "nf6",  label: "3...Nf6 (Two Knights)",    fen: "r1bqkb1r/pppp1ppp/2n2n2/4p3/2B1P3/5N2/PPPP1PPP/RNBQK2R w KQkq - 4 4" },
-      { id: "be7",  label: "3...Be7 (Hungarian)",      fen: "r1bqk1nr/ppppbppp/2n5/4p3/2B1P3/5N2/PPPP1PPP/RNBQK2R w KQkq - 4 4" },
-      { id: "d6",   label: "3...d6 (Classical)",       fen: "r1bqkbnr/ppp2ppp/2np4/4p3/2B1P3/5N2/PPPP1PPP/RNBQK2R w KQkq - 0 4" },
+      { id: "bc5", label: "3...Bc5 (Giuoco Piano)",  fen: "r1bqk1nr/pppp1ppp/2n5/2b1p3/2B1P3/5N2/PPPP1PPP/RNBQK2R w KQkq - 4 4" },
+      { id: "nf6", label: "3...Nf6 (Two Knights)",   fen: "r1bqkb1r/pppp1ppp/2n2n2/4p3/2B1P3/5N2/PPPP1PPP/RNBQK2R w KQkq - 4 4" },
+      { id: "be7", label: "3...Be7 (Hungarian)",     fen: "r1bqk1nr/ppppbppp/2n5/4p3/2B1P3/5N2/PPPP1PPP/RNBQK2R w KQkq - 4 4" },
+      { id: "d6",  label: "3...d6 (Classical)",      fen: "r1bqkbnr/ppp2ppp/2np4/4p3/2B1P3/5N2/PPPP1PPP/RNBQK2R w KQkq - 0 4" },
     ],
     deviations: [
       { trigger: "Black plays ...d5 early", response: "exd5 — open lines favor our better development and Bc4 pressure." },
@@ -50,14 +51,14 @@ const LINES = [
     tagline: "They prep for Ng5. We play d3.",
     terminalFen: "r1bq1rk1/pp2bppp/2np1n2/2p1p3/P3P3/2PP1N2/BP1N1PPP/R1BQR1K1 b - - 0 10",
     moves: [
-      { move: "e2e4", label: "1. e4",   note: "Same face. Same calm." },
-      { move: "g1f3", label: "2. Nf3",  note: "Develop. Attack e5." },
-      { move: "f1c4", label: "3. Bc4",  note: "Italian Bishop. Black plays Nf6 instead of Bc5." },
-      { move: "d2d3", label: "4. d3",   note: "Gentleman's move. Refuse all sharp lines." },
-      { move: "a2a4", label: "5. a4",   note: "Neutralizes Na5 queenside expansion immediately." },
-      { move: "e1g1", label: "6. O-O",  note: "Castle. King safe before complications." },
-      { move: "h2h3", label: "7. h3",   note: "Mandatory prophylactic. Stop Bg4." },
-      { move: "f1e1", label: "8. Re1",  note: "Cage completion. Rook to e-file." },
+      { move: "e2e4", label: "1. e4",  note: "Same face. Same calm." },
+      { move: "g1f3", label: "2. Nf3", note: "Develop. Attack e5." },
+      { move: "f1c4", label: "3. Bc4", note: "Italian Bishop. Black plays Nf6 instead of Bc5." },
+      { move: "d2d3", label: "4. d3",  note: "Gentleman's move. Refuse all sharp lines." },
+      { move: "a2a4", label: "5. a4",  note: "Neutralizes Na5 queenside expansion immediately." },
+      { move: "e1g1", label: "6. O-O", note: "Castle. King safe before complications." },
+      { move: "h2h3", label: "7. h3",  note: "Mandatory prophylactic. Stop Bg4." },
+      { move: "f1e1", label: "8. Re1", note: "Cage completion. Rook to e-file." },
     ],
     responses: [
       { id: "bc5t", label: "...Bc5 (transposes to Line 1)", fen: "r1bqk2r/pppp1ppp/2n2n2/2b1p3/2B1P3/3P1N2/PPP2PPP/RNBQK2R w KQkq - 4 5" },
@@ -81,20 +82,20 @@ const LINES = [
     tagline: "Skip the theory jungle entirely.",
     terminalFen: "r1b2rk1/ppq1bppp/2nppn2/8/4P3/1BPPBN2/PP1N1PPP/R2QR1K1 b - - 0 11",
     moves: [
-      { move: "e2e4", label: "1. e4",   note: "Black plays c5. The Sicilian. Stay calm." },
-      { move: "g1f3", label: "2. Nf3",  note: "Develop. Do not play 2.d4 — that is their world." },
-      { move: "f1c4", label: "3. Bc4",  note: "Anti-Sicilian. Avoids Najdorf, Dragon, all of it." },
-      { move: "d2d3", label: "4. d3",   note: "Cage structure. Mirror Line 1." },
-      { move: "c2c3", label: "5. c3",   note: "Prepare d4 if needed. Solidify." },
-      { move: "e1g1", label: "6. O-O",  note: "Castle fast. King safe before action." },
-      { move: "h2h3", label: "7. h3",   note: "Sacred shield. Stop Bg4 pin." },
-      { move: "f1e1", label: "8. Re1",  note: "Rook to e-file. Cage complete." },
+      { move: "e2e4", label: "1. e4",  note: "Black plays c5. The Sicilian. Stay calm." },
+      { move: "g1f3", label: "2. Nf3", note: "Develop. Do not play 2.d4 — that is their world." },
+      { move: "f1c4", label: "3. Bc4", note: "Anti-Sicilian. Avoids Najdorf, Dragon, all of it." },
+      { move: "d2d3", label: "4. d3",  note: "Cage structure. Mirror Line 1." },
+      { move: "c2c3", label: "5. c3",  note: "Prepare d4 if needed. Solidify." },
+      { move: "e1g1", label: "6. O-O", note: "Castle fast. King safe before action." },
+      { move: "h2h3", label: "7. h3",  note: "Sacred shield. Stop Bg4 pin." },
+      { move: "f1e1", label: "8. Re1", note: "Rook to e-file. Cage complete." },
     ],
     responses: [
-      { id: "e6",   label: "...e6 (French-like)",     fen: "rnbqkbnr/pp1p1ppp/4p3/2p5/2B1P3/5N2/PPPP1PPP/RNBQK2R w KQkq - 0 4" },
-      { id: "e5",   label: "...e5 (Grand Prix style)", fen: "rnbqkbnr/pp1p1ppp/8/2p1p3/2B1P3/5N2/PPPP1PPP/RNBQK2R w KQkq e6 0 4" },
-      { id: "nc6",  label: "...Nc6 (Classical)",       fen: "r1bqkbnr/pp1ppppp/2n5/2p5/2B1P3/5N2/PPPP1PPP/RNBQK2R w KQkq - 2 3" },
-      { id: "d6s",  label: "...d6 (Scheveningen-ish)", fen: "rnbqkbnr/pp2pppp/3p4/2p5/2B1P3/5N2/PPPP1PPP/RNBQK2R w KQkq - 0 4" },
+      { id: "e6",  label: "...e6 (French-like)",      fen: "rnbqkbnr/pp1p1ppp/4p3/2p5/2B1P3/5N2/PPPP1PPP/RNBQK2R w KQkq - 0 4" },
+      { id: "e5",  label: "...e5 (Grand Prix style)",  fen: "rnbqkbnr/pp1p1ppp/8/2p1p3/2B1P3/5N2/PPPP1PPP/RNBQK2R w KQkq e6 0 4" },
+      { id: "nc6", label: "...Nc6 (Classical)",        fen: "r1bqkbnr/pp1ppppp/2n5/2p5/2B1P3/5N2/PPPP1PPP/RNBQK2R w KQkq - 2 3" },
+      { id: "d6s", label: "...d6 (Scheveningen-ish)",  fen: "rnbqkbnr/pp2pppp/3p4/2p5/2B1P3/5N2/PPPP1PPP/RNBQK2R w KQkq - 0 4" },
     ],
     deviations: [
       { trigger: "Black plays ...d5 (central break)", response: "Do not panic. exd5 and recapture. Our development advantage holds." },
@@ -112,14 +113,14 @@ const LINES = [
     tagline: "Refuse the draw. Force the cage.",
     terminalFen: "r1bqkb1r/pppp1ppp/2n2n2/4p3/2B1P3/3P1N2/PPP2PPP/RNBQK2R w KQkq - 4 5",
     moves: [
-      { move: "e2e4", label: "1. e4",   note: "Black plays e5. Standard." },
-      { move: "g1f3", label: "2. Nf3",  note: "Develop. Black plays Nf6 — the Petrov." },
-      { move: "d2d3", label: "3. d3",   note: "Rejects drawish 3.Nxe5. Forces Black into Italian cage structure." },
-      { move: "f1c4", label: "4. Bc4",  note: "Italian bishop. Now we are in familiar territory." },
-      { move: "a2a4", label: "5. a4",   note: "Prophylaxis. Secure the bishop escape hatch early." },
-      { move: "e1g1", label: "6. O-O",  note: "Castle. King safe." },
-      { move: "h2h3", label: "7. h3",   note: "Sacred shield. Stop Bg4." },
-      { move: "f1e1", label: "8. Re1",  note: "Cage complete. Ready for Assassin phase." },
+      { move: "e2e4", label: "1. e4",  note: "Black plays e5. Standard." },
+      { move: "g1f3", label: "2. Nf3", note: "Develop. Black plays Nf6 — the Petrov." },
+      { move: "d2d3", label: "3. d3",  note: "Rejects drawish 3.Nxe5. Forces Black into Italian cage structure." },
+      { move: "f1c4", label: "4. Bc4", note: "Italian bishop. Now we are in familiar territory." },
+      { move: "a2a4", label: "5. a4",  note: "Prophylaxis. Secure the bishop escape hatch early." },
+      { move: "e1g1", label: "6. O-O", note: "Castle. King safe." },
+      { move: "h2h3", label: "7. h3",  note: "Sacred shield. Stop Bg4." },
+      { move: "f1e1", label: "8. Re1", note: "Cage complete. Ready for Assassin phase." },
     ],
     responses: [
       { id: "nc6p",  label: "...Nc6 (transposes to Line 1)", fen: "r1bqkb1r/pppp1ppp/2n2n2/4p3/2B1P3/3P1N2/PPP2PPP/RNBQK2R w KQkq - 4 5" },
@@ -210,7 +211,9 @@ export default function OpeningLab() {
   const [checklist, setChecklist] = useState({});
   const [selectedResponse, setSelectedResponse] = useState(null);
   const [responseCoaching, setResponseCoaching] = useState({});
+  const [magnusCoaching, setMagnusCoaching] = useState({});
   const [loadingResponse, setLoadingResponse] = useState(null);
+  const [loadingMagnus, setLoadingMagnus] = useState(null);
   const [quizIndex, setQuizIndex] = useState(0);
   const [quizStarted, setQuizStarted] = useState(false);
   const [quizAnswer, setQuizAnswer] = useState(null);
@@ -224,29 +227,37 @@ export default function OpeningLab() {
   const totalMoves = LINES.reduce((acc, l) => acc + l.moves.length, 0);
   const progressPct = Math.round((totalStudied / totalMoves) * 100);
 
-  const toggleStudied = (key) => {
-    setStudiedMoves(prev => ({ ...prev, [key]: !prev[key] }));
-  };
-
-  const toggleChecklist = (id) => {
-    setChecklist(prev => ({ ...prev, [id]: !prev[id] }));
-  };
-
+  const toggleStudied = (key) => setStudiedMoves(prev => ({ ...prev, [key]: !prev[key] }));
+  const toggleChecklist = (id) => setChecklist(prev => ({ ...prev, [id]: !prev[id] }));
   const checklistComplete = ASSASSIN_CHECKLIST.every(item => checklist[item.id]);
 
   const handleResponseClick = useCallback(async (response) => {
     setSelectedResponse(response.id);
-    if (responseCoaching[response.id]) return;
-    setLoadingResponse(response.id);
-    try {
-      const prompt = `You are Fabiano Caruana — precise, analytical. The player is TopherBettis (ELO 609, building toward 2000). They are playing the Gentleman's Assassin system (Italian Pianissimo Cage). Black has just played ${response.label}. In 2-3 sentences: explain the threat this move creates, and the exact response within the Gentleman's Assassin system.`;
-      const coaching = await askFabiano(prompt);
-      setResponseCoaching(prev => ({ ...prev, [response.id]: coaching }));
-    } catch {
-      setResponseCoaching(prev => ({ ...prev, [response.id]: "Fabiano is unavailable. Trust the system." }));
-    }
+    const needsFabiano = !responseCoaching[response.id];
+    const needsMagnus = !magnusCoaching[response.id];
+    if (!needsFabiano && !needsMagnus) return;
+
+    if (needsFabiano) setLoadingResponse(response.id);
+    if (needsMagnus) setLoadingMagnus(response.id);
+
+    const fabianoPrompt = `You are Fabiano Caruana — precise, analytical. The player is TopherBettis (ELO 609, building toward 2000). They are playing the Gentleman's Assassin system (Italian Pianissimo Cage). Black has just played ${response.label}. In 2-3 sentences: explain the threat this move creates, and the exact response within the Gentleman's Assassin system.`;
+
+    const magnusPrompt = `You are Magnus Carlsen — intuitive, blunt, occasionally sardonic. The player is TopherBettis (ELO 609). They are playing the Italian Pianissimo Cage. Black has just played ${response.label}. In 1-2 sentences: give a raw intuitive read on this position. No theory — just feel. What does the position want?`;
+
+    const [fabianoResult, magnusResult] = await Promise.all([
+      needsFabiano
+        ? askFabiano(fabianoPrompt).catch(() => "Fabiano is unavailable. Trust the system.")
+        : Promise.resolve(responseCoaching[response.id]),
+      needsMagnus
+        ? askMagnus(magnusPrompt).catch(() => "Feel the position. The cage is solid.")
+        : Promise.resolve(magnusCoaching[response.id]),
+    ]);
+
+    setResponseCoaching(prev => ({ ...prev, [response.id]: fabianoResult }));
+    setMagnusCoaching(prev => ({ ...prev, [response.id]: magnusResult }));
     setLoadingResponse(null);
-  }, [responseCoaching]);
+    setLoadingMagnus(null);
+  }, [responseCoaching, magnusCoaching]);
 
   const handleQuizAnswer = useCallback(async (idx) => {
     const q = lineQuestions[quizIndex];
@@ -273,23 +284,24 @@ export default function OpeningLab() {
   };
 
   const tabs = [
-    { id: "sequence", label: "MOVE SEQUENCE" },
-    { id: "assassin", label: "ASSASSIN" },
-    { id: "tactics",  label: "TACTICS" },
-    { id: "responses", label: "RESPONSES" },
+    { id: "sequence",   label: "MOVE SEQUENCE" },
+    { id: "assassin",   label: "ASSASSIN" },
+    { id: "tactics",    label: "TACTICS" },
+    { id: "responses",  label: "RESPONSES" },
     { id: "deviations", label: "DEVIATIONS" },
-    { id: "quiz",    label: "QUIZ" },
+    { id: "quiz",       label: "QUIZ" },
   ];
 
   return (
     <div style={styles.root}>
+
       {/* Header */}
       <div style={styles.header}>
         <div style={styles.headerLeft}>
           <span style={styles.headerIcon}>🗡️</span>
           <div>
             <h1 style={styles.headerTitle}>Opening Lab</h1>
-            <p style={styles.headerSub}>GENTLEMAN'S ASSASSIN — v2.0</p>
+            <p style={styles.headerSub}>GENTLEMAN'S ASSASSIN — v2.1</p>
           </div>
         </div>
         <div style={styles.progressChip}>
@@ -314,7 +326,12 @@ export default function OpeningLab() {
               color: activeLine.id === line.id ? line.color : "#555",
               backgroundColor: activeLine.id === line.id ? `${line.color}15` : "transparent",
             }}
-            onClick={() => { setActiveLine(line); setActiveTab("sequence"); setSelectedMove(0); setSelectedResponse(null); }}
+            onClick={() => {
+              setActiveLine(line);
+              setActiveTab("sequence");
+              setSelectedMove(0);
+              setSelectedResponse(null);
+            }}
           >
             <span style={styles.lineBtnCode}>{line.code}</span>
             <span style={styles.lineBtnName}>{line.name}</span>
@@ -336,7 +353,9 @@ export default function OpeningLab() {
             key={tab.id}
             style={{
               ...styles.tab,
-              ...(activeTab === tab.id ? { ...styles.tabActive, color: currentLine.color, borderBottomColor: currentLine.color } : {}),
+              ...(activeTab === tab.id
+                ? { ...styles.tabActive, color: currentLine.color, borderBottomColor: currentLine.color }
+                : {}),
             }}
             onClick={() => setActiveTab(tab.id)}
           >
@@ -345,7 +364,7 @@ export default function OpeningLab() {
         ))}
       </div>
 
-      {/* Tab: Move Sequence */}
+      {/* ── MOVE SEQUENCE ── */}
       {activeTab === "sequence" && (
         <div style={styles.sequenceLayout}>
           <div style={styles.moveTree}>
@@ -419,7 +438,7 @@ export default function OpeningLab() {
         </div>
       )}
 
-      {/* Tab: Assassin */}
+      {/* ── ASSASSIN ── */}
       {activeTab === "assassin" && (
         <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
           <div style={styles.assassinHeader}>
@@ -463,7 +482,13 @@ export default function OpeningLab() {
           <div style={styles.strikeSequence}>
             <p style={styles.strikeTitle}>STRIKE SEQUENCE</p>
             {STRIKE_SEQUENCE.map((step, i) => (
-              <div key={i} style={{ ...styles.strikeStep, borderBottomColor: i === STRIKE_SEQUENCE.length - 1 ? "transparent" : "#141420" }}>
+              <div
+                key={i}
+                style={{
+                  ...styles.strikeStep,
+                  borderBottomColor: i === STRIKE_SEQUENCE.length - 1 ? "transparent" : "#141420",
+                }}
+              >
                 <div style={styles.strikeNum}>{i + 1}</div>
                 <div>
                   <div style={styles.strikeMoveLabel}>{step.move}</div>
@@ -475,11 +500,11 @@ export default function OpeningLab() {
         </div>
       )}
 
-      {/* Tab: Tactics */}
+      {/* ── TACTICS ── */}
       {activeTab === "tactics" && (
         <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
           {TACTICS.map((t, i) => (
-            <div key={i} style={{ ...styles.tacticCard, border: `1px solid #1e1e1e`, backgroundColor: "#0a0a0a" }}>
+            <div key={i} style={{ ...styles.tacticCard, border: "1px solid #1e1e1e", backgroundColor: "#0a0a0a" }}>
               <div style={styles.tacticHeader}>
                 <span style={styles.tacticIcon}>{t.icon}</span>
                 <div>
@@ -500,7 +525,7 @@ export default function OpeningLab() {
         </div>
       )}
 
-      {/* Tab: Responses */}
+      {/* ── RESPONSES ── */}
       {activeTab === "responses" && (
         <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
           <p style={styles.sectionLabel}>BLACK'S RESPONSES — {currentLine.name.toUpperCase()}</p>
@@ -520,20 +545,34 @@ export default function OpeningLab() {
               </div>
             ))}
           </div>
+
           {selectedResponse && (
-            <div style={{ ...styles.responseCoachBox, borderColor: `${currentLine.color}44` }}>
-              <p style={{ ...styles.responseCoachTitle, color: currentLine.color }}>FABIANO ANALYSIS</p>
-              {loadingResponse === selectedResponse ? (
-                <p style={styles.loadingText}>Fabiano is calculating...</p>
-              ) : (
-                <p style={styles.responseCoachText}>{responseCoaching[selectedResponse]}</p>
-              )}
-            </div>
+            <>
+              {/* Fabiano box */}
+              <div style={{ ...styles.responseCoachBox, borderColor: `${currentLine.color}44` }}>
+                <p style={{ ...styles.responseCoachTitle, color: currentLine.color }}>FABIANO ANALYSIS</p>
+                {loadingResponse === selectedResponse ? (
+                  <p style={styles.loadingText}>Fabiano is calculating...</p>
+                ) : (
+                  <p style={styles.responseCoachText}>{responseCoaching[selectedResponse]}</p>
+                )}
+              </div>
+
+              {/* Magnus box */}
+              <div style={{ ...styles.responseCoachBox, borderColor: "#27ae6044" }}>
+                <p style={{ ...styles.responseCoachTitle, color: "#27ae60" }}>MAGNUS — INTUITION</p>
+                {loadingMagnus === selectedResponse ? (
+                  <p style={styles.loadingText}>Magnus is feeling the position...</p>
+                ) : (
+                  <p style={styles.responseCoachText}>{magnusCoaching[selectedResponse]}</p>
+                )}
+              </div>
+            </>
           )}
         </div>
       )}
 
-      {/* Tab: Deviations */}
+      {/* ── DEVIATIONS ── */}
       {activeTab === "deviations" && (
         <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
           <p style={styles.sectionLabel}>WHEN BLACK BREAKS THE SCRIPT — {currentLine.name.toUpperCase()}</p>
@@ -558,7 +597,7 @@ export default function OpeningLab() {
         </div>
       )}
 
-      {/* Tab: Quiz */}
+      {/* ── QUIZ ── */}
       {activeTab === "quiz" && (
         <div style={styles.quizLayout}>
           {!quizStarted ? (
@@ -569,7 +608,12 @@ export default function OpeningLab() {
               </p>
               <button
                 style={{ ...styles.btn, backgroundColor: currentLine.color }}
-                onClick={() => { setQuizStarted(true); setQuizIndex(0); setQuizAnswer(null); setVladFeedback(""); }}
+                onClick={() => {
+                  setQuizStarted(true);
+                  setQuizIndex(0);
+                  setQuizAnswer(null);
+                  setVladFeedback("");
+                }}
               >
                 Start Quiz
               </button>
@@ -586,12 +630,10 @@ export default function OpeningLab() {
                     <p style={styles.quizQuestion}>{q.question}</p>
                     <div style={styles.quizOptions}>
                       {q.options.map((opt, i) => {
-                        let bg = "#111";
-                        let border = "#222";
-                        let color = "#aaa";
+                        let bg = "#111", border = "#222", color = "#aaa";
                         if (quizAnswer !== null) {
                           if (i === q.correct) { bg = "#0f2010"; border = "#27ae60"; color = "#27ae60"; }
-                          else if (i === quizAnswer && i !== q.correct) { bg = "#1a0000"; border = "#c0392b"; color = "#c0392b"; }
+                          else if (i === quizAnswer) { bg = "#1a0000"; border = "#c0392b"; color = "#c0392b"; }
                         }
                         return (
                           <button
@@ -625,7 +667,15 @@ export default function OpeningLab() {
                           <button style={{ ...styles.btn, backgroundColor: currentLine.color }} onClick={nextQuiz}>
                             Next Question
                           </button>
-                          <button style={styles.btnGhost} onClick={() => { setQuizStarted(false); setQuizIndex(0); setQuizAnswer(null); setVladFeedback(""); }}>
+                          <button
+                            style={styles.btnGhost}
+                            onClick={() => {
+                              setQuizStarted(false);
+                              setQuizIndex(0);
+                              setQuizAnswer(null);
+                              setVladFeedback("");
+                            }}
+                          >
                             Restart
                           </button>
                         </div>
@@ -638,6 +688,7 @@ export default function OpeningLab() {
           )}
         </div>
       )}
+
     </div>
   );
 }
@@ -668,18 +719,18 @@ const styles = {
   moveNodeNum: { width: 26, height: 26, borderRadius: 4, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 11, fontWeight: 700, flexShrink: 0 },
   moveNodeInfo: { display: "flex", flexDirection: "column", gap: 2 },
   moveNodeLabel: { fontSize: 13, fontWeight: 600, color: "#ccc" },
-  moveNodeNote: { fontSize: 10, color: "#555", lineHeight: 1.4 },
+  moveNodeNote: { fontSize: 10, color: "#888", lineHeight: 1.4 },
   stepDetail: { flex: 1, display: "flex", flexDirection: "column", gap: 16, minWidth: 240 },
   stepDetailHeader: { display: "flex", justifyContent: "space-between", alignItems: "baseline" },
   stepDetailLabel: { fontSize: 28, fontWeight: 700 },
   stepDetailNum: { fontSize: 11, color: "#555" },
-  stepDetailNote: { fontSize: 14, color: "#aaa", lineHeight: 1.7, margin: 0 },
+  stepDetailNote: { fontSize: 14, color: "#bbb", lineHeight: 1.7, margin: 0 },
   philosophyBox: { padding: "14px 16px", backgroundColor: "#0d1a0d", border: "1px solid", borderRadius: 6 },
   philosophyTitle: { margin: "0 0 6px", fontSize: 9, color: "#3a6b3a", letterSpacing: "1.5px" },
   philosophyText: { margin: 0, fontSize: 12, color: "#5a8a5a", lineHeight: 1.7, fontStyle: "italic" },
   fenBox: { padding: "10px 14px", backgroundColor: "#0a0a0a", border: "1px solid #1a1a1a", borderRadius: 4 },
   fenLabel: { display: "block", fontSize: 8, color: "#444", letterSpacing: "2px", marginBottom: 6 },
-  fenText: { fontSize: 9, color: "#555", wordBreak: "break-all", lineHeight: 1.5 },
+  fenText: { fontSize: 9, color: "#666", wordBreak: "break-all", lineHeight: 1.5 },
   completeBanner: { padding: "12px 16px", backgroundColor: "#0f2010", border: "1px solid #1e4d20", borderRadius: 6, fontSize: 13, color: "#27ae60" },
   assassinHeader: { padding: "14px 18px", backgroundColor: "#0f0a00", border: "1px solid #3d2800", borderRadius: 6 },
   assassinRule: { margin: 0, fontSize: 12, color: "#8a6a2a", lineHeight: 1.7, fontStyle: "italic" },
@@ -687,18 +738,18 @@ const styles = {
   checklistItem: { display: "flex", alignItems: "center", gap: 14, padding: "12px 16px", borderRadius: 6 },
   checklistBox: { width: 22, height: 22, border: "1px solid", borderRadius: 4, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 12, color: "#fff", flexShrink: 0 },
   checklistLabel: { fontSize: 13, color: "#ccc", fontWeight: 600 },
-  checklistDesc: { fontSize: 10, color: "#555", marginTop: 2 },
+  checklistDesc: { fontSize: 10, color: "#666", marginTop: 2 },
   strikeSequence: { padding: "16px 18px", backgroundColor: "#0a0a12", border: "1px solid #1a1a2a", borderRadius: 6 },
   strikeTitle: { margin: "0 0 14px", fontSize: 9, color: "#5555aa", letterSpacing: "1.5px" },
   strikeStep: { display: "flex", gap: 14, alignItems: "flex-start", padding: "8px 0", borderBottom: "1px solid #141420" },
   strikeNum: { width: 22, height: 22, backgroundColor: "#c0392b", borderRadius: 3, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 10, color: "#fff", fontWeight: 700, flexShrink: 0 },
-  strikeMoveLabel: { fontSize: 13, color: "#aaa", fontWeight: 600 },
-  strikeNote: { fontSize: 10, color: "#555", marginTop: 3 },
+  strikeMoveLabel: { fontSize: 13, color: "#bbb", fontWeight: 600 },
+  strikeNote: { fontSize: 10, color: "#666", marginTop: 3 },
   tacticCard: { padding: "14px 16px", borderRadius: 8 },
   tacticHeader: { display: "flex", alignItems: "flex-start", gap: 12 },
   tacticIcon: { fontSize: 24, flexShrink: 0 },
   tacticName: { margin: "0 0 4px", fontSize: 14, fontWeight: 700, color: "#ccc" },
-  tacticDesc: { margin: 0, fontSize: 11, color: "#666" },
+  tacticDesc: { margin: 0, fontSize: 11, color: "#777" },
   tacticNote: { margin: "10px 0 0", fontSize: 12, color: "#7fb3d3", fontStyle: "italic", lineHeight: 1.6 },
   tacticReminder: { padding: "14px 16px", backgroundColor: "#1a0f00", border: "1px solid #3d2800", borderRadius: 6 },
   tacticReminderTitle: { margin: "0 0 6px", fontSize: 9, color: "#7a5500", letterSpacing: "1.5px" },
@@ -706,26 +757,26 @@ const styles = {
   sectionLabel: { margin: 0, fontSize: 9, letterSpacing: "2px", color: "#444" },
   responseGrid: { display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(200px, 1fr))", gap: 10 },
   responseCard: { padding: "14px 16px", borderRadius: 6 },
-  responseLabel: { fontSize: 12, color: "#aaa" },
+  responseLabel: { fontSize: 12, color: "#bbb" },
   responseCoachBox: { padding: "16px 18px", backgroundColor: "#0a1520", border: "1px solid", borderRadius: 8 },
   responseCoachTitle: { margin: "0 0 8px", fontSize: 10, letterSpacing: "1px" },
-  responseCoachText: { margin: 0, fontSize: 13, color: "#aaa", lineHeight: 1.8 },
+  responseCoachText: { margin: 0, fontSize: 13, color: "#bbb", lineHeight: 1.8 },
   deviationCard: { backgroundColor: "#111", border: "1px solid #1e1e1e", borderRadius: 6, overflow: "hidden" },
   deviationTrigger: { padding: "10px 14px", backgroundColor: "#1a1000", borderBottom: "1px solid #1e1e1e", display: "flex", flexDirection: "column", gap: 4 },
   deviationTriggerText: { fontSize: 12, color: "#e67e22" },
   deviationResponse: { padding: "10px 14px", display: "flex", flexDirection: "column", gap: 4 },
-  deviationResponseText: { fontSize: 12, color: "#aaa", lineHeight: 1.6 },
+  deviationResponseText: { fontSize: 12, color: "#bbb", lineHeight: 1.6 },
   deviationRule: { padding: "14px 16px", backgroundColor: "#0a1200", border: "1px solid #1e2a00", borderRadius: 6 },
   quizLayout: { display: "flex", flexDirection: "column", gap: 20 },
   quizStart: { display: "flex", flexDirection: "column", gap: 16 },
-  quizIntro: { margin: 0, fontSize: 14, color: "#aaa", lineHeight: 1.7 },
+  quizIntro: { margin: 0, fontSize: 14, color: "#bbb", lineHeight: 1.7 },
   quizQuestion: { fontSize: 16, color: "#ccc", lineHeight: 1.6, margin: 0 },
   quizOptions: { display: "flex", flexDirection: "column", gap: 10 },
   quizOption: { padding: "14px 18px", borderRadius: 6, fontSize: 14, fontFamily: "'IBM Plex Mono', monospace", cursor: "pointer", textAlign: "left" },
   quizFeedback: { display: "flex", flexDirection: "column", gap: 10, padding: "16px 18px", backgroundColor: "#111", border: "1px solid #222", borderRadius: 8 },
-  quizCorrectNote: { margin: 0, fontSize: 12, color: "#888" },
+  quizCorrectNote: { margin: 0, fontSize: 12, color: "#999" },
   vladQuizNote: { margin: 0, fontSize: 12, color: "#c0392b", fontStyle: "italic" },
   loadingText: { margin: 0, fontSize: 12, color: "#555", fontStyle: "italic" },
   btn: { padding: "10px 22px", color: "#fff", border: "none", borderRadius: 6, fontSize: 13, fontFamily: "'IBM Plex Mono', monospace", fontWeight: 700, cursor: "pointer", alignSelf: "flex-start" },
-  btnGhost: { padding: "10px 22px", backgroundColor: "transparent", color: "#666", border: "1px solid #333", borderRadius: 6, fontSize: 13, fontFamily: "'IBM Plex Mono', monospace", cursor: "pointer", alignSelf: "flex-start" },
+  btnGhost: { padding: "10px 22px", backgroundColor: "transparent", color: "#777", border: "1px solid #333", borderRadius: 6, fontSize: 13, fontFamily: "'IBM Plex Mono', monospace", cursor: "pointer", alignSelf: "flex-start" },
 };
