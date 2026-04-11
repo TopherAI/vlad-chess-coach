@@ -199,19 +199,20 @@ function AnalysisProgress({ current, total, phase }) {
 // ---------------------------------------------------------------------------
 
 export default function GameAutopsy() {
-  const [phase, setPhase]         = useState("idle");
-  const [pgn, setPgn]             = useState("");
-  const [gameInfo, setGameInfo]   = useState(null);
-  const [analysis, setAnalysis]   = useState(null);
-  const [progress, setProgress]   = useState({ current: 0, total: 0 });
+  const [phase, setPhase]               = useState("idle");
+  const [pgn, setPgn]                   = useState("");
+  const [gameInfo, setGameInfo]         = useState(null);
+  const [analysis, setAnalysis]         = useState(null);
+  const [progress, setProgress]         = useState({ current: 0, total: 0 });
   const [selectedMove, setSelectedMove] = useState(null);
-  const [coaches, setCoaches]     = useState({ vlad: null, fabiano: null, magnus: null });
+  const [coaches, setCoaches]           = useState({ vlad: null, fabiano: null, magnus: null });
   const [coachLoading, setCoachLoading] = useState({ vlad: false, fabiano: false, magnus: false });
-  const [errorMsg, setErrorMsg]   = useState("");
-  const [activeTab, setActiveTab] = useState("moves");
+  const [errorMsg, setErrorMsg]         = useState("");
+  const [activeTab, setActiveTab]       = useState("moves");
   const [restoredFrom, setRestoredFrom] = useState(null);
 
-  const fileRef = useRef(null);
+  const fileRef    = useRef(null);
+  const runBtnRef  = useRef(null);
 
   // ---- On mount: check for pending PGN from dashboard drop zone, else restore last game ----
   useEffect(() => {
@@ -220,6 +221,10 @@ export default function GameAutopsy() {
       localStorage.removeItem("vlad_pending_pgn");
       setPgn(pending);
       setPhase("idle");
+      // Auto-trigger after state settles
+      setTimeout(() => {
+        runBtnRef.current?.click();
+      }, 150);
       return;
     }
 
@@ -255,8 +260,9 @@ export default function GameAutopsy() {
   }, []);
 
   // ---- Main analysis pipeline ----
-  const runAutopsy = useCallback(async () => {
-    if (!pgn.trim()) return;
+  const runAutopsy = useCallback(async (pgnOverride) => {
+    const target = (typeof pgnOverride === "string" ? pgnOverride : pgn).trim();
+    if (!target) return;
 
     setPhase("parsing");
     setAnalysis(null);
@@ -267,7 +273,7 @@ export default function GameAutopsy() {
 
     let parsed;
     try {
-      parsed = parsePGN(pgn);
+      parsed = parsePGN(target);
       setGameInfo(parsed);
     } catch (err) {
       setErrorMsg(err.message);
@@ -295,8 +301,8 @@ export default function GameAutopsy() {
     setPhase("coaching");
     setCoachLoading({ vlad: true, fabiano: true, magnus: true });
 
-    const vladContext = buildVladContext(gameAnalysis, parsed.playerSide);
-    const gameContext = { ...parsed, summary: gameAnalysis.summary };
+    const vladContext  = buildVladContext(gameAnalysis, parsed.playerSide);
+    const gameContext  = { ...parsed, summary: gameAnalysis.summary };
     const finalCoaches = { vlad: null, fabiano: null, magnus: null };
 
     const fireCoach = async (key, fn) => {
@@ -319,9 +325,7 @@ export default function GameAutopsy() {
       fireCoach("magnus",  askMagnus),
     ]);
 
-    // ---- Save to localStorage ----
-    saveAutopsy(pgn, parsed, gameAnalysis, finalCoaches);
-
+    saveAutopsy(target, parsed, gameAnalysis, finalCoaches);
     setPhase("done");
   }, [pgn]);
 
@@ -339,6 +343,7 @@ export default function GameAutopsy() {
 
   return (
     <div style={styles.root}>
+
       {/* ── Header ── */}
       <div style={styles.header}>
         <div style={styles.headerLeft}>
@@ -386,22 +391,23 @@ export default function GameAutopsy() {
         </div>
       )}
 
-      {/* ── PGN textarea ── */}
+      {/* ── PGN textarea + Run button ── */}
       {phase === "idle" && (
         <div style={styles.pasteSection}>
           <textarea
             style={styles.pgnInput}
-            placeholder="…or paste PGN directly here (Ctrl+V from dashboard also lands here)"
+            placeholder="…or paste PGN directly here (Cmd+V from dashboard also lands here)"
             value={pgn}
             onChange={e => setPgn(e.target.value)}
             rows={5}
           />
           <button
+            ref={runBtnRef}
             style={{ ...styles.btn, opacity: pgn.trim() ? 1 : 0.4 }}
             disabled={!pgn.trim()}
             onClick={runAutopsy}
           >
-            Run Autopsy →
+            Game Analysis →
           </button>
         </div>
       )}
