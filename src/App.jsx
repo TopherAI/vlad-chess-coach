@@ -2,16 +2,18 @@ import { useState, useEffect } from "react";
 import GameAutopsy from "@modules/GameAutopsy.jsx";
 import DrillSergeant from "@modules/DrillSergeant.jsx";
 import OpeningLab from "@modules/OpeningLab.jsx";
+import MiddlegameMat from "@modules/MiddlegameMat.jsx";
 import EndgameDojo from "@modules/EndgameDojo.jsx";
 
 // ── Constants ───────────────────────────────────────────────────────────────
 
 const NAV = [
-  { id: "dashboard", label: "Dashboard",      icon: "🏠" },
-  { id: "autopsy",   label: "Game Autopsy",   icon: "🔬" },
-  { id: "drills",    label: "Drill Sergeant",  icon: "⚔️" },
-  { id: "opening",   label: "Opening Lab",     icon: "🏛️" },
-  { id: "endgame",   label: "Endgame Dojo",    icon: "👑" },
+  { id: "dashboard",   label: "Dashboard",       icon: "🏠" },
+  { id: "autopsy",     label: "Game Autopsy",    icon: "🔬" },
+  { id: "drills",      label: "Drill Sergeant",  icon: "⚔️" },
+  { id: "opening",     label: "Opening Lab",     icon: "🏛️" },
+  { id: "middlegame",  label: "Middlegame Mat",  icon: "🗡️" },
+  { id: "endgame",     label: "Endgame Dojo",    icon: "👑" },
 ];
 
 const PLAYER = "TopherBettis";
@@ -83,7 +85,7 @@ function PgnDropCard({ onNavigate }) {
       <p style={S.moduleDesc}>
         {ready
           ? `${pgn.split("\n").length} lines loaded`
-          : dragging ? "Release to load" : "Drag a .pgn file · or Ctrl+V"}
+          : dragging ? "Release to load" : "Drag a .pgn file · or Cmd+V"}
       </p>
       {ready && (
         <button
@@ -191,10 +193,11 @@ function Dashboard({ onNavigate }) {
       <p style={S.sectionTitle}>TRAINING MODULES</p>
       <div style={S.moduleGrid}>
         {[
-          { id: "autopsy", icon: "🔬", title: "Game Autopsy",   desc: "Upload PGN → Stockfish + 3-coach debrief",    color: "#c0392b" },
-          { id: "drills",  icon: "⚔️", title: "Drill Sergeant", desc: "Targeted puzzles from YOUR blunder positions", color: "#e67e22" },
-          { id: "opening", icon: "🏛️", title: "Opening Lab",    desc: "Italian Cage deep prep · Quiz mode",          color: "#2980b9" },
-          { id: "endgame", icon: "👑", title: "Endgame Dojo",   desc: "Magnus-voiced conversion training",           color: "#27ae60" },
+          { id: "autopsy",    icon: "🔬", title: "Game Autopsy",    desc: "Upload PGN → Stockfish + 3-coach debrief",    color: "#c0392b" },
+          { id: "drills",     icon: "⚔️", title: "Drill Sergeant",  desc: "Targeted puzzles from YOUR blunder positions", color: "#e67e22" },
+          { id: "opening",    icon: "🏛️", title: "Opening Lab",     desc: "Italian Cage deep prep · Quiz mode",          color: "#2980b9" },
+          { id: "middlegame", icon: "🗡️", title: "Middlegame Mat",  desc: "5 Assassin weapons · Hikaru tactical coaching", color: "#f39c12" },
+          { id: "endgame",    icon: "👑", title: "Endgame Dojo",    desc: "Magnus-voiced conversion training",           color: "#27ae60" },
         ].map(mod => (
           <div
             key={mod.id}
@@ -214,9 +217,10 @@ function Dashboard({ onNavigate }) {
       <p style={S.sectionTitle}>COACHING TEAM</p>
       <div style={S.coachRow}>
         {[
-          { emoji: "🎖️", name: "Vlad",    based: "Vladimir Chuchelov", role: "Head Coach · Drill prescription · Weekly plan",  color: "#c0392b" },
-          { emoji: "♟️", name: "Fabiano", based: "Fabiano Caruana",    role: "Opening prep · Positional benchmarking",          color: "#2980b9" },
-          { emoji: "👑", name: "Magnus",  based: "Magnus Carlsen",     role: "Endgame conversion · Intuition · Reality checks", color: "#27ae60" },
+          { emoji: "🎖️", name: "Vlad",    based: "Vladimir Chuchelov", role: "Head Coach · Drill prescription · Weekly plan",    color: "#c0392b" },
+          { emoji: "♟️", name: "Fabiano", based: "Fabiano Caruana",    role: "Opening prep · Positional benchmarking",            color: "#2980b9" },
+          { emoji: "👑", name: "Magnus",  based: "Magnus Carlsen",     role: "Endgame conversion · Intuition · Reality checks",   color: "#27ae60" },
+          { emoji: "⚡", name: "Hikaru",  based: "Hikaru Nakamura",    role: "Middlegame tactics · Attack patterns · 5 weapons",  color: "#f39c12" },
         ].map(coach => (
           <div key={coach.name} style={S.coachCard}>
             <span style={S.coachEmoji}>{coach.emoji}</span>
@@ -264,12 +268,13 @@ export default function App() {
 
   const renderContent = () => {
     switch (active) {
-      case "dashboard": return <Dashboard onNavigate={setActive} />;
-      case "autopsy":   return <GameAutopsy />;
-      case "drills":    return <DrillSergeant />;
-      case "opening":   return <OpeningLab />;
-      case "endgame":   return <EndgameDojo />;
-      default:          return <Dashboard onNavigate={setActive} />;
+      case "dashboard":  return <Dashboard onNavigate={setActive} />;
+      case "autopsy":    return <GameAutopsy />;
+      case "drills":     return <DrillSergeant />;
+      case "opening":    return <OpeningLab />;
+      case "middlegame": return <MiddlegameMat />;
+      case "endgame":    return <EndgameDojo />;
+      default:           return <Dashboard onNavigate={setActive} />;
     }
   };
 
@@ -347,7 +352,6 @@ export default function App() {
 
 const S = {
   shell: { display: "flex", height: "100vh", overflow: "hidden" },
-
   nav: {
     display: "flex", flexDirection: "column",
     backgroundColor: "#080808",
@@ -365,7 +369,6 @@ const S = {
   navLogoIcon:  { fontSize: 28, flexShrink: 0 },
   navLogoTitle: { margin: 0, fontSize: 16, fontWeight: 700, fontFamily: "'IBM Plex Mono', monospace", color: "#fff", letterSpacing: "2px" },
   navLogoSub:   { margin: 0, fontSize: 10, color: "#444", letterSpacing: "1px" },
-
   playerChip: {
     margin: "12px 12px 4px",
     padding: "10px 12px",
@@ -375,7 +378,6 @@ const S = {
   },
   playerName: { margin: "0 0 2px", fontSize: 12, fontWeight: 700, color: "#ccc", fontFamily: "'IBM Plex Mono', monospace" },
   playerElo:  { margin: 0, fontSize: 11, color: "#555", fontFamily: "'IBM Plex Mono', monospace" },
-
   navItems: { display: "flex", flexDirection: "column", gap: 2, padding: "12px 8px", flex: 1 },
   navItem: {
     display: "flex", alignItems: "center", gap: 10,
@@ -390,20 +392,16 @@ const S = {
   },
   navIcon:  { fontSize: 16, flexShrink: 0 },
   navLabel: { fontSize: 12, transition: "color 0.15s" },
-
   navFooter: { padding: "14px 16px", borderTop: "1px solid #1a1a1a" },
   navFooterText: { margin: "0 0 2px", fontSize: 11, fontFamily: "'IBM Plex Mono', monospace", color: "#c0392b" },
   navFooterSub:  { margin: 0, fontSize: 10, color: "#333", fontFamily: "'IBM Plex Mono', monospace" },
-
   main: { flex: 1, overflowY: "auto", backgroundColor: "#0d0d0d" },
-
   dashRoot: {
     display: "flex", flexDirection: "column", gap: 28,
     padding: "32px 36px",
     maxWidth: 1000,
     fontFamily: "'IBM Plex Mono', monospace",
   },
-
   hero: {
     display: "flex", justifyContent: "space-between", alignItems: "flex-end",
     flexWrap: "wrap", gap: 24,
@@ -416,7 +414,6 @@ const S = {
   heroArrow:    { color: "#333" },
   heroSub:      { margin: 0, fontSize: 12, color: "#555" },
   heroRight:    { minWidth: 280 },
-
   progressLabel: { margin: "0 0 8px", fontSize: 9, color: "#444", letterSpacing: "1.5px" },
   progressTrack: {
     position: "relative", height: 8,
@@ -439,7 +436,6 @@ const S = {
     display: "flex", justifyContent: "space-between",
     marginTop: 6, fontSize: 10, color: "#444",
   },
-
   phaseRow: { display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(200px, 1fr))", gap: 12 },
   phaseCard: {
     padding: "14px 16px", borderRadius: 8,
@@ -458,7 +454,6 @@ const S = {
     borderRadius: 2,
     letterSpacing: "1px",
   },
-
   loopBox: {
     padding: "20px",
     backgroundColor: "#080808",
@@ -476,7 +471,6 @@ const S = {
   },
   loopLabel: { margin: "0 0 2px", fontSize: 11, fontWeight: 700, color: "#ccc" },
   loopDesc:  { margin: 0, fontSize: 10, color: "#555", lineHeight: 1.5 },
-
   sectionTitle: { margin: 0, fontSize: 10, color: "#444", letterSpacing: "1.5px" },
   moduleGrid: { display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(200px, 1fr))", gap: 14 },
   moduleCard: {
@@ -492,7 +486,6 @@ const S = {
   moduleTitle: { margin: 0, fontSize: 14, fontWeight: 700, color: "#ccc" },
   moduleDesc:  { margin: 0, fontSize: 11, color: "#555", lineHeight: 1.5, flex: 1 },
   moduleArrow: { fontSize: 18, fontWeight: 700, alignSelf: "flex-end" },
-
   coachRow: { display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(220px, 1fr))", gap: 12 },
   coachCard: {
     padding: "16px",
@@ -505,7 +498,6 @@ const S = {
   coachName:  { margin: 0, fontSize: 15, fontWeight: 700 },
   coachBased: { margin: 0, fontSize: 10, color: "#444" },
   coachRole:  { margin: 0, fontSize: 11, color: "#666", lineHeight: 1.5 },
-
   weaknessList: { display: "flex", flexDirection: "column", gap: 10 },
   weaknessItem: {
     display: "flex", alignItems: "flex-start", gap: 14,
