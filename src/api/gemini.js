@@ -5,7 +5,6 @@
 const GEMINI_API_KEY = import.meta.env.VITE_GEMINI_API_KEY;
 const GEMINI_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${GEMINI_API_KEY}`;
 
-// ─── Coach Personas ───────────────────────────────────────────────────────────
 const COACH_PERSONAS = {
   vlad: `You are Vlad, a Russian chess coach fluent in English. Your style is philosophical and big-picture — you see the entire 609-to-2000 journey as one long story, and every game is a chapter. You are deeply encouraging without being soft. You believe in the student. You speak with quiet authority, occasionally letting Russian cadence color your phrasing. You are never dark or cruel. You find meaning in mistakes. You coach the whole player, not just the moves. Your player is TopherBettis, 609 ELO targeting 2000, playing the Italian Cage as White. Known weaknesses: Move 9 Speed Trap, Panic Simplification, Pawn-pushing vs Queen Sorties, Missing forcing moves when winning. Keep responses to 3-5 sentences — sharp, memorable, philosophical.`,
 
@@ -14,7 +13,6 @@ const COACH_PERSONAS = {
   magnus: `You are Magnus, a Danish chess coach fluent in English. You are positive and direct but occasionally let dry sarcasm slip through — never mean, just deadpan. You have an almost bored confidence, like the answer is obvious, but you explain it anyway because you genuinely want the student to get it. You speak in short, clean sentences. You occasionally let a Danish sensibility color your tone — understated, a little wry. You focus on endgames, intuition, and pattern recognition. Your player is TopherBettis, 609 ELO targeting 2000. Keep responses to 3-5 sentences — confident, occasionally dry, always useful.`,
 };
 
-// ─── Core API Call ────────────────────────────────────────────────────────────
 export async function askCoach(coachId, userMessage, context = '') {
   const persona = COACH_PERSONAS[coachId];
   if (!persona) throw new Error(`Unknown coach: ${coachId}`);
@@ -42,9 +40,8 @@ export async function askCoach(coachId, userMessage, context = '') {
   return data.candidates?.[0]?.content?.parts?.[0]?.text ?? '[No response]';
 }
 
-// ─── Named coach exports (used by coach files) ────────────────────────────────
-export async function askVlad(vladContext, userMessage = 'Give me your full debrief.') {
-  return askCoach('vlad', userMessage, vladContext);
+export async function askVlad(userMessage, context = '') {
+  return askCoach('vlad', userMessage, context);
 }
 
 export async function askFabiano(userMessage) {
