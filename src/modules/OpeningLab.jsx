@@ -13,9 +13,9 @@ const LINES = [
     id: "line1",
     code: "LINE 1",
     name: "Giuoco Pianissimo",
-    subtitle: "The Anchor",
+    subtitle: "The Gentleman Assassinr",
     color: "#c0392b",
-    tagline: "Build the fortress. Wait. Strike.",
+    tagline: "Build like a Gentleman. Attack like an Assassin.",
     terminalFen: "r1bqr1k1/bpp2pp1/p1np1n1p/4p3/4P3/1BPP1N1P/PP1N1PP1/R1BQR1K1 w - - 1 11",
     moves: [
       { move: "e2e4", label: "1. e4",  note: "Control the center. Non-negotiable." },
@@ -48,17 +48,18 @@ const LINES = [
     name: "Two Knights — d3 System",
     subtitle: "The Misdirect",
     color: "#e67e22",
-    tagline: "They prep for Ng5. We play d3.",
+    tagline: "They prep for Ng5. We play c3/d3.",
     terminalFen: "r1bq1rk1/pp2bppp/2np1n2/2p1p3/P3P3/2PP1N2/BP1N1PPP/R1BQR1K1 b - - 0 10",
     moves: [
       { move: "e2e4", label: "1. e4",  note: "Same face. Same calm." },
       { move: "g1f3", label: "2. Nf3", note: "Develop. Attack e5." },
       { move: "f1c4", label: "3. Bc4", note: "Italian Bishop. Black plays Nf6 instead of Bc5." },
-      { move: "d2d3", label: "4. d3",  note: "Gentleman's move. Refuse all sharp lines." },
-      { move: "a2a4", label: "5. a4",  note: "Neutralizes Na5 queenside expansion immediately." },
-      { move: "e1g1", label: "6. O-O", note: "Castle. King safe before complications." },
-      { move: "h2h3", label: "7. h3",  note: "Mandatory prophylactic. Stop Bg4." },
-      { move: "f1e1", label: "8. Re1", note: "Cage completion. Rook to e-file." },
+      { move: "c2c3", label: "4. c3",  note: "Bunker first. Same as Line 1 — cage structure identical." },
+      { move: "d2d3", label: "5. d3",  note: "Gentleman's move. Refuse all sharp lines." },
+      { move: "a2a4", label: "6. a4",  note: "Neutralizes Na5 queenside expansion immediately." },
+      { move: "e1g1", label: "7. O-O", note: "Castle. King safe before complications." },
+      { move: "h2h3", label: "8. h3",  note: "Mandatory prophylactic. Stop Bg4." },
+      { move: "f1e1", label: "9. Re1", note: "Cage completion. Rook to e-file." },
     ],
     responses: [
       { id: "bc5t", label: "...Bc5 (transposes to Line 1)", fen: "r1bqk2r/pppp1ppp/2n2n2/2b1p3/2B1P3/3P1N2/PPP2PPP/RNBQK2R w KQkq - 4 5" },
@@ -165,45 +166,43 @@ const TACTICS = [
   { icon: "🌋", name: "Central Explosion (d4)", desc: "Cage is complete. Black commits heavily to a flank.", note: "Snap the coiled spring. d4 blows open the center while White is 3 tempos ahead." },
 ];
 
-// ── Static fallback questions per line ────────────────────────────────────────
 const FALLBACK_QUESTIONS = {
   line1: [
-    { question: "After 1.e4 e5 2.Nf3 Nc6 3.Bc4 Bc5 4.c3 — what is the correct 5th move?", options: ["5. d4", "5. d3", "5. O-O", "5. Ng5"], correct: 1, explanation: "5.d3 — THE Pianissimo move. Build the cage, not the attack." },
-    { question: "The cage is built: c3, d3, O-O. What is the NEXT mandatory move?", options: ["Re1", "Nbd2", "h3", "a4"], correct: 2, explanation: "h3 is SACRED. Must come before Nbd2. Stops the Bg4 pin cold." },
-    { question: "Black plays ...Na5 attacking your Bc4. Correct response?", options: ["Bxf7+", "Bb3", "Ba2", "d4"], correct: 2, explanation: "Ba2 — the safe house built by a4. Bishop stays on the diagonal." },
-    { question: "When should you castle in the Pianissimo?", options: ["Move 4-5", "Move 6-7", "Move 10+", "Never castle early"], correct: 1, explanation: "Castle by move 7. King safety before action." },
-    { question: "What is the purpose of a4 in the Gentleman's Assassin?", options: ["Attack the queenside", "Create a bishop safe house on a2", "Prepare b4", "Stop ...b5"], correct: 1, explanation: "a4 creates the a2 escape hatch for the bishop when attacked by ...Na5." },
+    { question: "After 1.e4 e5 2.Nf3 Nc6 3.Bc4 — what is the correct 4th move?", options: ["4. d4", "4. c3", "4. O-O", "4. Ng5"], correct: 1, explanation: "4.c3 — bunker first. Creates the c3-d3 foundation. d3 follows on move 5." },
+    { question: "After c3, what is move 5?", options: ["5. d4", "5. d3", "5. O-O", "5. a4"], correct: 1, explanation: "5.d3 — THE Pianissimo move. c3 then d3. Build the cage slow." },
+    { question: "After d3, what comes next?", options: ["O-O", "h3", "a4", "Nbd2"], correct: 2, explanation: "6.a4 — prophylaxis vs Na5. Creates the a2 escape hatch before castling." },
+    { question: "Black plays ...Na5 attacking your Bc4. Correct response?", options: ["Bxf7+", "Bb3", "Ba2", "d4"], correct: 2, explanation: "Ba2 — the safe house built by a4. Bishop stays on the a2-g8 diagonal." },
+    { question: "What is the LAST move that completes the cage?", options: ["h3", "O-O", "a4", "Re1"], correct: 3, explanation: "9.Re1 — rook to e-file. When Re1 lands, the cage is complete. Execute." },
   ],
   line2: [
-    { question: "Black plays Nf6 (Two Knights). What is our 4th move?", options: ["4. Ng5", "4. d4", "4. d3", "4. O-O"], correct: 2, explanation: "4.d3 — the Gentleman's move. Refuse the sharp lines entirely." },
-    { question: "After d3, what is the immediate priority?", options: ["Nc3", "a4", "h3", "O-O"], correct: 1, explanation: "a4 neutralizes ...Na5 queenside expansion before it becomes a threat." },
-    { question: "Black transposes with ...Bc5. What do we do?", options: ["Change plans completely", "Welcome it — we are in Line 1 now", "Play d4 immediately", "Retreat the bishop"], correct: 1, explanation: "Welcome it. Same cage applies. We are in familiar territory." },
-    { question: "When does h3 get played in Line 2?", options: ["Move 4", "Move 5", "Move 7", "Move 9"], correct: 2, explanation: "Move 7. After castling. Sacred sequence: O-O then h3." },
-    { question: "What does the Misdirect name refer to?", options: ["Misdirecting your king", "Black expects Ng5, we play d3 instead", "Hiding the bishop", "A queenside feint"], correct: 1, explanation: "They prepare for Ng5. We play d3. They prepared for the wrong opponent." },
+    { question: "Black plays Nf6 (Two Knights). What is our 4th move?", options: ["4. Ng5", "4. d4", "4. c3", "4. O-O"], correct: 2, explanation: "4.c3 — same bunker as Line 1. Cage structure is identical. d3 follows on move 5." },
+    { question: "After c3, what is move 5?", options: ["a4", "O-O", "d3", "h3"], correct: 2, explanation: "5.d3 — the Gentleman's move. c3 then d3. Same sequence as Line 1." },
+    { question: "After d3, what comes next?", options: ["O-O", "h3", "a4", "Nbd2"], correct: 2, explanation: "6.a4 — neutralizes ...Na5 immediately. Bishop escape hatch secured before castling." },
+    { question: "When does h3 get played in Line 2?", options: ["Move 5", "Move 6", "Move 8", "Move 9"], correct: 2, explanation: "Move 8. After O-O. Sacred sequence: a4 → O-O → h3. Never before castling." },
+    { question: "What does the Misdirect name refer to?", options: ["Misdirecting your king", "Black expects Ng5, we play c3/d3 instead", "Hiding the bishop", "A queenside feint"], correct: 1, explanation: "They prep for Ng5. We play c3 then d3. They prepared for the wrong opponent." },
   ],
   line3: [
     { question: "Black plays 1...c5 (Sicilian). Our 2nd move?", options: ["2. d4", "2. Nc3", "2. Nf3", "2. Bc4"], correct: 2, explanation: "2.Nf3 first — then Bc4. Prevents ...e6 blocking the diagonal." },
-    { question: "Why does Bc4 work against the Sicilian?", options: ["It attacks c6", "It avoids the Najdorf and Dragon theory", "It controls d5", "It prepares d4"], correct: 1, explanation: "The Bc4 Bypass skips all of Black's prepared Sicilian theory entirely." },
+    { question: "Why does Bc4 work against the Sicilian?", options: ["It attacks c6", "It avoids all Sicilian theory", "It controls d5", "It prepares d4"], correct: 1, explanation: "The Bc4 Bypass skips the Najdorf, Dragon, Scheveningen — all of it." },
     { question: "Black plays ...d5. Correct response?", options: ["Panic and retreat", "exd5 and recapture", "c4", "d4"], correct: 1, explanation: "exd5 and recapture. Our development advantage holds. Do not panic." },
     { question: "What does c3 accomplish in Line 3?", options: ["Protects the bishop", "Prepares d4 and solidifies", "Attacks b4", "Supports e4 only"], correct: 1, explanation: "c3 prepares d4 if needed and solidifies the center structure." },
-    { question: "When is the cage complete in Line 3?", options: ["After O-O", "After h3", "After Re1", "After d3"], correct: 2, explanation: "Re1 is the final piece. Rook to e-file. Cage complete." },
+    { question: "What is the final move that completes the cage in Line 3?", options: ["h3", "O-O", "c3", "Re1"], correct: 3, explanation: "Re1 — rook to e-file. Cage complete. Assassin ready." },
   ],
   line4: [
     { question: "Black plays 2...Nf6 (Petrov). Our 3rd move?", options: ["3. Nxe5", "3. d4", "3. d3", "3. Nc3"], correct: 2, explanation: "3.d3 — rejects the drawish Nxe5 line. Forces Black into our cage." },
-    { question: "Why refuse 3.Nxe5 in the Petrov?", options: ["It loses material", "It leads to drawish simplified positions", "It's illegal", "It weakens our king"], correct: 1, explanation: "3.Nxe5 leads to early simplification and dull draws. We play 3.d3 instead." },
+    { question: "Why refuse 3.Nxe5 in the Petrov?", options: ["It loses material", "It leads to drawish simplified positions", "It is illegal", "It weakens our king"], correct: 1, explanation: "3.Nxe5 leads to early simplification and dull draws. We play 3.d3 instead." },
     { question: "Black plays ...Nxe4 grabbing the pawn. Response?", options: ["Recapture immediately", "d4 — open the center", "Ignore it", "O-O first"], correct: 1, explanation: "d4. Open the center immediately. Our development advantage is decisive." },
     { question: "After 3.d3, what move comes next?", options: ["h3", "O-O", "Bc4", "a4"], correct: 2, explanation: "4.Bc4 — Italian bishop. We are now in familiar territory." },
     { question: "What does the Refusal name mean in Line 4?", options: ["Refusing to castle", "Refusing the draw with d3 instead of Nxe5", "Refusing Black's pawn", "Refusing to open the center"], correct: 1, explanation: "We refuse the draw. 3.d3 forces Black into our cage instead of equal simplification." },
   ],
 };
 
-// ── AI question generator ─────────────────────────────────────────────────────
 async function generateQuizQuestions(line) {
   const prompt = `You are generating a chess quiz for TopherBettis (ELO 609) who is studying the Gentleman's Assassin opening system.
 
 Generate exactly 5 multiple-choice questions about the "${line.name}" opening line (${line.tagline}).
 
-Key moves for this line: ${line.moves.map(m => m.label + ": " + m.note).join(" | ")}
+The exact move order for this line is: ${line.moves.map(m => m.label + ": " + m.note).join(" | ")}
 
 Rules:
 - Each question tests move order, purpose of a specific move, or response to Black's play
@@ -240,7 +239,6 @@ export default function OpeningLab() {
   const [loadingResponse, setLoadingResponse] = useState(null);
   const [loadingMagnus, setLoadingMagnus] = useState(null);
 
-  // Quiz state
   const [quizQuestions, setQuizQuestions] = useState([]);
   const [quizLoading, setQuizLoading] = useState(false);
   const [quizStarted, setQuizStarted] = useState(false);
@@ -260,7 +258,6 @@ export default function OpeningLab() {
   const toggleChecklist = (id) => setChecklist(prev => ({ ...prev, [id]: !prev[id] }));
   const checklistComplete = ASSASSIN_CHECKLIST.every(item => checklist[item.id]);
 
-  // Load questions when quiz tab opens or line changes
   const loadQuestions = useCallback(async (line) => {
     setQuizLoading(true);
     setQuizQuestions([]);
@@ -344,10 +341,10 @@ export default function OpeningLab() {
 
   const getVladVerdict = (score, total) => {
     const pct = score / total;
-    if (pct === 1) return "Perfect. The cage is in your hands. Now execute.";
-    if (pct >= 0.8) return "Strong. One weakness. Find it. Fix it before next game.";
-    if (pct >= 0.6) return "Acceptable. But acceptable loses games. Drill the failures.";
-    if (pct >= 0.4) return "The cage is leaking. Review the sequence. Again.";
+    if (pct === 1)   return "Perfect. The cage is in your hands. Now execute.";
+    if (pct >= 0.8)  return "Strong. One weakness. Find it. Fix it before next game.";
+    if (pct >= 0.6)  return "Acceptable. But acceptable loses games. Drill the failures.";
+    if (pct >= 0.4)  return "The cage is leaking. Review the sequence. Again.";
     return "You are building on sand. Back to the beginning. Every move. Every purpose.";
   };
 
@@ -659,14 +656,12 @@ export default function OpeningLab() {
       {activeTab === "quiz" && (
         <div style={styles.quizLayout}>
 
-          {/* Loading */}
           {quizLoading && (
             <div style={styles.quizLoadingBox}>
               <p style={styles.quizLoadingText}>⚙ Generating questions for {currentLine.name}...</p>
             </div>
           )}
 
-          {/* Start screen */}
           {!quizLoading && !quizStarted && !quizDone && quizQuestions.length > 0 && (
             <div style={styles.quizStart}>
               <p style={styles.quizIntro}>
@@ -684,7 +679,6 @@ export default function OpeningLab() {
             </div>
           )}
 
-          {/* Active question */}
           {!quizLoading && quizStarted && !quizDone && quizQuestions.length > 0 && (() => {
             const q = quizQuestions[quizIndex];
             return (
@@ -741,7 +735,6 @@ export default function OpeningLab() {
             );
           })()}
 
-          {/* End screen */}
           {!quizLoading && quizDone && (
             <div style={styles.quizEndScreen}>
               <div style={styles.quizScoreDisplay}>
