@@ -1,24 +1,11 @@
 /**
  * src/modules/OpeningLab.jsx
  * vlad-chess-coach — Opening Lab Module (v2.0 Gentleman's Assassin)
- *
- * UPGRADE LOG (v2.0):
- *   - Added all 4 repertoire lines with line selector
- *   - Fixed COILED_SPRING move order (a4 removed, h3 corrected, Re1 UCI fixed)
- *   - Added ASSASSIN ACTIVATION checklist tab
- *   - Added Script Deviation handler per line
- *   - Added Sicilian + Petrov black responses
- *   - Wired gentlemans-assassin.json terminal FENs
- *   - All existing coach integrations (askFabiano, askVlad) preserved
  */
 
 import { useState, useCallback } from "react";
 import { askFabiano } from "../coaches/fabiano.jsx";
 import { askVlad } from "../coaches/vlad.jsx";
-
-// ---------------------------------------------------------------------------
-// Data — 4 Repertoire Lines (Gentleman's Assassin Super Plan v2.0)
-// ---------------------------------------------------------------------------
 
 const LINES = [
   {
@@ -30,28 +17,27 @@ const LINES = [
     tagline: "Build the fortress. Wait. Strike.",
     terminalFen: "r1bqr1k1/bpp2pp1/p1np1n1p/4p3/4P3/1BPP1N1P/PP1N1PP1/R1BQR1K1 w - - 1 11",
     moves: [
-      { move: "e2e4",  label: "1. e4",    note: "Control the center. Non-negotiable." },
-      { move: "g1f3",  label: "2. Nf3",   note: "Develop, attack e5 with tempo." },
-      { move: "f1c4",  label: "3. Bc4",   note: "Italian Bishop. Target f7 — Black's eternal weakness." },
-      { move: "d2d3",  label: "4. d3",    note: "THE Pianissimo move. Build slow. Don't tip your hand." },
-      { move: "c2c3",  label: "5. c3",    note: "Prepares d4. Creates the c3-d3 bunker." },
-      { move: "e1g1",  label: "6. O-O",   note: "Castle. King safe. Always by move 7." },
-      { move: "h2h3",  label: "7. h3",    note: "SACRED. Stops Bg4 pin. Enables Be3. Non-negotiable." },
-      { move: "f1e1",  label: "8. Re1",   note: "Rook to e-file. Supports e4. Cage is forming." },
-      { move: "b1d2",  label: "9. Nbd2",  note: "Develop without blocking structure. Loading the spring." },
-      { move: "d2f1",  label: "10. Nf1",  note: "Knight loaded on f1. Assassin is coiled. Ready." },
+      { move: "e2e4", label: "1. e4",   note: "Control the center. Non-negotiable." },
+      { move: "g1f3", label: "2. Nf3",  note: "Develop, attack e5 with tempo." },
+      { move: "f1c4", label: "3. Bc4",  note: "Italian Bishop. Target f7 — Black's eternal weakness." },
+      { move: "c2c3", label: "4. c3",   note: "Prepares d4. Creates the c3-d3 bunker." },
+      { move: "d2d3", label: "5. d3",   note: "THE Pianissimo move. Build slow. Don't tip your hand." },
+      { move: "a2a4", label: "6. a4",   note: "Prophylaxis vs Na5. Creates a2 escape hatch for bishop." },
+      { move: "e1g1", label: "7. O-O",  note: "Castle. King safe. Always by move 7." },
+      { move: "h2h3", label: "8. h3",   note: "SACRED. Stops Bg4 pin. Enables Be3. Non-negotiable." },
+      { move: "f1e1", label: "9. Re1",  note: "Rook to e-file. Supports e4. Cage is complete." },
     ],
     responses: [
-      { id: "bc5",   label: "3...Bc5 (Giuoco Piano)",    fen: "r1bqk1nr/pppp1ppp/2n5/2b1p3/2B1P3/5N2/PPPP1PPP/RNBQK2R w KQkq - 4 4" },
-      { id: "nf6",   label: "3...Nf6 (Two Knights)",     fen: "r1bqkb1r/pppp1ppp/2n2n2/4p3/2B1P3/5N2/PPPP1PPP/RNBQK2R w KQkq - 4 4" },
-      { id: "be7",   label: "3...Be7 (Hungarian)",       fen: "r1bqk1nr/ppppbppp/2n5/4p3/2B1P3/5N2/PPPP1PPP/RNBQK2R w KQkq - 4 4" },
-      { id: "d6",    label: "3...d6 (Classical setup)",  fen: "r1bqkbnr/ppp2ppp/2np4/4p3/2B1P3/5N2/PPPP1PPP/RNBQK2R w KQkq - 0 4" },
+      { id: "bc5",  label: "3...Bc5 (Giuoco Piano)",   fen: "r1bqk1nr/pppp1ppp/2n5/2b1p3/2B1P3/5N2/PPPP1PPP/RNBQK2R w KQkq - 4 4" },
+      { id: "nf6",  label: "3...Nf6 (Two Knights)",    fen: "r1bqkb1r/pppp1ppp/2n2n2/4p3/2B1P3/5N2/PPPP1PPP/RNBQK2R w KQkq - 4 4" },
+      { id: "be7",  label: "3...Be7 (Hungarian)",      fen: "r1bqk1nr/ppppbppp/2n5/4p3/2B1P3/5N2/PPPP1PPP/RNBQK2R w KQkq - 4 4" },
+      { id: "d6",   label: "3...d6 (Classical)",       fen: "r1bqkbnr/ppp2ppp/2np4/4p3/2B1P3/5N2/PPPP1PPP/RNBQK2R w KQkq - 0 4" },
     ],
     deviations: [
       { trigger: "Black plays ...d5 early", response: "exd5 — open lines favor our better development and Bc4 pressure." },
-      { trigger: "Black plays ...Be6 (trade offer)", response: "Bxe6 fxe6 (doubled pawns long-term target) OR Bb3 and continue the maneuver." },
+      { trigger: "Black plays ...Be6 (trade offer)", response: "Bxe6 fxe6 (doubled pawns long-term target) OR Bb3 and continue." },
       { trigger: "Black plays ...Ng4 before h3", response: "h3 immediately. They lose a tempo retreating. This is why h3 is sacred." },
-      { trigger: "Black plays ...Na5 (bishop attack)", response: "Ba2 — bishop retreats, stays on diagonal. Then a4 for space." },
+      { trigger: "Black plays ...Na5 (bishop attack)", response: "Ba2 — bishop retreats to safe house, stays on diagonal." },
       { trigger: "Black plays ...f5 (early aggression)", response: "Castle. Let them overextend. The f5 pawn becomes a target later." },
     ],
   },
@@ -64,28 +50,25 @@ const LINES = [
     tagline: "They prep for Ng5. We play d3.",
     terminalFen: "r1bq1rk1/pp2bppp/2np1n2/2p1p3/P3P3/2PP1N2/BP1N1PPP/R1BQR1K1 b - - 0 10",
     moves: [
-      { move: "e2e4",  label: "1. e4",    note: "Same face. Same calm." },
-      { move: "g1f3",  label: "2. Nf3",   note: "Develop. Attack e5." },
-      { move: "f1c4",  label: "3. Bc4",   note: "Italian Bishop. Black plays Nf6 instead of Bc5." },
-      { move: "d2d3",  label: "4. d3",    note: "Gentleman's move. True Pianissimo. Refuse all sharp lines." },
-      { move: "e1g1",  label: "5. O-O",   note: "Castle immediately. King safe before any complications." },
-      { move: "f1e1",  label: "6. Re1",   note: "Rook to e-file. Standard Italian placement." },
-      { move: "d3d6",  label: "7. d6",    note: "Black plays d6. We continue development." },
-      { move: "a2a4",  label: "7. a4",    note: "Prophylaxis against Na5 queenside expansion." },
-      { move: "c4a2",  label: "8. Ba2",   note: "Bishop retreats. Stays on diagonal. Knight on rim is dim." },
-      { move: "c2c3",  label: "9. c3",    note: "Solidify center. Complete the cage." },
-      { move: "b1d2",  label: "10. Nbd2", note: "Last development move. Cage complete. Spring loaded." },
+      { move: "e2e4", label: "1. e4",   note: "Same face. Same calm." },
+      { move: "g1f3", label: "2. Nf3",  note: "Develop. Attack e5." },
+      { move: "f1c4", label: "3. Bc4",  note: "Italian Bishop. Black plays Nf6 instead of Bc5." },
+      { move: "d2d3", label: "4. d3",   note: "Gentleman's move. Refuse all sharp lines." },
+      { move: "a2a4", label: "5. a4",   note: "Neutralizes Na5 queenside expansion immediately." },
+      { move: "e1g1", label: "6. O-O",  note: "Castle. King safe before complications." },
+      { move: "h2h3", label: "7. h3",   note: "Mandatory prophylactic. Stop Bg4." },
+      { move: "f1e1", label: "8. Re1",  note: "Cage completion. Rook to e-file." },
     ],
     responses: [
-      { id: "bc5t",  label: "...Bc5 (transposes to Line 1)", fen: "r1bqk2r/pppp1ppp/2n2n2/2b1p3/2B1P3/3P1N2/PPP2PPP/RNBQK2R w KQkq - 4 5" },
-      { id: "d5",    label: "...d5 (counterattack)",         fen: "r1bqkb1r/ppp2ppp/2n2n2/3pp3/2B1P3/3P1N2/PPP2PPP/RNBQK2R w KQkq d6 0 5" },
-      { id: "na5",   label: "...Na5 (bishop attack)",        fen: "r1bqkb1r/pppp1ppp/5n2/n3p3/2B1P3/3P1N2/PPP2PPP/RNBQK2R w KQkq - 2 5" },
-      { id: "be7t",  label: "...Be7 (solid setup)",          fen: "r1bqk2r/ppppbppp/2n2n2/4p3/2B1P3/3P1N2/PPP2PPP/RNBQK2R w KQkq - 4 5" },
+      { id: "bc5t", label: "...Bc5 (transposes to Line 1)", fen: "r1bqk2r/pppp1ppp/2n2n2/2b1p3/2B1P3/3P1N2/PPP2PPP/RNBQK2R w KQkq - 4 5" },
+      { id: "d5",   label: "...d5 (counterattack)",         fen: "r1bqkb1r/ppp2ppp/2n2n2/3pp3/2B1P3/3P1N2/PPP2PPP/RNBQK2R w KQkq d6 0 5" },
+      { id: "na5",  label: "...Na5 (bishop attack)",        fen: "r1bqkb1r/pppp1ppp/5n2/n3p3/2B1P3/3P1N2/PPP2PPP/RNBQK2R w KQkq - 2 5" },
+      { id: "be7t", label: "...Be7 (solid setup)",          fen: "r1bqk2r/ppppbppp/2n2n2/4p3/2B1P3/3P1N2/PPP2PPP/RNBQK2R w KQkq - 4 5" },
     ],
     deviations: [
-      { trigger: "Black plays ...Bc5 (transposition)", response: "Welcome it. We're in Line 1 territory. Same cage applies." },
-      { trigger: "Black plays ...d5 early", response: "exd5 Nxd5. Open position favors our development lead and bishop pair." },
-      { trigger: "Black plays ...Na5 (bishop attack)", response: "a4 + Ba2. Bishop retreats to a2, stays on the long diagonal. Knight on the rim is dim." },
+      { trigger: "Black plays ...Bc5 (transposition)", response: "Welcome it. We are in Line 1 territory. Same cage applies." },
+      { trigger: "Black plays ...d5 early", response: "exd5 Nxd5. Open position favors our development lead." },
+      { trigger: "Black plays ...Na5 (bishop attack)", response: "a4 already played. Ba2. Bishop stays on the long diagonal." },
       { trigger: "Black plays ...Ng4 (attack d3)", response: "h3 immediately. Ng4 without preparation loses tempo." },
     ],
   },
@@ -98,26 +81,569 @@ const LINES = [
     tagline: "Skip the theory jungle entirely.",
     terminalFen: "r1b2rk1/ppq1bppp/2nppn2/8/4P3/1BPPBN2/PP1N1PPP/R2QR1K1 b - - 0 11",
     moves: [
-      { move: "e2e4",  label: "1. e4",    note: "Black plays c5. The Sicilian. Stay calm." },
-      { move: "g1f3",  label: "2. Nf3",   note: "Develop. Don't play 2.d4 — that's their world." },
-      { move: "f1c4",  label: "3. Bc4",   note: "Anti-Sicilian. Avoids Najdorf, Dragon, all of it." },
-      { move: "d2d3",  label: "4. d3",    note: "Cage structure. Mirror Line 1." },
-      { move: "c2c3",  label: "5. c3",    note: "Prepare d4 if needed. Solidify." },
-      { move: "e1g1",  label: "6. O-O",   note: "Castle fast. King safe before action." },
-      { move: "f1e1",  label: "7. Re1",   note: "Rook to e-file. Standard." },
-      { move: "b1d2",  label: "8. Nbd2",  note: "Development. Same pattern as Lines 1 and 2." },
-< truncated lines 109-681 >
-// Styles (preserved from v1, extended)
-// ---------------------------------------------------------------------------
+      { move: "e2e4", label: "1. e4",   note: "Black plays c5. The Sicilian. Stay calm." },
+      { move: "g1f3", label: "2. Nf3",  note: "Develop. Do not play 2.d4 — that is their world." },
+      { move: "f1c4", label: "3. Bc4",  note: "Anti-Sicilian. Avoids Najdorf, Dragon, all of it." },
+      { move: "d2d3", label: "4. d3",   note: "Cage structure. Mirror Line 1." },
+      { move: "c2c3", label: "5. c3",   note: "Prepare d4 if needed. Solidify." },
+      { move: "e1g1", label: "6. O-O",  note: "Castle fast. King safe before action." },
+      { move: "h2h3", label: "7. h3",   note: "Sacred shield. Stop Bg4 pin." },
+      { move: "f1e1", label: "8. Re1",  note: "Rook to e-file. Cage complete." },
+    ],
+    responses: [
+      { id: "e6",   label: "...e6 (French-like)",     fen: "rnbqkbnr/pp1p1ppp/4p3/2p5/2B1P3/5N2/PPPP1PPP/RNBQK2R w KQkq - 0 4" },
+      { id: "e5",   label: "...e5 (Grand Prix style)", fen: "rnbqkbnr/pp1p1ppp/8/2p1p3/2B1P3/5N2/PPPP1PPP/RNBQK2R w KQkq e6 0 4" },
+      { id: "nc6",  label: "...Nc6 (Classical)",       fen: "r1bqkbnr/pp1ppppp/2n5/2p5/2B1P3/5N2/PPPP1PPP/RNBQK2R w KQkq - 2 3" },
+      { id: "d6s",  label: "...d6 (Scheveningen-ish)", fen: "rnbqkbnr/pp2pppp/3p4/2p5/2B1P3/5N2/PPPP1PPP/RNBQK2R w KQkq - 0 4" },
+    ],
+    deviations: [
+      { trigger: "Black plays ...d5 (central break)", response: "Do not panic. exd5 and recapture. Our development advantage holds." },
+      { trigger: "Black goes queenside with ...a6 ...b5", response: "Watch for ...d5 break. Queenside expansion a3-b4 if they commit." },
+      { trigger: "Black castles kingside", response: "Same Nf1-g3-f5 knight routing. Standard Assassin activation." },
+      { trigger: "Black keeps king in center", response: "Use d4 break earlier to open files against the uncastled king." },
+    ],
+  },
+  {
+    id: "line4",
+    code: "LINE 4",
+    name: "Petrov — d3 Refusal",
+    subtitle: "The Refusal",
+    color: "#27ae60",
+    tagline: "Refuse the draw. Force the cage.",
+    terminalFen: "r1bqkb1r/pppp1ppp/2n2n2/4p3/2B1P3/3P1N2/PPP2PPP/RNBQK2R w KQkq - 4 5",
+    moves: [
+      { move: "e2e4", label: "1. e4",   note: "Black plays e5. Standard." },
+      { move: "g1f3", label: "2. Nf3",  note: "Develop. Black plays Nf6 — the Petrov." },
+      { move: "d2d3", label: "3. d3",   note: "Rejects drawish 3.Nxe5. Forces Black into Italian cage structure." },
+      { move: "f1c4", label: "4. Bc4",  note: "Italian bishop. Now we are in familiar territory." },
+      { move: "a2a4", label: "5. a4",   note: "Prophylaxis. Secure the bishop escape hatch early." },
+      { move: "e1g1", label: "6. O-O",  note: "Castle. King safe." },
+      { move: "h2h3", label: "7. h3",   note: "Sacred shield. Stop Bg4." },
+      { move: "f1e1", label: "8. Re1",  note: "Cage complete. Ready for Assassin phase." },
+    ],
+    responses: [
+      { id: "nc6p",  label: "...Nc6 (transposes to Line 1)", fen: "r1bqkb1r/pppp1ppp/2n2n2/4p3/2B1P3/3P1N2/PPP2PPP/RNBQK2R w KQkq - 4 5" },
+      { id: "d6p",   label: "...d6 (Philidor-like)",         fen: "rnbqkb1r/pppp1ppp/3p1n2/4p3/2B1P3/3P1N2/PPP2PPP/RNBQK2R w KQkq - 0 5" },
+      { id: "bc5p",  label: "...Bc5 (active bishop)",        fen: "r1bqk2r/pppp1ppp/2n2n2/2b1p3/2B1P3/3P1N2/PPP2PPP/RNBQK2R w KQkq - 4 5" },
+      { id: "exd3p", label: "...d5 (central counter)",       fen: "rnbqkb1r/ppp2ppp/5n2/3pp3/2B1P3/3P1N2/PPP2PPP/RNBQK2R w KQkq d6 0 5" },
+    ],
+    deviations: [
+      { trigger: "Black plays ...Nxe4 (grabbing the pawn)", response: "d4. Open the center immediately. Our development advantage is decisive." },
+      { trigger: "Black plays ...d5 (central counter)", response: "exd5. Recapture and continue development. Standard procedure." },
+      { trigger: "Black plays ...Nc6 (transposition)", response: "Welcome it. We are in Line 1 territory now." },
+      { trigger: "Black plays ...Bc5 (active bishop)", response: "Mirror their energy. Continue cage construction. h3 before Nbd2." },
+    ],
+  },
+];
+
+const ASSASSIN_CHECKLIST = [
+  { id: 1, condition: "Knight on f1", note: "Rerouting for the Ng3 to Nf5 maneuver." },
+  { id: 2, condition: "h3 is played", note: "Secured against Bg4 pin." },
+  { id: 3, condition: "Bishop secure on b3 or a2", note: "Retreated safely, still eyeing f7." },
+  { id: 4, condition: "Rook on e1", note: "Central support and future Re3 swing." },
+  { id: 5, condition: "King castled", note: "King safety confirmed." },
+  { id: 6, condition: "Zero hanging pieces", note: "No loose pieces before attacking." },
+  { id: 7, condition: "Ng3 square is clear", note: "Path open for the knight maneuver." },
+];
+
+const STRIKE_SEQUENCE = [
+  { move: "Nf1 to Ng3", note: "Load the spring. Knight begins the march." },
+  { move: "Bb3 or Ba2", note: "Bishop secured in the safe house." },
+  { move: "Be3 or Bg5", note: "Second bishop activates. Pin or control." },
+  { move: "Qe2", note: "Queen supports e4, prepares Re3 battery." },
+  { move: "Ng3 to Nf5", note: "The Strangler lands. Black suffocates." },
+  { move: "Re1 to Re3", note: "Rook swings. Attack begins in earnest." },
+  { move: "d4 break", note: "Release the coiled spring. Center explodes." },
+];
+
+const TACTICS = [
+  { icon: "🎯", name: "Search and Destroy (b4)", desc: "Black's Bc5 is blocked by d6 or unprotected.", note: "Push b4 to cramp queenside and hunt the bishop. Creates permanent bind." },
+  { icon: "🐍", name: "The Strangler (f5 Outpost)", desc: "Black has a hole on f5 or g7. No g6 pawn or h6 has been played.", note: "Land knight on f5 to paralyze defense. Setup Nxg7 or Bxh6 sacrifices." },
+  { icon: "☠️", name: "Toxic Bait (Bg5 Pin + h4)", desc: "Black's Nf6 is pinned and they impatiently play h6 to kick the bishop.", note: "Do not retreat. Play h4. Recapturing hxg5 rips open the h-file." },
+  { icon: "💥", name: "High-Velocity Sacrifice (Bxh6)", desc: "Black is castled, h6 defended once, Qd2 aligned with knight on f5.", note: "Violently sacrifice to shatter the pawn shield. Qd2 and Ng5 follow." },
+  { icon: "🌋", name: "Central Explosion (d4)", desc: "Cage is complete. Black commits heavily to a flank.", note: "Snap the coiled spring. d4 blows open the center while White is 3 tempos ahead." },
+];
+
+const QUIZ_QUESTIONS = [
+  {
+    line: "line1",
+    question: "After 1.e4 e5 2.Nf3 Nc6 3.Bc4 Bc5 4.c3 — what is the correct 5th move?",
+    options: ["5. d4", "5. d3", "5. O-O", "5. Ng5"],
+    correct: 1,
+    explanation: "5.d3 — THE Pianissimo move. We are building the cage, not attacking yet.",
+  },
+  {
+    line: "line1",
+    question: "The cage is built: c3, d3, O-O. What is the NEXT mandatory move?",
+    options: ["Re1", "Nbd2", "h3", "a4"],
+    correct: 2,
+    explanation: "h3 is SACRED and must come before Nbd2. Without it, Black plays Bg4 and achieves a paralyzing pin.",
+  },
+  {
+    line: "line1",
+    question: "Black plays ...Na5 attacking your Bc4. What is the correct response?",
+    options: ["Bxf7+", "Bb3", "Ba2", "d4"],
+    correct: 2,
+    explanation: "Ba2 — retreat to the safe house built by a4. The bishop stays on the a2-g8 diagonal and cannot be hunted.",
+  },
+  {
+    line: "line3",
+    question: "Black plays 1...c5 (Sicilian). What is our 2nd move?",
+    options: ["2. d4", "2. Nc3", "2. Nf3", "2. Bc4"],
+    correct: 2,
+    explanation: "2.Nf3 first — must be played before Bc4 to prevent immediate ...e6 blocking the bishop diagonal.",
+  },
+  {
+    line: "line4",
+    question: "Black plays 2...Nf6 (Petrov Defense). What is our 3rd move?",
+    options: ["3. Nxe5", "3. d4", "3. d3", "3. Nc3"],
+    correct: 2,
+    explanation: "3.d3 — rejects the drawish 3.Nxe5 and complex 3.d4 lines. Forces Black into our Italian cage structure.",
+  },
+];
+
+export default function OpeningLab() {
+  const [activeLine, setActiveLine] = useState(LINES[0]);
+  const [activeTab, setActiveTab] = useState("sequence");
+  const [selectedMove, setSelectedMove] = useState(0);
+  const [studiedMoves, setStudiedMoves] = useState({});
+  const [checklist, setChecklist] = useState({});
+  const [selectedResponse, setSelectedResponse] = useState(null);
+  const [responseCoaching, setResponseCoaching] = useState({});
+  const [loadingResponse, setLoadingResponse] = useState(null);
+  const [quizIndex, setQuizIndex] = useState(0);
+  const [quizStarted, setQuizStarted] = useState(false);
+  const [quizAnswer, setQuizAnswer] = useState(null);
+  const [vladFeedback, setVladFeedback] = useState("");
+  const [loadingVlad, setLoadingVlad] = useState(false);
+
+  const currentLine = activeLine;
+  const lineQuestions = QUIZ_QUESTIONS.filter(q => q.line === currentLine.id || true);
+
+  const totalStudied = Object.values(studiedMoves).filter(Boolean).length;
+  const totalMoves = LINES.reduce((acc, l) => acc + l.moves.length, 0);
+  const progressPct = Math.round((totalStudied / totalMoves) * 100);
+
+  const toggleStudied = (key) => {
+    setStudiedMoves(prev => ({ ...prev, [key]: !prev[key] }));
+  };
+
+  const toggleChecklist = (id) => {
+    setChecklist(prev => ({ ...prev, [id]: !prev[id] }));
+  };
+
+  const checklistComplete = ASSASSIN_CHECKLIST.every(item => checklist[item.id]);
+
+  const handleResponseClick = useCallback(async (response) => {
+    setSelectedResponse(response.id);
+    if (responseCoaching[response.id]) return;
+    setLoadingResponse(response.id);
+    try {
+      const prompt = `You are Fabiano Caruana — precise, analytical. The player is TopherBettis (ELO 609, building toward 2000). They are playing the Gentleman's Assassin system (Italian Pianissimo Cage). Black has just played ${response.label}. In 2-3 sentences: explain the threat this move creates, and the exact response within the Gentleman's Assassin system.`;
+      const coaching = await askFabiano(prompt);
+      setResponseCoaching(prev => ({ ...prev, [response.id]: coaching }));
+    } catch {
+      setResponseCoaching(prev => ({ ...prev, [response.id]: "Fabiano is unavailable. Trust the system." }));
+    }
+    setLoadingResponse(null);
+  }, [responseCoaching]);
+
+  const handleQuizAnswer = useCallback(async (idx) => {
+    const q = lineQuestions[quizIndex];
+    setQuizAnswer(idx);
+    if (idx !== q.correct) {
+      setLoadingVlad(true);
+      try {
+        const prompt = `You are Vlad — stern Eastern European chess coach. TopherBettis answered a move order quiz question wrong. The question was: "${q.question}". They chose "${q.options[idx]}" but the correct answer is "${q.options[q.correct]}". Give a sharp, motivating 1-2 sentence correction in Vlad's voice.`;
+        const feedback = await askVlad(prompt);
+        setVladFeedback(feedback);
+      } catch {
+        setVladFeedback("Nyet. The cage must be built in order. Patience before power. Try again.");
+      }
+      setLoadingVlad(false);
+    } else {
+      setVladFeedback("");
+    }
+  }, [quizIndex, lineQuestions]);
+
+  const nextQuiz = () => {
+    setQuizAnswer(null);
+    setVladFeedback("");
+    setQuizIndex(prev => (prev + 1) % lineQuestions.length);
+  };
+
+  const tabs = [
+    { id: "sequence", label: "MOVE SEQUENCE" },
+    { id: "assassin", label: "ASSASSIN" },
+    { id: "tactics",  label: "TACTICS" },
+    { id: "responses", label: "RESPONSES" },
+    { id: "deviations", label: "DEVIATIONS" },
+    { id: "quiz",    label: "QUIZ" },
+  ];
+
+  return (
+    <div style={styles.root}>
+      {/* Header */}
+      <div style={styles.header}>
+        <div style={styles.headerLeft}>
+          <span style={styles.headerIcon}>🗡️</span>
+          <div>
+            <h1 style={styles.headerTitle}>Opening Lab</h1>
+            <p style={styles.headerSub}>GENTLEMAN'S ASSASSIN — v2.0</p>
+          </div>
+        </div>
+        <div style={styles.progressChip}>
+          <span style={styles.progressNum}>{progressPct}%</span>
+          <span style={styles.progressLabel}>STUDIED</span>
+        </div>
+      </div>
+
+      {/* Progress Bar */}
+      <div style={styles.progressBar}>
+        <div style={{ ...styles.progressFill, width: `${progressPct}%`, backgroundColor: currentLine.color }} />
+      </div>
+
+      {/* Line Selector */}
+      <div style={styles.lineSelector}>
+        {LINES.map(line => (
+          <button
+            key={line.id}
+            style={{
+              ...styles.lineBtn,
+              borderColor: activeLine.id === line.id ? line.color : "#333",
+              color: activeLine.id === line.id ? line.color : "#555",
+              backgroundColor: activeLine.id === line.id ? `${line.color}15` : "transparent",
+            }}
+            onClick={() => { setActiveLine(line); setActiveTab("sequence"); setSelectedMove(0); setSelectedResponse(null); }}
+          >
+            <span style={styles.lineBtnCode}>{line.code}</span>
+            <span style={styles.lineBtnName}>{line.name}</span>
+          </button>
+        ))}
+      </div>
+
+      {/* Tagline */}
+      <div style={{ ...styles.taglineBar, borderLeftColor: currentLine.color }}>
+        <span style={{ fontSize: 12, color: currentLine.color, fontStyle: "italic" }}>
+          "{currentLine.tagline}"
+        </span>
+      </div>
+
+      {/* Tabs */}
+      <div style={styles.tabs}>
+        {tabs.map(tab => (
+          <button
+            key={tab.id}
+            style={{
+              ...styles.tab,
+              ...(activeTab === tab.id ? { ...styles.tabActive, color: currentLine.color, borderBottomColor: currentLine.color } : {}),
+            }}
+            onClick={() => setActiveTab(tab.id)}
+          >
+            {tab.label}
+          </button>
+        ))}
+      </div>
+
+      {/* Tab: Move Sequence */}
+      {activeTab === "sequence" && (
+        <div style={styles.sequenceLayout}>
+          <div style={styles.moveTree}>
+            {currentLine.moves.map((m, i) => {
+              const key = `${currentLine.id}-${i}`;
+              const isStudied = studiedMoves[key];
+              const isActive = selectedMove === i;
+              return (
+                <div
+                  key={i}
+                  style={{
+                    ...styles.moveNode,
+                    border: `1px solid ${isActive ? currentLine.color : isStudied ? "#1e4d20" : "#1e1e1e"}`,
+                    backgroundColor: isActive ? `${currentLine.color}15` : isStudied ? "#0a1200" : "#0a0a0a",
+                  }}
+                  onClick={() => setSelectedMove(i)}
+                >
+                  <div style={{
+                    ...styles.moveNodeNum,
+                    backgroundColor: isStudied ? "#27ae60" : isActive ? currentLine.color : "#1a1a1a",
+                    color: "#fff",
+                  }}>
+                    {isStudied ? "✓" : i + 1}
+                  </div>
+                  <div style={styles.moveNodeInfo}>
+                    <span style={styles.moveNodeLabel}>{m.label}</span>
+                    <span style={styles.moveNodeNote}>{m.note}</span>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+
+          <div style={styles.stepDetail}>
+            {(() => {
+              const m = currentLine.moves[selectedMove];
+              const key = `${currentLine.id}-${selectedMove}`;
+              return (
+                <>
+                  <div style={styles.stepDetailHeader}>
+                    <span style={{ ...styles.stepDetailLabel, color: currentLine.color }}>{m.label}</span>
+                    <span style={styles.stepDetailNum}>Move {selectedMove + 1} of {currentLine.moves.length}</span>
+                  </div>
+                  <p style={styles.stepDetailNote}>{m.note}</p>
+                  <div style={{ ...styles.philosophyBox, borderColor: `${currentLine.color}44` }}>
+                    <p style={styles.philosophyTitle}>CAGE PHILOSOPHY</p>
+                    <p style={styles.philosophyText}>
+                      Construct the cage quietly for 9 moves. Execute violently when Black flinches.
+                      Every move has a purpose. Every tempo is a loaded spring.
+                    </p>
+                  </div>
+                  <div style={styles.fenBox}>
+                    <span style={styles.fenLabel}>TERMINAL FEN</span>
+                    <span style={styles.fenText}>{currentLine.terminalFen}</span>
+                  </div>
+                  <button
+                    style={{ ...styles.btn, backgroundColor: studiedMoves[key] ? "#1e4d20" : currentLine.color }}
+                    onClick={() => toggleStudied(key)}
+                  >
+                    {studiedMoves[key] ? "✓ Studied" : "Mark Studied"}
+                  </button>
+                  {currentLine.moves.every((_, i) => studiedMoves[`${currentLine.id}-${i}`]) && (
+                    <div style={styles.completeBanner}>
+                      ✓ {currentLine.name} complete. The cage is built. Activate the Assassin.
+                    </div>
+                  )}
+                </>
+              );
+            })()}
+          </div>
+        </div>
+      )}
+
+      {/* Tab: Assassin */}
+      {activeTab === "assassin" && (
+        <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+          <div style={styles.assassinHeader}>
+            <p style={styles.assassinRule}>
+              "The assassin does not strike until all conditions are perfect.
+              Premature aggression is the mark of a beginner. Patience is the mark of a killer."
+              — Vlad
+            </p>
+          </div>
+          <div style={styles.checklistGrid}>
+            {ASSASSIN_CHECKLIST.map(item => (
+              <div
+                key={item.id}
+                style={{
+                  ...styles.checklistItem,
+                  border: `1px solid ${checklist[item.id] ? "#1e4d20" : "#1e1e1e"}`,
+                  backgroundColor: checklist[item.id] ? "#0a1200" : "#0a0a0a",
+                  cursor: "pointer",
+                }}
+                onClick={() => toggleChecklist(item.id)}
+              >
+                <div style={{
+                  ...styles.checklistBox,
+                  borderColor: checklist[item.id] ? "#27ae60" : "#333",
+                  backgroundColor: checklist[item.id] ? "#27ae60" : "transparent",
+                }}>
+                  {checklist[item.id] ? "✓" : ""}
+                </div>
+                <div>
+                  <div style={styles.checklistLabel}>{item.condition}</div>
+                  <div style={styles.checklistDesc}>{item.note}</div>
+                </div>
+              </div>
+            ))}
+          </div>
+          {checklistComplete && (
+            <div style={styles.completeBanner}>
+              ⚡ ALL CONDITIONS MET. The assassin is cleared to strike. Execute the sequence below.
+            </div>
+          )}
+          <div style={styles.strikeSequence}>
+            <p style={styles.strikeTitle}>STRIKE SEQUENCE</p>
+            {STRIKE_SEQUENCE.map((step, i) => (
+              <div key={i} style={{ ...styles.strikeStep, borderBottomColor: i === STRIKE_SEQUENCE.length - 1 ? "transparent" : "#141420" }}>
+                <div style={styles.strikeNum}>{i + 1}</div>
+                <div>
+                  <div style={styles.strikeMoveLabel}>{step.move}</div>
+                  <div style={styles.strikeNote}>{step.note}</div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Tab: Tactics */}
+      {activeTab === "tactics" && (
+        <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+          {TACTICS.map((t, i) => (
+            <div key={i} style={{ ...styles.tacticCard, border: `1px solid #1e1e1e`, backgroundColor: "#0a0a0a" }}>
+              <div style={styles.tacticHeader}>
+                <span style={styles.tacticIcon}>{t.icon}</span>
+                <div>
+                  <p style={styles.tacticName}>{t.name}</p>
+                  <p style={styles.tacticDesc}>{t.desc}</p>
+                </div>
+              </div>
+              <p style={styles.tacticNote}>{t.note}</p>
+            </div>
+          ))}
+          <div style={styles.tacticReminder}>
+            <p style={styles.tacticReminderTitle}>VLAD'S RULE</p>
+            <p style={styles.tacticReminderText}>
+              Do not guess which weapon to use. Run the 4-Step Mental Loop first.
+              Read Black's intent. Then deploy the corresponding weapon with precision.
+            </p>
+          </div>
+        </div>
+      )}
+
+      {/* Tab: Responses */}
+      {activeTab === "responses" && (
+        <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+          <p style={styles.sectionLabel}>BLACK'S RESPONSES — {currentLine.name.toUpperCase()}</p>
+          <div style={styles.responseGrid}>
+            {currentLine.responses.map(r => (
+              <div
+                key={r.id}
+                style={{
+                  ...styles.responseCard,
+                  border: `1px solid ${selectedResponse === r.id ? currentLine.color : "#1e1e1e"}`,
+                  backgroundColor: selectedResponse === r.id ? `${currentLine.color}10` : "#0a0a0a",
+                  cursor: "pointer",
+                }}
+                onClick={() => handleResponseClick(r)}
+              >
+                <div style={styles.responseLabel}>{r.label}</div>
+              </div>
+            ))}
+          </div>
+          {selectedResponse && (
+            <div style={{ ...styles.responseCoachBox, borderColor: `${currentLine.color}44` }}>
+              <p style={{ ...styles.responseCoachTitle, color: currentLine.color }}>FABIANO ANALYSIS</p>
+              {loadingResponse === selectedResponse ? (
+                <p style={styles.loadingText}>Fabiano is calculating...</p>
+              ) : (
+                <p style={styles.responseCoachText}>{responseCoaching[selectedResponse]}</p>
+              )}
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* Tab: Deviations */}
+      {activeTab === "deviations" && (
+        <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+          <p style={styles.sectionLabel}>WHEN BLACK BREAKS THE SCRIPT — {currentLine.name.toUpperCase()}</p>
+          {currentLine.deviations.map((d, i) => (
+            <div key={i} style={styles.deviationCard}>
+              <div style={styles.deviationTrigger}>
+                <span style={{ fontSize: 8, color: "#7a5500", letterSpacing: "1.5px" }}>TRIGGER</span>
+                <span style={styles.deviationTriggerText}>{d.trigger}</span>
+              </div>
+              <div style={styles.deviationResponse}>
+                <span style={{ fontSize: 8, color: "#3a6b3a", letterSpacing: "1.5px" }}>RESPONSE</span>
+                <span style={styles.deviationResponseText}>{d.response}</span>
+              </div>
+            </div>
+          ))}
+          <div style={styles.deviationRule}>
+            <p style={{ margin: 0, fontSize: 12, color: "#5a8a5a", lineHeight: 1.7, fontStyle: "italic" }}>
+              At ELO 609, opponents will deviate constantly. This is not chaos — it is opportunity.
+              Every deviation from theory gives us a development advantage. Stay calm. Run the loop.
+            </p>
+          </div>
+        </div>
+      )}
+
+      {/* Tab: Quiz */}
+      {activeTab === "quiz" && (
+        <div style={styles.quizLayout}>
+          {!quizStarted ? (
+            <div style={styles.quizStart}>
+              <p style={styles.quizIntro}>
+                Test your move order knowledge. Vlad will correct you if you deviate.
+                The cage must be built in the right order — every time.
+              </p>
+              <button
+                style={{ ...styles.btn, backgroundColor: currentLine.color }}
+                onClick={() => { setQuizStarted(true); setQuizIndex(0); setQuizAnswer(null); setVladFeedback(""); }}
+              >
+                Start Quiz
+              </button>
+            </div>
+          ) : (
+            <>
+              {(() => {
+                const q = lineQuestions[quizIndex];
+                return (
+                  <>
+                    <p style={{ fontSize: 9, color: "#555", letterSpacing: "1.5px" }}>
+                      QUESTION {quizIndex + 1} OF {lineQuestions.length}
+                    </p>
+                    <p style={styles.quizQuestion}>{q.question}</p>
+                    <div style={styles.quizOptions}>
+                      {q.options.map((opt, i) => {
+                        let bg = "#111";
+                        let border = "#222";
+                        let color = "#aaa";
+                        if (quizAnswer !== null) {
+                          if (i === q.correct) { bg = "#0f2010"; border = "#27ae60"; color = "#27ae60"; }
+                          else if (i === quizAnswer && i !== q.correct) { bg = "#1a0000"; border = "#c0392b"; color = "#c0392b"; }
+                        }
+                        return (
+                          <button
+                            key={i}
+                            style={{ ...styles.quizOption, backgroundColor: bg, border: `1px solid ${border}`, color }}
+                            onClick={() => quizAnswer === null && handleQuizAnswer(i)}
+                            disabled={quizAnswer !== null}
+                          >
+                            {opt}
+                          </button>
+                        );
+                      })}
+                    </div>
+                    {quizAnswer !== null && (
+                      <div style={styles.quizFeedback}>
+                        {quizAnswer === q.correct ? (
+                          <p style={{ ...styles.quizCorrectNote, color: "#27ae60" }}>
+                            ✓ Correct. {q.explanation}
+                          </p>
+                        ) : (
+                          <>
+                            <p style={styles.quizCorrectNote}>{q.explanation}</p>
+                            {loadingVlad ? (
+                              <p style={styles.loadingText}>Vlad is watching...</p>
+                            ) : vladFeedback ? (
+                              <p style={styles.vladQuizNote}>"{vladFeedback}"</p>
+                            ) : null}
+                          </>
+                        )}
+                        <div style={{ display: "flex", gap: 10 }}>
+                          <button style={{ ...styles.btn, backgroundColor: currentLine.color }} onClick={nextQuiz}>
+                            Next Question
+                          </button>
+                          <button style={styles.btnGhost} onClick={() => { setQuizStarted(false); setQuizIndex(0); setQuizAnswer(null); setVladFeedback(""); }}>
+                            Restart
+                          </button>
+                        </div>
+                      </div>
+                    )}
+                  </>
+                );
+              })()}
+            </>
+          )}
+        </div>
+      )}
+    </div>
+  );
+}
 
 const styles = {
-  root: {
-    display: "flex", flexDirection: "column", gap: 20,
-    padding: "28px 32px", minHeight: "100vh",
-    backgroundColor: "#0d0d0d", color: "#e8e8e8",
-    fontFamily: "'IBM Plex Mono', 'Courier New', monospace",
-    maxWidth: 960, margin: "0 auto",
-  },
+  root: { display: "flex", flexDirection: "column", gap: 20, padding: "28px 32px", minHeight: "100vh", backgroundColor: "#0d0d0d", color: "#e8e8e8", fontFamily: "'IBM Plex Mono', 'Courier New', monospace", maxWidth: 960, margin: "0 auto" },
   header: { display: "flex", justifyContent: "space-between", alignItems: "center", borderBottom: "1px solid #222", paddingBottom: 20, flexWrap: "wrap", gap: 12 },
   headerLeft: { display: "flex", alignItems: "center", gap: 14 },
   headerIcon: { fontSize: 36 },
@@ -128,26 +654,21 @@ const styles = {
   progressLabel: { fontSize: 10, color: "#555", marginTop: 2 },
   progressBar: { height: 4, backgroundColor: "#1a1a1a", borderRadius: 2, overflow: "hidden" },
   progressFill: { height: "100%", borderRadius: 2, transition: "width 0.4s ease" },
-
   lineSelector: { display: "flex", gap: 8, flexWrap: "wrap" },
   lineBtn: { padding: "8px 14px", background: "transparent", border: "1px solid", borderRadius: 6, cursor: "pointer", display: "flex", flexDirection: "column", gap: 2, fontFamily: "'IBM Plex Mono', monospace", transition: "all 0.15s", minWidth: 130 },
   lineBtnCode: { fontSize: 8, letterSpacing: "2px" },
   lineBtnName: { fontSize: 11, fontWeight: 600 },
-
   taglineBar: { padding: "8px 14px", borderLeft: "3px solid", backgroundColor: "#111", display: "flex", alignItems: "center" },
-
   tabs: { display: "flex", gap: 0, borderBottom: "1px solid #222", flexWrap: "wrap" },
   tab: { padding: "10px 14px", backgroundColor: "transparent", border: "none", borderBottom: "2px solid transparent", color: "#555", fontSize: 11, fontFamily: "'IBM Plex Mono', monospace", cursor: "pointer", letterSpacing: "0.5px" },
   tabActive: { borderBottom: "2px solid #27ae60" },
-
   sequenceLayout: { display: "flex", gap: 24, alignItems: "flex-start", flexWrap: "wrap" },
   moveTree: { display: "flex", flexDirection: "column", gap: 6, width: 290, flexShrink: 0 },
   moveNode: { display: "flex", alignItems: "center", gap: 12, padding: "10px 14px", borderRadius: 6, cursor: "pointer", transition: "border-color 0.2s, background 0.2s" },
-  moveNodeNum: { width: 26, height: 26, borderRadius: 4, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 11, fontWeight: 700, flexShrink: 0, transition: "background 0.2s" },
+  moveNodeNum: { width: 26, height: 26, borderRadius: 4, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 11, fontWeight: 700, flexShrink: 0 },
   moveNodeInfo: { display: "flex", flexDirection: "column", gap: 2 },
   moveNodeLabel: { fontSize: 13, fontWeight: 600, color: "#ccc" },
   moveNodeNote: { fontSize: 10, color: "#555", lineHeight: 1.4 },
-
   stepDetail: { flex: 1, display: "flex", flexDirection: "column", gap: 16, minWidth: 240 },
   stepDetailHeader: { display: "flex", justifyContent: "space-between", alignItems: "baseline" },
   stepDetailLabel: { fontSize: 28, fontWeight: 700 },
@@ -160,12 +681,11 @@ const styles = {
   fenLabel: { display: "block", fontSize: 8, color: "#444", letterSpacing: "2px", marginBottom: 6 },
   fenText: { fontSize: 9, color: "#555", wordBreak: "break-all", lineHeight: 1.5 },
   completeBanner: { padding: "12px 16px", backgroundColor: "#0f2010", border: "1px solid #1e4d20", borderRadius: 6, fontSize: 13, color: "#27ae60" },
-
   assassinHeader: { padding: "14px 18px", backgroundColor: "#0f0a00", border: "1px solid #3d2800", borderRadius: 6 },
   assassinRule: { margin: 0, fontSize: 12, color: "#8a6a2a", lineHeight: 1.7, fontStyle: "italic" },
   checklistGrid: { display: "flex", flexDirection: "column", gap: 8 },
-  checklistItem: { display: "flex", alignItems: "center", gap: 14, padding: "12px 16px", borderRadius: 6, transition: "all 0.15s" },
-  checklistBox: { width: 22, height: 22, border: "1px solid", borderRadius: 4, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 12, color: "#fff", flexShrink: 0, transition: "all 0.15s" },
+  checklistItem: { display: "flex", alignItems: "center", gap: 14, padding: "12px 16px", borderRadius: 6 },
+  checklistBox: { width: 22, height: 22, border: "1px solid", borderRadius: 4, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 12, color: "#fff", flexShrink: 0 },
   checklistLabel: { fontSize: 13, color: "#ccc", fontWeight: 600 },
   checklistDesc: { fontSize: 10, color: "#555", marginTop: 2 },
   strikeSequence: { padding: "16px 18px", backgroundColor: "#0a0a12", border: "1px solid #1a1a2a", borderRadius: 6 },
@@ -174,8 +694,7 @@ const styles = {
   strikeNum: { width: 22, height: 22, backgroundColor: "#c0392b", borderRadius: 3, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 10, color: "#fff", fontWeight: 700, flexShrink: 0 },
   strikeMoveLabel: { fontSize: 13, color: "#aaa", fontWeight: 600 },
   strikeNote: { fontSize: 10, color: "#555", marginTop: 3 },
-
-  tacticCard: { padding: "14px 16px", borderRadius: 8, transition: "border-color 0.2s, background 0.2s" },
+  tacticCard: { padding: "14px 16px", borderRadius: 8 },
   tacticHeader: { display: "flex", alignItems: "flex-start", gap: 12 },
   tacticIcon: { fontSize: 24, flexShrink: 0 },
   tacticName: { margin: "0 0 4px", fontSize: 14, fontWeight: 700, color: "#ccc" },
@@ -184,32 +703,28 @@ const styles = {
   tacticReminder: { padding: "14px 16px", backgroundColor: "#1a0f00", border: "1px solid #3d2800", borderRadius: 6 },
   tacticReminderTitle: { margin: "0 0 6px", fontSize: 9, color: "#7a5500", letterSpacing: "1.5px" },
   tacticReminderText: { margin: 0, fontSize: 12, color: "#8a6a2a", lineHeight: 1.7 },
-
   sectionLabel: { margin: 0, fontSize: 9, letterSpacing: "2px", color: "#444" },
   responseGrid: { display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(200px, 1fr))", gap: 10 },
-  responseCard: { padding: "14px 16px", borderRadius: 6, transition: "border-color 0.2s, background 0.2s" },
+  responseCard: { padding: "14px 16px", borderRadius: 6 },
   responseLabel: { fontSize: 12, color: "#aaa" },
   responseCoachBox: { padding: "16px 18px", backgroundColor: "#0a1520", border: "1px solid", borderRadius: 8 },
   responseCoachTitle: { margin: "0 0 8px", fontSize: 10, letterSpacing: "1px" },
   responseCoachText: { margin: 0, fontSize: 13, color: "#aaa", lineHeight: 1.8 },
-
   deviationCard: { backgroundColor: "#111", border: "1px solid #1e1e1e", borderRadius: 6, overflow: "hidden" },
   deviationTrigger: { padding: "10px 14px", backgroundColor: "#1a1000", borderBottom: "1px solid #1e1e1e", display: "flex", flexDirection: "column", gap: 4 },
   deviationTriggerText: { fontSize: 12, color: "#e67e22" },
   deviationResponse: { padding: "10px 14px", display: "flex", flexDirection: "column", gap: 4 },
   deviationResponseText: { fontSize: 12, color: "#aaa", lineHeight: 1.6 },
   deviationRule: { padding: "14px 16px", backgroundColor: "#0a1200", border: "1px solid #1e2a00", borderRadius: 6 },
-
   quizLayout: { display: "flex", flexDirection: "column", gap: 20 },
   quizStart: { display: "flex", flexDirection: "column", gap: 16 },
   quizIntro: { margin: 0, fontSize: 14, color: "#aaa", lineHeight: 1.7 },
   quizQuestion: { fontSize: 16, color: "#ccc", lineHeight: 1.6, margin: 0 },
   quizOptions: { display: "flex", flexDirection: "column", gap: 10 },
-  quizOption: { padding: "14px 18px", borderRadius: 6, fontSize: 14, fontFamily: "'IBM Plex Mono', monospace", cursor: "pointer", textAlign: "left", transition: "all 0.2s" },
+  quizOption: { padding: "14px 18px", borderRadius: 6, fontSize: 14, fontFamily: "'IBM Plex Mono', monospace", cursor: "pointer", textAlign: "left" },
   quizFeedback: { display: "flex", flexDirection: "column", gap: 10, padding: "16px 18px", backgroundColor: "#111", border: "1px solid #222", borderRadius: 8 },
   quizCorrectNote: { margin: 0, fontSize: 12, color: "#888" },
   vladQuizNote: { margin: 0, fontSize: 12, color: "#c0392b", fontStyle: "italic" },
-
   loadingText: { margin: 0, fontSize: 12, color: "#555", fontStyle: "italic" },
   btn: { padding: "10px 22px", color: "#fff", border: "none", borderRadius: 6, fontSize: 13, fontFamily: "'IBM Plex Mono', monospace", fontWeight: 700, cursor: "pointer", alignSelf: "flex-start" },
   btnGhost: { padding: "10px 22px", backgroundColor: "transparent", color: "#666", border: "1px solid #333", borderRadius: 6, fontSize: 13, fontFamily: "'IBM Plex Mono', monospace", cursor: "pointer", alignSelf: "flex-start" },
