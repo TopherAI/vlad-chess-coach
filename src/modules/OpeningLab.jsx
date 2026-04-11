@@ -1,9 +1,9 @@
 /**
  * src/modules/OpeningLab.jsx
- * vlad-chess-coach — Opening Lab Module (v2.1 Gentleman's Assassin)
+ * vlad-chess-coach — Opening Lab Module (v2.2 Gentleman's Assassin)
  */
 
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect } from "react";
 import { askFabiano } from "../coaches/fabiano.jsx";
 import { askVlad } from "../coaches/vlad.jsx";
 import { askMagnus } from "../api/gemini.js";
@@ -165,43 +165,68 @@ const TACTICS = [
   { icon: "🌋", name: "Central Explosion (d4)", desc: "Cage is complete. Black commits heavily to a flank.", note: "Snap the coiled spring. d4 blows open the center while White is 3 tempos ahead." },
 ];
 
-const QUIZ_QUESTIONS = [
+// ── Static fallback questions per line ────────────────────────────────────────
+const FALLBACK_QUESTIONS = {
+  line1: [
+    { question: "After 1.e4 e5 2.Nf3 Nc6 3.Bc4 Bc5 4.c3 — what is the correct 5th move?", options: ["5. d4", "5. d3", "5. O-O", "5. Ng5"], correct: 1, explanation: "5.d3 — THE Pianissimo move. Build the cage, not the attack." },
+    { question: "The cage is built: c3, d3, O-O. What is the NEXT mandatory move?", options: ["Re1", "Nbd2", "h3", "a4"], correct: 2, explanation: "h3 is SACRED. Must come before Nbd2. Stops the Bg4 pin cold." },
+    { question: "Black plays ...Na5 attacking your Bc4. Correct response?", options: ["Bxf7+", "Bb3", "Ba2", "d4"], correct: 2, explanation: "Ba2 — the safe house built by a4. Bishop stays on the diagonal." },
+    { question: "When should you castle in the Pianissimo?", options: ["Move 4-5", "Move 6-7", "Move 10+", "Never castle early"], correct: 1, explanation: "Castle by move 7. King safety before action." },
+    { question: "What is the purpose of a4 in the Gentleman's Assassin?", options: ["Attack the queenside", "Create a bishop safe house on a2", "Prepare b4", "Stop ...b5"], correct: 1, explanation: "a4 creates the a2 escape hatch for the bishop when attacked by ...Na5." },
+  ],
+  line2: [
+    { question: "Black plays Nf6 (Two Knights). What is our 4th move?", options: ["4. Ng5", "4. d4", "4. d3", "4. O-O"], correct: 2, explanation: "4.d3 — the Gentleman's move. Refuse the sharp lines entirely." },
+    { question: "After d3, what is the immediate priority?", options: ["Nc3", "a4", "h3", "O-O"], correct: 1, explanation: "a4 neutralizes ...Na5 queenside expansion before it becomes a threat." },
+    { question: "Black transposes with ...Bc5. What do we do?", options: ["Change plans completely", "Welcome it — we are in Line 1 now", "Play d4 immediately", "Retreat the bishop"], correct: 1, explanation: "Welcome it. Same cage applies. We are in familiar territory." },
+    { question: "When does h3 get played in Line 2?", options: ["Move 4", "Move 5", "Move 7", "Move 9"], correct: 2, explanation: "Move 7. After castling. Sacred sequence: O-O then h3." },
+    { question: "What does the Misdirect name refer to?", options: ["Misdirecting your king", "Black expects Ng5, we play d3 instead", "Hiding the bishop", "A queenside feint"], correct: 1, explanation: "They prepare for Ng5. We play d3. They prepared for the wrong opponent." },
+  ],
+  line3: [
+    { question: "Black plays 1...c5 (Sicilian). Our 2nd move?", options: ["2. d4", "2. Nc3", "2. Nf3", "2. Bc4"], correct: 2, explanation: "2.Nf3 first — then Bc4. Prevents ...e6 blocking the diagonal." },
+    { question: "Why does Bc4 work against the Sicilian?", options: ["It attacks c6", "It avoids the Najdorf and Dragon theory", "It controls d5", "It prepares d4"], correct: 1, explanation: "The Bc4 Bypass skips all of Black's prepared Sicilian theory entirely." },
+    { question: "Black plays ...d5. Correct response?", options: ["Panic and retreat", "exd5 and recapture", "c4", "d4"], correct: 1, explanation: "exd5 and recapture. Our development advantage holds. Do not panic." },
+    { question: "What does c3 accomplish in Line 3?", options: ["Protects the bishop", "Prepares d4 and solidifies", "Attacks b4", "Supports e4 only"], correct: 1, explanation: "c3 prepares d4 if needed and solidifies the center structure." },
+    { question: "When is the cage complete in Line 3?", options: ["After O-O", "After h3", "After Re1", "After d3"], correct: 2, explanation: "Re1 is the final piece. Rook to e-file. Cage complete." },
+  ],
+  line4: [
+    { question: "Black plays 2...Nf6 (Petrov). Our 3rd move?", options: ["3. Nxe5", "3. d4", "3. d3", "3. Nc3"], correct: 2, explanation: "3.d3 — rejects the drawish Nxe5 line. Forces Black into our cage." },
+    { question: "Why refuse 3.Nxe5 in the Petrov?", options: ["It loses material", "It leads to drawish simplified positions", "It's illegal", "It weakens our king"], correct: 1, explanation: "3.Nxe5 leads to early simplification and dull draws. We play 3.d3 instead." },
+    { question: "Black plays ...Nxe4 grabbing the pawn. Response?", options: ["Recapture immediately", "d4 — open the center", "Ignore it", "O-O first"], correct: 1, explanation: "d4. Open the center immediately. Our development advantage is decisive." },
+    { question: "After 3.d3, what move comes next?", options: ["h3", "O-O", "Bc4", "a4"], correct: 2, explanation: "4.Bc4 — Italian bishop. We are now in familiar territory." },
+    { question: "What does the Refusal name mean in Line 4?", options: ["Refusing to castle", "Refusing the draw with d3 instead of Nxe5", "Refusing Black's pawn", "Refusing to open the center"], correct: 1, explanation: "We refuse the draw. 3.d3 forces Black into our cage instead of equal simplification." },
+  ],
+};
+
+// ── AI question generator ─────────────────────────────────────────────────────
+async function generateQuizQuestions(line) {
+  const prompt = `You are generating a chess quiz for TopherBettis (ELO 609) who is studying the Gentleman's Assassin opening system.
+
+Generate exactly 5 multiple-choice questions about the "${line.name}" opening line (${line.tagline}).
+
+Key moves for this line: ${line.moves.map(m => m.label + ": " + m.note).join(" | ")}
+
+Rules:
+- Each question tests move order, purpose of a specific move, or response to Black's play
+- 4 options each, exactly 1 correct answer
+- Keep it practical — things that matter at ELO 609-2000
+- Explanations should be sharp and memorable, like Vlad would say them
+
+Respond with ONLY a JSON array, no markdown, no backticks, no preamble:
+[
   {
-    line: "line1",
-    question: "After 1.e4 e5 2.Nf3 Nc6 3.Bc4 Bc5 4.c3 — what is the correct 5th move?",
-    options: ["5. d4", "5. d3", "5. O-O", "5. Ng5"],
-    correct: 1,
-    explanation: "5.d3 — THE Pianissimo move. We are building the cage, not attacking yet.",
-  },
-  {
-    line: "line1",
-    question: "The cage is built: c3, d3, O-O. What is the NEXT mandatory move?",
-    options: ["Re1", "Nbd2", "h3", "a4"],
-    correct: 2,
-    explanation: "h3 is SACRED and must come before Nbd2. Without it, Black plays Bg4 and achieves a paralyzing pin.",
-  },
-  {
-    line: "line1",
-    question: "Black plays ...Na5 attacking your Bc4. What is the correct response?",
-    options: ["Bxf7+", "Bb3", "Ba2", "d4"],
-    correct: 2,
-    explanation: "Ba2 — retreat to the safe house built by a4. The bishop stays on the a2-g8 diagonal and cannot be hunted.",
-  },
-  {
-    line: "line3",
-    question: "Black plays 1...c5 (Sicilian). What is our 2nd move?",
-    options: ["2. d4", "2. Nc3", "2. Nf3", "2. Bc4"],
-    correct: 2,
-    explanation: "2.Nf3 first — must be played before Bc4 to prevent immediate ...e6 blocking the bishop diagonal.",
-  },
-  {
-    line: "line4",
-    question: "Black plays 2...Nf6 (Petrov Defense). What is our 3rd move?",
-    options: ["3. Nxe5", "3. d4", "3. d3", "3. Nc3"],
-    correct: 2,
-    explanation: "3.d3 — rejects the drawish 3.Nxe5 and complex 3.d4 lines. Forces Black into our Italian cage structure.",
-  },
-];
+    "question": "...",
+    "options": ["...", "...", "...", "..."],
+    "correct": 0,
+    "explanation": "..."
+  }
+]`;
+
+  const raw = await askMagnus(prompt);
+  const clean = raw.replace(/```json|```/g, "").trim();
+  const parsed = JSON.parse(clean);
+  if (!Array.isArray(parsed) || parsed.length === 0) throw new Error("Bad response");
+  return parsed.slice(0, 5);
+}
 
 export default function OpeningLab() {
   const [activeLine, setActiveLine] = useState(LINES[0]);
@@ -214,15 +239,19 @@ export default function OpeningLab() {
   const [magnusCoaching, setMagnusCoaching] = useState({});
   const [loadingResponse, setLoadingResponse] = useState(null);
   const [loadingMagnus, setLoadingMagnus] = useState(null);
-  const [quizIndex, setQuizIndex] = useState(0);
+
+  // Quiz state
+  const [quizQuestions, setQuizQuestions] = useState([]);
+  const [quizLoading, setQuizLoading] = useState(false);
   const [quizStarted, setQuizStarted] = useState(false);
+  const [quizIndex, setQuizIndex] = useState(0);
   const [quizAnswer, setQuizAnswer] = useState(null);
+  const [quizScore, setQuizScore] = useState(0);
+  const [quizDone, setQuizDone] = useState(false);
   const [vladFeedback, setVladFeedback] = useState("");
   const [loadingVlad, setLoadingVlad] = useState(false);
 
   const currentLine = activeLine;
-  const lineQuestions = QUIZ_QUESTIONS.filter(q => q.line === currentLine.id || true);
-
   const totalStudied = Object.values(studiedMoves).filter(Boolean).length;
   const totalMoves = LINES.reduce((acc, l) => acc + l.moves.length, 0);
   const progressPct = Math.round((totalStudied / totalMoves) * 100);
@@ -230,6 +259,31 @@ export default function OpeningLab() {
   const toggleStudied = (key) => setStudiedMoves(prev => ({ ...prev, [key]: !prev[key] }));
   const toggleChecklist = (id) => setChecklist(prev => ({ ...prev, [id]: !prev[id] }));
   const checklistComplete = ASSASSIN_CHECKLIST.every(item => checklist[item.id]);
+
+  // Load questions when quiz tab opens or line changes
+  const loadQuestions = useCallback(async (line) => {
+    setQuizLoading(true);
+    setQuizQuestions([]);
+    setQuizStarted(false);
+    setQuizIndex(0);
+    setQuizAnswer(null);
+    setQuizScore(0);
+    setQuizDone(false);
+    setVladFeedback("");
+    try {
+      const questions = await generateQuizQuestions(line);
+      setQuizQuestions(questions);
+    } catch {
+      setQuizQuestions(FALLBACK_QUESTIONS[line.id] || FALLBACK_QUESTIONS.line1);
+    }
+    setQuizLoading(false);
+  }, []);
+
+  useEffect(() => {
+    if (activeTab === "quiz") {
+      loadQuestions(currentLine);
+    }
+  }, [activeTab, currentLine.id]);
 
   const handleResponseClick = useCallback(async (response) => {
     setSelectedResponse(response.id);
@@ -241,7 +295,6 @@ export default function OpeningLab() {
     if (needsMagnus) setLoadingMagnus(response.id);
 
     const fabianoPrompt = `You are Fabiano Caruana — precise, analytical. The player is TopherBettis (ELO 609, building toward 2000). They are playing the Gentleman's Assassin system (Italian Pianissimo Cage). Black has just played ${response.label}. In 2-3 sentences: explain the threat this move creates, and the exact response within the Gentleman's Assassin system.`;
-
     const magnusPrompt = `You are Magnus Carlsen — intuitive, blunt, occasionally sardonic. The player is TopherBettis (ELO 609). They are playing the Italian Pianissimo Cage. Black has just played ${response.label}. In 1-2 sentences: give a raw intuitive read on this position. No theory — just feel. What does the position want?`;
 
     const [fabianoResult, magnusResult] = await Promise.all([
@@ -260,27 +313,42 @@ export default function OpeningLab() {
   }, [responseCoaching, magnusCoaching]);
 
   const handleQuizAnswer = useCallback(async (idx) => {
-    const q = lineQuestions[quizIndex];
+    const q = quizQuestions[quizIndex];
     setQuizAnswer(idx);
-    if (idx !== q.correct) {
+    if (idx === q.correct) {
+      setQuizScore(prev => prev + 1);
+      setVladFeedback("");
+    } else {
       setLoadingVlad(true);
       try {
-        const prompt = `You are Vlad — stern Eastern European chess coach. TopherBettis answered a move order quiz question wrong. The question was: "${q.question}". They chose "${q.options[idx]}" but the correct answer is "${q.options[q.correct]}". Give a sharp, motivating 1-2 sentence correction in Vlad's voice.`;
+        const prompt = `You are Vlad — stern Eastern European chess coach. TopherBettis answered a quiz question wrong. Question: "${q.question}". They chose "${q.options[idx]}" but correct answer is "${q.options[q.correct]}". Give a sharp, motivating 1-2 sentence correction in Vlad's voice.`;
         const feedback = await askVlad(prompt);
         setVladFeedback(feedback);
       } catch {
-        setVladFeedback("Nyet. The cage must be built in order. Patience before power. Try again.");
+        setVladFeedback("Nyet. The cage must be built in order. Patience before power.");
       }
       setLoadingVlad(false);
+    }
+  }, [quizIndex, quizQuestions]);
+
+  const nextQuestion = () => {
+    const isLast = quizIndex === quizQuestions.length - 1;
+    if (isLast) {
+      setQuizDone(true);
     } else {
+      setQuizIndex(prev => prev + 1);
+      setQuizAnswer(null);
       setVladFeedback("");
     }
-  }, [quizIndex, lineQuestions]);
+  };
 
-  const nextQuiz = () => {
-    setQuizAnswer(null);
-    setVladFeedback("");
-    setQuizIndex(prev => (prev + 1) % lineQuestions.length);
+  const getVladVerdict = (score, total) => {
+    const pct = score / total;
+    if (pct === 1) return "Perfect. The cage is in your hands. Now execute.";
+    if (pct >= 0.8) return "Strong. One weakness. Find it. Fix it before next game.";
+    if (pct >= 0.6) return "Acceptable. But acceptable loses games. Drill the failures.";
+    if (pct >= 0.4) return "The cage is leaking. Review the sequence. Again.";
+    return "You are building on sand. Back to the beginning. Every move. Every purpose.";
   };
 
   const tabs = [
@@ -301,7 +369,7 @@ export default function OpeningLab() {
           <span style={styles.headerIcon}>🗡️</span>
           <div>
             <h1 style={styles.headerTitle}>Opening Lab</h1>
-            <p style={styles.headerSub}>GENTLEMAN'S ASSASSIN — v2.1</p>
+            <p style={styles.headerSub}>GENTLEMAN'S ASSASSIN — v2.2</p>
           </div>
         </div>
         <div style={styles.progressChip}>
@@ -482,13 +550,7 @@ export default function OpeningLab() {
           <div style={styles.strikeSequence}>
             <p style={styles.strikeTitle}>STRIKE SEQUENCE</p>
             {STRIKE_SEQUENCE.map((step, i) => (
-              <div
-                key={i}
-                style={{
-                  ...styles.strikeStep,
-                  borderBottomColor: i === STRIKE_SEQUENCE.length - 1 ? "transparent" : "#141420",
-                }}
-              >
+              <div key={i} style={{ ...styles.strikeStep, borderBottomColor: i === STRIKE_SEQUENCE.length - 1 ? "transparent" : "#141420" }}>
                 <div style={styles.strikeNum}>{i + 1}</div>
                 <div>
                   <div style={styles.strikeMoveLabel}>{step.move}</div>
@@ -545,10 +607,8 @@ export default function OpeningLab() {
               </div>
             ))}
           </div>
-
           {selectedResponse && (
             <>
-              {/* Fabiano box */}
               <div style={{ ...styles.responseCoachBox, borderColor: `${currentLine.color}44` }}>
                 <p style={{ ...styles.responseCoachTitle, color: currentLine.color }}>FABIANO ANALYSIS</p>
                 {loadingResponse === selectedResponse ? (
@@ -557,8 +617,6 @@ export default function OpeningLab() {
                   <p style={styles.responseCoachText}>{responseCoaching[selectedResponse]}</p>
                 )}
               </div>
-
-              {/* Magnus box */}
               <div style={{ ...styles.responseCoachBox, borderColor: "#27ae6044" }}>
                 <p style={{ ...styles.responseCoachTitle, color: "#27ae60" }}>MAGNUS — INTUITION</p>
                 {loadingMagnus === selectedResponse ? (
@@ -600,92 +658,120 @@ export default function OpeningLab() {
       {/* ── QUIZ ── */}
       {activeTab === "quiz" && (
         <div style={styles.quizLayout}>
-          {!quizStarted ? (
+
+          {/* Loading */}
+          {quizLoading && (
+            <div style={styles.quizLoadingBox}>
+              <p style={styles.quizLoadingText}>⚙ Generating questions for {currentLine.name}...</p>
+            </div>
+          )}
+
+          {/* Start screen */}
+          {!quizLoading && !quizStarted && !quizDone && quizQuestions.length > 0 && (
             <div style={styles.quizStart}>
               <p style={styles.quizIntro}>
-                Test your move order knowledge. Vlad will correct you if you deviate.
-                The cage must be built in the right order — every time.
+                {quizQuestions.length} questions on <span style={{ color: currentLine.color }}>{currentLine.name}</span>.
+                Vlad is watching. Build the cage in the right order — every time.
               </p>
-              <button
-                style={{ ...styles.btn, backgroundColor: currentLine.color }}
-                onClick={() => {
+              <div style={{ display: "flex", gap: 10 }}>
+                <button style={{ ...styles.btn, backgroundColor: currentLine.color }} onClick={() => setQuizStarted(true)}>
+                  Start Quiz
+                </button>
+                <button style={styles.btnGhost} onClick={() => loadQuestions(currentLine)}>
+                  ↺ Regenerate
+                </button>
+              </div>
+            </div>
+          )}
+
+          {/* Active question */}
+          {!quizLoading && quizStarted && !quizDone && quizQuestions.length > 0 && (() => {
+            const q = quizQuestions[quizIndex];
+            return (
+              <>
+                <div style={styles.quizMeta}>
+                  <span style={{ fontSize: 9, color: "#555", letterSpacing: "1.5px" }}>
+                    QUESTION {quizIndex + 1} OF {quizQuestions.length}
+                  </span>
+                  <span style={{ fontSize: 9, color: currentLine.color, letterSpacing: "1.5px" }}>
+                    SCORE {quizScore}/{quizIndex + (quizAnswer !== null ? 1 : 0)}
+                  </span>
+                </div>
+                <p style={styles.quizQuestion}>{q.question}</p>
+                <div style={styles.quizOptions}>
+                  {q.options.map((opt, i) => {
+                    let bg = "#111", border = "#222", color = "#bbb";
+                    if (quizAnswer !== null) {
+                      if (i === q.correct) { bg = "#0f2010"; border = "#27ae60"; color = "#27ae60"; }
+                      else if (i === quizAnswer) { bg = "#1a0000"; border = "#c0392b"; color = "#c0392b"; }
+                    }
+                    return (
+                      <button
+                        key={i}
+                        style={{ ...styles.quizOption, backgroundColor: bg, border: `1px solid ${border}`, color }}
+                        onClick={() => quizAnswer === null && handleQuizAnswer(i)}
+                        disabled={quizAnswer !== null}
+                      >
+                        {opt}
+                      </button>
+                    );
+                  })}
+                </div>
+                {quizAnswer !== null && (
+                  <div style={styles.quizFeedback}>
+                    {quizAnswer === q.correct ? (
+                      <p style={{ ...styles.quizCorrectNote, color: "#27ae60" }}>✓ Correct. {q.explanation}</p>
+                    ) : (
+                      <>
+                        <p style={styles.quizCorrectNote}>{q.explanation}</p>
+                        {loadingVlad
+                          ? <p style={styles.loadingText}>Vlad is watching...</p>
+                          : vladFeedback
+                            ? <p style={styles.vladQuizNote}>"{vladFeedback}"</p>
+                            : null
+                        }
+                      </>
+                    )}
+                    <button style={{ ...styles.btn, backgroundColor: currentLine.color }} onClick={nextQuestion}>
+                      {quizIndex === quizQuestions.length - 1 ? "See Results" : "Next Question"}
+                    </button>
+                  </div>
+                )}
+              </>
+            );
+          })()}
+
+          {/* End screen */}
+          {!quizLoading && quizDone && (
+            <div style={styles.quizEndScreen}>
+              <div style={styles.quizScoreDisplay}>
+                <span style={{ ...styles.quizScoreBig, color: currentLine.color }}>
+                  {quizScore}/{quizQuestions.length}
+                </span>
+                <span style={styles.quizScoreLabel}>FINAL SCORE</span>
+              </div>
+              <div style={styles.vladVerdictBox}>
+                <p style={styles.vladVerdictLabel}>VLAD'S VERDICT</p>
+                <p style={styles.vladVerdictText}>"{getVladVerdict(quizScore, quizQuestions.length)}"</p>
+              </div>
+              <div style={{ display: "flex", gap: 10 }}>
+                <button style={{ ...styles.btn, backgroundColor: currentLine.color }} onClick={() => loadQuestions(currentLine)}>
+                  ↺ New Quiz
+                </button>
+                <button style={styles.btnGhost} onClick={() => {
                   setQuizStarted(true);
+                  setQuizDone(false);
                   setQuizIndex(0);
                   setQuizAnswer(null);
+                  setQuizScore(0);
                   setVladFeedback("");
-                }}
-              >
-                Start Quiz
-              </button>
+                }}>
+                  Retry Same
+                </button>
+              </div>
             </div>
-          ) : (
-            <>
-              {(() => {
-                const q = lineQuestions[quizIndex];
-                return (
-                  <>
-                    <p style={{ fontSize: 9, color: "#555", letterSpacing: "1.5px" }}>
-                      QUESTION {quizIndex + 1} OF {lineQuestions.length}
-                    </p>
-                    <p style={styles.quizQuestion}>{q.question}</p>
-                    <div style={styles.quizOptions}>
-                      {q.options.map((opt, i) => {
-                        let bg = "#111", border = "#222", color = "#aaa";
-                        if (quizAnswer !== null) {
-                          if (i === q.correct) { bg = "#0f2010"; border = "#27ae60"; color = "#27ae60"; }
-                          else if (i === quizAnswer) { bg = "#1a0000"; border = "#c0392b"; color = "#c0392b"; }
-                        }
-                        return (
-                          <button
-                            key={i}
-                            style={{ ...styles.quizOption, backgroundColor: bg, border: `1px solid ${border}`, color }}
-                            onClick={() => quizAnswer === null && handleQuizAnswer(i)}
-                            disabled={quizAnswer !== null}
-                          >
-                            {opt}
-                          </button>
-                        );
-                      })}
-                    </div>
-                    {quizAnswer !== null && (
-                      <div style={styles.quizFeedback}>
-                        {quizAnswer === q.correct ? (
-                          <p style={{ ...styles.quizCorrectNote, color: "#27ae60" }}>
-                            ✓ Correct. {q.explanation}
-                          </p>
-                        ) : (
-                          <>
-                            <p style={styles.quizCorrectNote}>{q.explanation}</p>
-                            {loadingVlad ? (
-                              <p style={styles.loadingText}>Vlad is watching...</p>
-                            ) : vladFeedback ? (
-                              <p style={styles.vladQuizNote}>"{vladFeedback}"</p>
-                            ) : null}
-                          </>
-                        )}
-                        <div style={{ display: "flex", gap: 10 }}>
-                          <button style={{ ...styles.btn, backgroundColor: currentLine.color }} onClick={nextQuiz}>
-                            Next Question
-                          </button>
-                          <button
-                            style={styles.btnGhost}
-                            onClick={() => {
-                              setQuizStarted(false);
-                              setQuizIndex(0);
-                              setQuizAnswer(null);
-                              setVladFeedback("");
-                            }}
-                          >
-                            Restart
-                          </button>
-                        </div>
-                      </div>
-                    )}
-                  </>
-                );
-              })()}
-            </>
           )}
+
         </div>
       )}
 
@@ -768,14 +854,24 @@ const styles = {
   deviationResponseText: { fontSize: 12, color: "#bbb", lineHeight: 1.6 },
   deviationRule: { padding: "14px 16px", backgroundColor: "#0a1200", border: "1px solid #1e2a00", borderRadius: 6 },
   quizLayout: { display: "flex", flexDirection: "column", gap: 20 },
+  quizLoadingBox: { padding: "24px", backgroundColor: "#111", border: "1px solid #222", borderRadius: 8, textAlign: "center" },
+  quizLoadingText: { margin: 0, fontSize: 13, color: "#555", fontStyle: "italic" },
   quizStart: { display: "flex", flexDirection: "column", gap: 16 },
   quizIntro: { margin: 0, fontSize: 14, color: "#bbb", lineHeight: 1.7 },
+  quizMeta: { display: "flex", justifyContent: "space-between", alignItems: "center" },
   quizQuestion: { fontSize: 16, color: "#ccc", lineHeight: 1.6, margin: 0 },
   quizOptions: { display: "flex", flexDirection: "column", gap: 10 },
   quizOption: { padding: "14px 18px", borderRadius: 6, fontSize: 14, fontFamily: "'IBM Plex Mono', monospace", cursor: "pointer", textAlign: "left" },
   quizFeedback: { display: "flex", flexDirection: "column", gap: 10, padding: "16px 18px", backgroundColor: "#111", border: "1px solid #222", borderRadius: 8 },
   quizCorrectNote: { margin: 0, fontSize: 12, color: "#999" },
   vladQuizNote: { margin: 0, fontSize: 12, color: "#c0392b", fontStyle: "italic" },
+  quizEndScreen: { display: "flex", flexDirection: "column", gap: 20, alignItems: "flex-start" },
+  quizScoreDisplay: { display: "flex", flexDirection: "column", gap: 4 },
+  quizScoreBig: { fontSize: 48, fontWeight: 700, lineHeight: 1 },
+  quizScoreLabel: { fontSize: 10, color: "#555", letterSpacing: "2px" },
+  vladVerdictBox: { padding: "16px 18px", backgroundColor: "#0f0a00", border: "1px solid #3d2800", borderRadius: 8, width: "100%" },
+  vladVerdictLabel: { margin: "0 0 8px", fontSize: 9, color: "#7a5500", letterSpacing: "1.5px" },
+  vladVerdictText: { margin: 0, fontSize: 14, color: "#8a6a2a", lineHeight: 1.7, fontStyle: "italic" },
   loadingText: { margin: 0, fontSize: 12, color: "#555", fontStyle: "italic" },
   btn: { padding: "10px 22px", color: "#fff", border: "none", borderRadius: 6, fontSize: 13, fontFamily: "'IBM Plex Mono', monospace", fontWeight: 700, cursor: "pointer", alignSelf: "flex-start" },
   btnGhost: { padding: "10px 22px", backgroundColor: "transparent", color: "#777", border: "1px solid #333", borderRadius: 6, fontSize: 13, fontFamily: "'IBM Plex Mono', monospace", cursor: "pointer", alignSelf: "flex-start" },
