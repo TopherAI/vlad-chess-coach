@@ -16,11 +16,6 @@ import { askVlad } from "../coaches/vlad.jsx";
 import { askFabiano } from "../coaches/fabiano.jsx";
 import { askMagnus } from "../coaches/magnus.jsx";
 
-// ---------------------------------------------------------------------------
-// GM Plan — Italian Cage core lines (Phase 1)
-// Will auto-load src/data/gmPlan.js if it exists, falls back to hardcoded
-// ---------------------------------------------------------------------------
-
 const ITALIAN_CAGE_PLAN = {
   "1w":  "e4",   "1b":  "e5",
   "2w":  "Nf3",  "2b":  "Nc6",
@@ -33,10 +28,6 @@ const ITALIAN_CAGE_PLAN = {
   "9w":  "h3",   "9b":  "h6",
   "10w": "Nbd2",
 };
-
-// ---------------------------------------------------------------------------
-// Constants
-// ---------------------------------------------------------------------------
 
 const PLAYER       = "TopherBettis";
 const STORAGE_KEY  = "vlad_last_autopsy";
@@ -57,23 +48,18 @@ const CLASSIFICATION_LABELS = {
   blunder:    { label: "Blunder",    symbol: "??" },
 };
 
-// Tab order: Coaches → Critical → Move List
 const TABS = [
   { id: "coaches",  label: ()  => "🎓 Coaches" },
   { id: "critical", label: (n) => `🚨 Critical (${n})` },
   { id: "moves",    label: ()  => "📋 Move List" },
 ];
 
-// ---------------------------------------------------------------------------
-// localStorage helpers
-// ---------------------------------------------------------------------------
-
 function saveAutopsy(pgn, gameInfo, analysis, coaches) {
   try {
     localStorage.setItem(STORAGE_KEY, JSON.stringify({
       pgn, gameInfo, analysis, coaches, savedAt: Date.now(),
     }));
-  } catch { /* storage full — fail silently */ }
+  } catch { /* fail silently */ }
 }
 
 function loadAutopsy() {
@@ -128,10 +114,6 @@ function formatCriticalText(record) {
   ].join("\n");
 }
 
-// ---------------------------------------------------------------------------
-// Utility — parse PGN with chess.js
-// ---------------------------------------------------------------------------
-
 function parsePGN(pgn) {
   if (typeof Chess === "undefined") {
     throw new Error("chess.js not loaded. Add CDN script to index.html.");
@@ -158,20 +140,12 @@ function parsePGN(pgn) {
   return { moves, sanMoves, white, black, result, date, event, playerSide, pgn };
 }
 
-// ---------------------------------------------------------------------------
-// GM Plan deviation detector
-// ---------------------------------------------------------------------------
-
 function isGmDeviation(moveNumber, side, sanMove) {
   const key      = `${moveNumber}${side === "white" ? "w" : "b"}`;
   const expected = ITALIAN_CAGE_PLAN[key];
   if (!expected) return false;
   return sanMove !== expected;
 }
-
-// ---------------------------------------------------------------------------
-// Sub-components
-// ---------------------------------------------------------------------------
 
 function AccuracyRing({ accuracy }) {
   const radius = 36;
@@ -288,10 +262,6 @@ function AnalysisProgress({ current, total, phase }) {
   );
 }
 
-// ---------------------------------------------------------------------------
-// Main Component
-// ---------------------------------------------------------------------------
-
 export default function GameAutopsy() {
   const [phase, setPhase]               = useState("idle");
   const [pgn, setPgn]                   = useState("");
@@ -329,6 +299,17 @@ export default function GameAutopsy() {
     }
   }, []);
 
+  // ── Enter key triggers analysis ──
+  useEffect(() => {
+    const handler = (e) => {
+      if (e.key === "Enter" && phase === "idle" && pgn.trim()) {
+        runAutopsy();
+      }
+    };
+    window.addEventListener("keydown", handler);
+    return () => window.removeEventListener("keydown", handler);
+  }, [phase, pgn, runAutopsy]);
+
   const handleFileUpload = useCallback((e) => {
     const file = e.target.files?.[0];
     if (!file) return;
@@ -347,7 +328,6 @@ export default function GameAutopsy() {
     setRestoredFrom(null);
   }, []);
 
-  // ── Main analysis pipeline ──
   const runAutopsy = useCallback(async (pgnOverride) => {
     const target = (typeof pgnOverride === "string" ? pgnOverride : pgn).trim();
     if (!target) return;
@@ -386,13 +366,11 @@ export default function GameAutopsy() {
       return;
     }
 
-    // Save critical list immediately after Stockfish
     const critical = gameAnalysis.moves?.filter(m =>
       ["blunder", "mistake"].includes(m.classification)
     ) ?? [];
     saveCriticalList(parsed, critical);
 
-    // ── Fire all 3 coaches in parallel ──
     setPhase("coaching");
     setCoachLoading({ vlad: true, fabiano: true, magnus: true });
 
@@ -447,14 +425,9 @@ export default function GameAutopsy() {
     URL.revokeObjectURL(url);
   };
 
-  // ---------------------------------------------------------------------------
-  // Render
-  // ---------------------------------------------------------------------------
-
   return (
     <div style={styles.root}>
 
-      {/* ── Header ── */}
       <div style={styles.header}>
         <div style={styles.headerLeft}>
           <span style={styles.headerIcon}>🔬</span>
@@ -472,7 +445,6 @@ export default function GameAutopsy() {
         )}
       </div>
 
-      {/* ── Restored Banner ── */}
       {restoredFrom && phase === "done" && (
         <div style={styles.restoredBanner}>
           <span>📂 Last game restored — {savedDate}</span>
@@ -480,7 +452,6 @@ export default function GameAutopsy() {
         </div>
       )}
 
-      {/* ── Upload Zone ── */}
       {phase === "idle" && (
         <div style={styles.uploadZone} onClick={() => fileRef.current?.click()}>
           <input
@@ -501,12 +472,11 @@ export default function GameAutopsy() {
         </div>
       )}
 
-      {/* ── PGN textarea + Run button ── */}
       {phase === "idle" && (
         <div style={styles.pasteSection}>
           <textarea
             style={styles.pgnInput}
-            placeholder="…or paste PGN directly here (Cmd+V from dashboard also lands here)"
+            placeholder="…or paste PGN directly here (Cmd+V from dashboard · Enter to analyze)"
             value={pgn}
             onChange={e => setPgn(e.target.value)}
             rows={5}
@@ -522,22 +492,20 @@ export default function GameAutopsy() {
         </div>
       )}
 
-      {/* ── Progress ── */}
       {(phase === "parsing" || phase === "analyzing" || phase === "coaching") && (
         <div style={styles.progressSection}>
           <AnalysisProgress
             current={progress.current}
             total={progress.total}
             phase={
-              phase === "parsing"   ? "Parsing PGN…"                        :
-              phase === "analyzing" ? "Stockfish analyzing moves…"           :
+              phase === "parsing"   ? "Parsing PGN…"                       :
+              phase === "analyzing" ? "Stockfish analyzing moves…"          :
                                       "Coaching team assembling debrief…"
             }
           />
         </div>
       )}
 
-      {/* ── Error ── */}
       {phase === "error" && (
         <div style={styles.errorBox}>
           <span style={styles.errorIcon}>⚠️</span>
@@ -546,7 +514,6 @@ export default function GameAutopsy() {
         </div>
       )}
 
-      {/* ── Results ── */}
       {(phase === "coaching" || phase === "done") && analysis && (
         <div style={styles.results}>
 
@@ -560,7 +527,6 @@ export default function GameAutopsy() {
             </div>
           </div>
 
-          {/* ── Tabs: Coaches → Critical → Move List ── */}
           <div style={styles.tabs}>
             {TABS.map(tab => (
               <button
@@ -573,7 +539,6 @@ export default function GameAutopsy() {
             ))}
           </div>
 
-          {/* ── Coaches Tab ── */}
           {activeTab === "coaches" && (
             <div style={styles.coachGrid}>
               {Object.keys(COACH_META).map(key => (
@@ -587,7 +552,6 @@ export default function GameAutopsy() {
             </div>
           )}
 
-          {/* ── Critical Tab ── */}
           {activeTab === "critical" && (
             <div style={styles.criticalList}>
               <div style={styles.criticalToolbar}>
@@ -632,7 +596,6 @@ export default function GameAutopsy() {
             </div>
           )}
 
-          {/* ── Move List Tab ── */}
           {activeTab === "moves" && (
             <div style={styles.moveList}>
               <div style={styles.gmLegend}>
@@ -664,10 +627,6 @@ export default function GameAutopsy() {
     </div>
   );
 }
-
-// ---------------------------------------------------------------------------
-// Styles
-// ---------------------------------------------------------------------------
 
 const styles = {
   root: {
