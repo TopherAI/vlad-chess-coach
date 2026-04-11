@@ -13,7 +13,7 @@ const LINES = [
     id: "line1",
     code: "LINE 1",
     name: "Giuoco Pianissimo",
-    subtitle: "The Gentleman Assassinr",
+    subtitle: "The Gentleman Assassin",
     color: "#c0392b",
     tagline: "Build like a Gentleman. Attack like an Assassin.",
     terminalFen: "r1bqr1k1/bpp2pp1/p1np1n1p/4p3/4P3/1BPP1N1P/PP1N1PP1/R1BQR1K1 w - - 1 11",
