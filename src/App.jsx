@@ -22,12 +22,18 @@ const TARGET = 2000;
 
 function PgnDropCard({ onNavigate }) {
   const [dragging, setDragging] = useState(false);
-  const [flash,    setFlash]    = useState(false);
+  const [pgn, setPgn]           = useState("");
+  const [ready, setReady]       = useState(false);
 
-  const launch = (pgn) => {
-    localStorage.setItem("vlad_pending_pgn", pgn.trim());
-    setFlash(true);
-    setTimeout(() => onNavigate("autopsy"), 600);
+  const load = (text) => {
+    if (!text?.trim()) return;
+    setPgn(text.trim());
+    setReady(true);
+  };
+
+  const launch = () => {
+    localStorage.setItem("vlad_pending_pgn", pgn);
+    onNavigate("autopsy");
   };
 
   const onDrop = (e) => {
@@ -36,11 +42,10 @@ function PgnDropCard({ onNavigate }) {
     const file = e.dataTransfer.files?.[0];
     if (file) {
       const reader = new FileReader();
-      reader.onload = (ev) => launch(ev.target.result ?? "");
+      reader.onload = (ev) => load(ev.target.result ?? "");
       reader.readAsText(file);
     } else {
-      const text = e.dataTransfer.getData("text");
-      if (text) launch(text);
+      load(e.dataTransfer.getData("text"));
     }
   };
 
@@ -48,7 +53,7 @@ function PgnDropCard({ onNavigate }) {
     const handler = (e) => {
       if ((e.ctrlKey || e.metaKey) && e.key === "v") {
         navigator.clipboard.readText().then(text => {
-          if (text?.trim().startsWith("[") || text?.includes("1.")) launch(text);
+          if (text?.trim().startsWith("[") || text?.includes("1.")) load(text);
         }).catch(() => {});
       }
     };
@@ -63,9 +68,9 @@ function PgnDropCard({ onNavigate }) {
       onDrop={onDrop}
       style={{
         ...S.moduleCard,
-        borderTop: `3px solid ${flash ? "#27ae60" : dragging ? "#f39c12" : "#c0392b"}`,
+        borderTop: `3px solid ${ready ? "#27ae60" : dragging ? "#f39c12" : "#c0392b"}`,
         outline: dragging ? "2px dashed #f39c12" : "none",
-        backgroundColor: dragging ? "#1a1200" : flash ? "#0a1a0a" : "#111",
+        backgroundColor: dragging ? "#1a1200" : ready ? "#0a1a0a" : "#111",
         transition: "all 0.2s",
         cursor: "default",
         justifyContent: "center",
@@ -73,11 +78,33 @@ function PgnDropCard({ onNavigate }) {
         textAlign: "center",
       }}
     >
-      <span style={S.moduleIcon}>{flash ? "✅" : dragging ? "📂" : "🎯"}</span>
-      <p style={S.moduleTitle}>{flash ? "Launching Autopsy…" : "Drop PGN Here"}</p>
+      <span style={S.moduleIcon}>{ready ? "✅" : dragging ? "📂" : "🎯"}</span>
+      <p style={S.moduleTitle}>{ready ? "PGN Ready" : "Drop PGN Here"}</p>
       <p style={S.moduleDesc}>
-        {dragging ? "Release to analyze" : "Drag a .pgn file · or Ctrl+V to paste"}
+        {ready
+          ? `${pgn.split("\n").length} lines loaded`
+          : dragging ? "Release to load" : "Drag a .pgn file · or Ctrl+V"}
       </p>
+      {ready && (
+        <button
+          onClick={launch}
+          style={{
+            marginTop: 8,
+            padding: "8px 16px",
+            backgroundColor: "#c0392b",
+            color: "#fff",
+            border: "none",
+            borderRadius: 5,
+            fontFamily: "'IBM Plex Mono', monospace",
+            fontSize: 12,
+            fontWeight: 700,
+            cursor: "pointer",
+            letterSpacing: "0.5px",
+          }}
+        >
+          Game Analysis →
+        </button>
+      )}
     </div>
   );
 }
@@ -187,7 +214,7 @@ function Dashboard({ onNavigate }) {
       <p style={S.sectionTitle}>COACHING TEAM</p>
       <div style={S.coachRow}>
         {[
-          { emoji: "🎖️", name: "Vlad",   based: "Vladimir Chuchelov", role: "Head Coach · Drill prescription · Weekly plan",  color: "#c0392b" },
+          { emoji: "🎖️", name: "Vlad",    based: "Vladimir Chuchelov", role: "Head Coach · Drill prescription · Weekly plan",  color: "#c0392b" },
           { emoji: "♟️", name: "Fabiano", based: "Fabiano Caruana",    role: "Opening prep · Positional benchmarking",          color: "#2980b9" },
           { emoji: "👑", name: "Magnus",  based: "Magnus Carlsen",     role: "Endgame conversion · Intuition · Reality checks", color: "#27ae60" },
         ].map(coach => (
@@ -370,7 +397,6 @@ const S = {
 
   main: { flex: 1, overflowY: "auto", backgroundColor: "#0d0d0d" },
 
-  // Dashboard
   dashRoot: {
     display: "flex", flexDirection: "column", gap: 28,
     padding: "32px 36px",
