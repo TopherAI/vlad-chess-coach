@@ -209,12 +209,20 @@ export default function GameAutopsy() {
   const [coachLoading, setCoachLoading] = useState({ vlad: false, fabiano: false, magnus: false });
   const [errorMsg, setErrorMsg]   = useState("");
   const [activeTab, setActiveTab] = useState("moves");
-  const [restoredFrom, setRestoredFrom] = useState(null); // timestamp of restored save
+  const [restoredFrom, setRestoredFrom] = useState(null);
 
   const fileRef = useRef(null);
 
-  // ---- Restore last game on mount ----
+  // ---- On mount: check for pending PGN from dashboard drop zone, else restore last game ----
   useEffect(() => {
+    const pending = localStorage.getItem("vlad_pending_pgn");
+    if (pending) {
+      localStorage.removeItem("vlad_pending_pgn");
+      setPgn(pending);
+      setPhase("idle");
+      return;
+    }
+
     const saved = loadAutopsy();
     if (saved?.analysis && saved?.gameInfo) {
       setPgn(saved.pgn ?? "");
@@ -372,7 +380,7 @@ export default function GameAutopsy() {
           <p style={styles.uploadSub}>or click to browse</p>
           {pgn && (
             <div style={styles.uploadLoaded}>
-              ✅ PGN loaded — {pgn.split("\n").length} lines
+              ✅ PGN loaded — {pgn.split("\n").length} lines · ready to analyze
             </div>
           )}
         </div>
@@ -383,7 +391,7 @@ export default function GameAutopsy() {
         <div style={styles.pasteSection}>
           <textarea
             style={styles.pgnInput}
-            placeholder="…or paste PGN directly here"
+            placeholder="…or paste PGN directly here (Ctrl+V from dashboard also lands here)"
             value={pgn}
             onChange={e => setPgn(e.target.value)}
             rows={5}
