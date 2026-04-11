@@ -148,9 +148,9 @@ function Dashboard({ onNavigate }) {
       <div style={S.phaseRow}>
         {[
           { range: "609→1000",  label: "Phase 1: Triage",    mission: "No Blunders + Zero hanging pieces",          active: true  },
-          { range: "1000→1400", label: "Phase 2: Structure", mission: "Piece activity + structure",   active: false },
-          { range: "1400→1800", label: "Phase 3: Weaponize", mission: "Deep prep + technique",        active: false },
-          { range: "1800→2000", label: "Phase 4: Mastery",   mission: "Candidate moves + psychology", active: false },
+          { range: "1000→1400", label: "Phase 2: Structure", mission: "Piece activity + Structure",   active: false },
+          { range: "1400→1800", label: "Phase 3: Weaponize", mission: "Deep prep + Technique",        active: false },
+          { range: "1800→2000", label: "Phase 4: Mastery",   mission: "Candidate moves + Psychology", active: false },
         ].map((phase, i) => (
           <div
             key={i}
