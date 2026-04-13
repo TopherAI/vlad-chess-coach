@@ -193,8 +193,6 @@
 193 async function generateQuizQuestions(line) {
 194   const prompt = `You are generating a chess quiz for TopherBettis (ELO 609) who is studying the Gentleman's Assassin opening system.
 195 
-196 Generate exactly 5 multiple-choice questions about the "${line.name}" opening line (${line.tagline}).
-197 
 200 Rules:
 201 - Each question tests move order, purpose of a specific move, or response to Black's play
 202 - 4 options each, exactly 1 correct answer
@@ -749,42 +747,4 @@ const styles = {
   checklistBox: { width: 22, height: 22, border: "1px solid", borderRadius: 4, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 12, color: "#fff", flexShrink: 0 },
   checklistLabel: { fontSize: 13, color: "#ccc", fontWeight: 600 },
   checklistDesc: { fontSize: 10, color: "#666", marginTop: 2 },
-  strikeSequence: { padding: "16px 18px", backgroundColor: "#0a0a12", border: "1px solid #1a1a2a", borderRadius: 6 },
-  strikeTitle: { margin: "0 0 14px", fontSize: 9, color: "#5555aa", letterSpacing: "1.5px" },
-  strikeStep: { display: "flex", gap: 14, alignItems: "flex-start", padding: "8px 0", borderBottom: "1px solid #141420" },
-  strikeNum: { width: 22, height: 22, backgroundColor: "#c0392b", borderRadius: 3, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 10, color: "#fff", fontWeight: 700, flexShrink: 0 },
-  strikeMoveLabel: { fontSize: 13, color: "#bbb", fontWeight: 600 },
-  strikeNote: { fontSize: 10, color: "#666", marginTop: 3 },
-  responseGrid: { display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(200px, 1fr))", gap: 10 },
-  responseCard: { padding: "14px 16px", borderRadius: 6 },
-  responseLabel: { fontSize: 12, color: "#bbb" },
-  responseCoachBox: { padding: "16px 18px", backgroundColor: "#0a1520", border: "1px solid", borderRadius: 8 },
-  responseCoachTitle: { margin: "0 0 8px", fontSize: 10, letterSpacing: "1px" },
-  responseCoachText: { margin: 0, fontSize: 13, color: "#bbb", lineHeight: 1.8 },
-  deviationCard: { backgroundColor: "#111", border: "1px solid #1e1e1e", borderRadius: 6, overflow: "hidden" },
-  deviationTrigger: { padding: "10px 14px", backgroundColor: "#1a1000", borderBottom: "1px solid #1e1e1e", display: "flex", flexDirection: "column", gap: 4 },
-  deviationTriggerText: { fontSize: 12, color: "#e67e22" },
-  deviationResponse: { padding: "10px 14px", display: "flex", flexDirection: "column", gap: 4 },
-  deviationResponseText: { fontSize: 12, color: "#bbb", lineHeight: 1.6 },
-  deviationRule: { padding: "14px 16px", backgroundColor: "#0a1200", border: "1px solid #1e2a00", borderRadius: 6 },
-  quizLayout: { display: "flex", flexDirection: "column", gap: 20 },
-  quizLoadingBox: { padding: "24px", backgroundColor: "#111", border: "1px solid #222", borderRadius: 8, textAlign: "center" },
-  quizLoadingText: { margin: 0, fontSize: 13, color: "#555", fontStyle: "italic" },
-  quizStart: { display: "flex", flexDirection: "column", gap: 16 },
-  quizIntro: { margin: 0, fontSize: 14, color: "#bbb", lineHeight: 1.7 },
-  quizMeta: { display: "flex", justifyContent: "space-between", alignItems: "center" },
-  quizQuestion: { fontSize: 16, color: "#ccc", lineHeight: 1.6, margin: 0 },
-  quizOptions: { display: "flex", flexDirection: "column", gap: 10 },
-  quizOption: { padding: "14px 18px", borderRadius: 6, fontSize: 14, fontFamily: "'IBM Plex Mono', monospace", cursor: "pointer", textAlign: "left" },
-  quizFeedback: { display: "flex", flexDirection: "column", gap: 10, padding: "16px 18px", backgroundColor: "#111", border: "1px solid #222", borderRadius: 8 },
-  quizCorrectNote: { margin: 0, fontSize: 12, color: "#999" },
-  vladQuizNote: { margin: 0, fontSize: 12, color: "#c0392b", fontStyle: "italic" },
-  quizEndScreen: { display: "flex", flexDirection: "column", gap: 20, alignItems: "flex-start" },
-  quizScoreDisplay: { display: "flex", flexDirection: "column", gap: 4 },
-  quizScoreBig: { fontSize: 48, fontWeight: 700, lineHeight: 1 },
-  quizScoreLabel: { fontSize: 10, color: "#555", letterSpacing: "2px" },
-  vladVerdictText: { margin: 0, fontSize: 14, color: "#8a6a2a", lineHeight: 1.7, fontStyle: "italic" },
-  loadingText: { margin: 0, fontSize: 12, color: "#555", fontStyle: "italic" },
-  btn: { padding: "10px 22px", color: "#fff", border: "none", borderRadius: 6, fontSize: 13, fontFamily: "'IBM Plex Mono', monospace", fontWeight: 700, cursor: "pointer", alignSelf: "flex-start" },
-  btnGhost: { padding: "10px 22px", backgroundColor: "transparent", color: "#777", border: "1px solid #333", borderRadius: 6, fontSize: 13, fontFamily: "'IBM Plex Mono', monospace", cursor: "pointer", alignSelf: "flex-start" },
-};
+  strikeSequence: { padding: "16px 18px", backgroundColor: "#0a0a12
