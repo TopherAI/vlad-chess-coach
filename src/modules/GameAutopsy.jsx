@@ -1,5 +1,3 @@
-feat: Decommission Stockfish, wire Super AI consensus engine & Hikaru integration
-
 /**
  * src/modules/GameAutopsy.jsx
  * vlad-chess-coach — Game Autopsy Module
