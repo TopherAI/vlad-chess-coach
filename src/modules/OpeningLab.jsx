@@ -1,5 +1,3 @@
-fix: Remove Tactics tab and array (moved to MiddlegameMat)
-
 /**
  * src/modules/OpeningLab.jsx
  * vlad-chess-coach — Opening Lab Module (v2.2 Gentleman's Assassin)
