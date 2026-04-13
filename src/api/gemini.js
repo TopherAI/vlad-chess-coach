@@ -1,7 +1,7 @@
 01 /**
 02  * src/api/gemini.js
 03  * THE CONDUIT: Pure API logic to Railway Gateway
-04  * Rule: Default export only for Vercel stability.
+04  * Standard: Default export (Braceless Import)
 05  */
 06 
 07 const GATEWAY_URL = import.meta.env.VITE_GATEWAY_URL;
