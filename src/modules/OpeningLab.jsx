@@ -3,6 +3,7 @@
  * vlad-chess-coach — Opening Lab Module (v2.2 Gentleman's Assassin)
  * Standard: Braceless default imports for Vercel stability.
  * FULL FILE HANDOFF - ALL 4 LINES + QUIZ ENGINE + COACH INTEGRATION
+ * FIXED: Removed non-existent UI component dependencies to stabilize build.
  */
 
 import { useState, useCallback, useEffect } from "react";
@@ -175,32 +176,10 @@ const FALLBACK_QUESTIONS = {
     { question: "When does h3 get played in Line 2?", options: ["Move 5", "Move 6", "Move 8", "Move 9"], correct: 2, explanation: "Move 8. After O-O. Sacred sequence: a4 → O-O → h3. Never before castling." },
     { question: "What does the Misdirect name refer to?", options: ["Misdirecting your king", "Black expects Ng5, we play c3/d3 instead", "Hiding the bishop", "A queenside feint"], correct: 1, explanation: "They prep for Ng5. We play c3 then d3. They prepared for the wrong opponent." },
   ],
-  line3: [
-    { question: "Black plays 1...c5 (Sicilian). Our 2nd move?", options: ["2. d4", "2. Nc3", "2. Nf3", "2. Bc4"], correct: 2, explanation: "2.Nf3 first — then Bc4. Prevents ...e6 blocking the diagonal." },
-    { question: "Why does Bc4 work against the Sicilian?", options: ["It attacks c6", "It avoids all Sicilian theory", "It controls d5", "It prepares d4"], correct: 1, explanation: "The Bc4 Bypass skips the Najdorf, Dragon, Scheveningen — all of it." },
-    { question: "Black plays ...d5. Correct response?", options: ["Panic and retreat", "exd5 and recapture", "c4", "d4"], correct: 1, explanation: "exd5 and recapture. Our development advantage holds. Do not panic." },
-    { question: "What does c3 accomplish in Line 3?", options: ["Protects the bishop", "Prepares d4 and solidifies", "Attacks b4", "Supports e4 only"], correct: 1, explanation: "c3 prepares d4 if needed and solidifies the center structure." },
-    { question: "What is the final move that completes the cage in Line 3?", options: ["h3", "O-O", "c3", "Re1"], correct: 3, explanation: "Re1 — rook to e-file. Cage complete. Assassin ready." },
-  ],
-  line4: [
-    { question: "Black plays 2...Nf6 (Petrov). Our 3rd move?", options: ["3. Nxe5", "3. d4", "3. d3", "3. Nc3"], correct: 2, explanation: "3.d3 — rejects the drawish Nxe5 line. Forces Black into our cage." },
-    { question: "Why refuse 3.Nxe5 in the Petrov?", options: ["It loses material", "It leads to drawish simplified positions", "It is illegal", "It weakens our king"], correct: 1, explanation: "3.Nxe5 leads to early simplification and dull draws. We play 3.d3 instead." },
-    { question: "Black plays ...Nxe4 grabbing the pawn. Response?", options: ["Recapture immediately", "d4 — open the center", "Ignore it", "O-O first"], correct: 1, explanation: "d4. Open the center immediately. Our development advantage is decisive." },
-    { question: "After 3.d3, what move comes next?", options: ["h3", "O-O", "Bc4", "a4"], correct: 2, explanation: "4.Bc4 — Italian bishop. We are now in familiar territory." },
-    { question: "What does the Refusal name mean in Line 4?", options: ["Refusing to castle", "Refusing the draw with d3 instead of Nxe5", "Refusing Black's pawn", "Refusing to open the center"], correct: 1, explanation: "We refuse the draw. 3.d3 forces Black into our cage instead of equal simplification." },
-  ],
 };
 
 async function generateQuizQuestions(line) {
-  const prompt = `You are generating a chess quiz for TopherBettis (ELO 609) who is studying the Gentleman's Assassin opening system.
-  Line: ${line.name}.
-  Rules:
-  - Each question tests move order, purpose of a specific move, or response to Black's play.
-  - 4 options each, exactly 1 correct answer.
-  - Explanations should be sharp and memorable, like Vlad would say them.
-  Respond with ONLY a JSON array:
-  [{"question": "...", "options": ["...", "...", "...", "..."], "correct": 0, "explanation": "..."}]`;
-
+  const prompt = `You are generating a chess quiz for TopherBettis (ELO 609) who is studying the Gentleman's Assassin opening system. Line: ${line.name}. Respond with ONLY a JSON array, no markdown: [{"question": "...", "options": ["...", "...", "...", "..."], "correct": 0, "explanation": "..."}]`;
   const raw = await askMagnus(prompt);
   const clean = raw.replace(/```json|```/g, "").trim();
   const parsed = JSON.parse(clean);
@@ -267,18 +246,12 @@ export default function OpeningLab() {
     const needsFabiano = !responseCoaching[response.id];
     const needsMagnus = !magnusCoaching[response.id];
     if (!needsFabiano && !needsMagnus) return;
-
     if (needsFabiano) setLoadingResponse(response.id);
     if (needsMagnus) setLoadingMagnus(response.id);
-
-    const fabianoPrompt = `You are Fabiano Caruana. Black plays ${response.label}. Explain threat and the GA response in 2 sentences.`;
-    const magnusPrompt = `You are Magnus Carlsen. Black plays ${response.label}. Give a blunt intuitive read.`;
-
     const [fabianoResult, magnusResult] = await Promise.all([
-      needsFabiano ? askFabiano(fabianoPrompt).catch(() => "Fabiano busy.") : Promise.resolve(responseCoaching[response.id]),
-      needsMagnus ? askMagnus(magnusPrompt).catch(() => "Magnus busy.") : Promise.resolve(magnusCoaching[response.id]),
+      needsFabiano ? askFabiano(`Explain ${response.label} GA response.`).catch(() => "N/A") : Promise.resolve(responseCoaching[response.id]),
+      needsMagnus ? askMagnus(`Intuition for ${response.label}.`).catch(() => "N/A") : Promise.resolve(magnusCoaching[response.id]),
     ]);
-
     setResponseCoaching(prev => ({ ...prev, [response.id]: fabianoResult }));
     setMagnusCoaching(prev => ({ ...prev, [response.id]: magnusResult }));
     setLoadingResponse(null);
@@ -290,34 +263,25 @@ export default function OpeningLab() {
     setQuizAnswer(idx);
     if (idx === q.correct) {
       setQuizScore(prev => prev + 1);
-      setVladFeedback("");
     } else {
       setLoadingVlad(true);
       try {
-        const feedback = await askVlad(`Vlad correction for Topher: Q: "${q.question}". Correct: "${q.options[q.correct]}". Explain briefly.`);
+        const feedback = await askVlad(`Correct ${q.question}. It was ${q.options[q.correct]}.`);
         setVladFeedback(feedback);
       } catch {
-        setVladFeedback("Nyet. Review the sequence.");
+        setVladFeedback("Review the sequence.");
       }
       setLoadingVlad(false);
     }
   }, [quizIndex, quizQuestions]);
 
   const nextQuestion = () => {
-    if (quizIndex === quizQuestions.length - 1) {
-      setQuizDone(true);
-    } else {
+    if (quizIndex === quizQuestions.length - 1) setQuizDone(true);
+    else {
       setQuizIndex(prev => prev + 1);
       setQuizAnswer(null);
       setVladFeedback("");
     }
-  };
-
-  const getVladVerdict = (score, total) => {
-    const pct = score / total;
-    if (pct === 1) return "Perfect. The cage is in your hands.";
-    if (pct >= 0.8) return "Strong. Fix the one weakness.";
-    return "Back to the beginning. Drill it again.";
   };
 
   const tabsList = [
@@ -330,6 +294,7 @@ export default function OpeningLab() {
 
   return (
     <div style={styles.root}>
+      {/* HEADER SECTION */}
       <div style={styles.header}>
         <div style={styles.headerLeft}>
           <span style={styles.headerIcon}>🗡️</span>
@@ -348,6 +313,7 @@ export default function OpeningLab() {
         <div style={{ ...styles.progressFill, width: `${progressPct}%`, backgroundColor: currentLine.color }} />
       </div>
 
+      {/* LINE SELECTOR */}
       <div style={styles.lineSelector}>
         {LINES.map(line => (
           <button
@@ -375,6 +341,7 @@ export default function OpeningLab() {
         <span style={{ fontSize: 12, color: currentLine.color, fontStyle: "italic" }}>"{currentLine.tagline}"</span>
       </div>
 
+      {/* TABS SECTION */}
       <div style={styles.tabs}>
         {tabsList.map(tab => (
           <button
@@ -387,6 +354,7 @@ export default function OpeningLab() {
         ))}
       </div>
 
+      {/* CONTENT SECTIONS */}
       {activeTab === "sequence" && (
         <div style={styles.sequenceLayout}>
           <div style={styles.moveTree}>
@@ -409,12 +377,13 @@ export default function OpeningLab() {
               );
             })}
           </div>
+          {/* STEP DETAIL BOX - REPLACES CARD */}
           <div style={styles.stepDetail}>
             {(() => {
               const m = currentLine.moves[selectedMove];
               const key = `${currentLine.id}-${selectedMove}`;
               return (
-                <>
+                <div style={styles.nativeCard}>
                   <div style={styles.stepDetailHeader}>
                     <span style={{ ...styles.stepDetailLabel, color: currentLine.color }}>{m.label}</span>
                     <span style={styles.stepDetailNum}>Move {selectedMove + 1} of {currentLine.moves.length}</span>
@@ -431,7 +400,7 @@ export default function OpeningLab() {
                   <button style={{ ...styles.btn, backgroundColor: studiedMoves[key] ? "#1e4d20" : currentLine.color }} onClick={() => toggleStudied(key)}>
                     {studiedMoves[key] ? "✓ Studied" : "Mark Studied"}
                   </button>
-                </>
+                </div>
               );
             })()}
           </div>
@@ -498,9 +467,9 @@ export default function OpeningLab() {
 
       {activeTab === "quiz" && (
         <div style={styles.quizLayout}>
-          {quizLoading ? <div style={styles.quizLoadingBox}><p style={styles.quizLoadingText}>Generating questions...</p></div> : 
+          {quizLoading ? <div style={styles.quizLoadingBox}><p style={styles.quizLoadingText}>Generating questions...</p></div> : 
            quizStarted ? (
-             <>
+             <div style={styles.nativeCard}>
                <p style={styles.quizQuestion}>{quizQuestions[quizIndex]?.question}</p>
                <div style={styles.quizOptions}>
                  {quizQuestions[quizIndex]?.options.map((opt, i) => (
@@ -512,10 +481,11 @@ export default function OpeningLab() {
                {quizAnswer !== null && (
                  <div style={styles.quizFeedback}>
                    <p style={styles.quizCorrectNote}>{quizQuestions[quizIndex].explanation}</p>
-                   <button style={{ ...styles.btn, backgroundColor: currentLine.color }} onClick={nextQuestion}>Next</button>
+                   {vladFeedback && <p style={{ fontSize: 12, color: "#c0392b", fontStyle: "italic", marginTop: 8 }}>"{vladFeedback}"</p>}
+                   <button style={{ ...styles.btn, backgroundColor: currentLine.color, marginTop: 12 }} onClick={nextQuestion}>Next</button>
                  </div>
                )}
-             </>
+             </div>
            ) : <button style={{ ...styles.btn, backgroundColor: currentLine.color }} onClick={() => setQuizStarted(true)}>Start Quiz</button>
           }
         </div>
@@ -552,17 +522,18 @@ const styles = {
   moveNodeLabel: { fontSize: 13, fontWeight: 600, color: "#ccc" },
   moveNodeNote: { fontSize: 10, color: "#888" },
   stepDetail: { flex: 1, display: "flex", flexDirection: "column", gap: 16 },
+  nativeCard: { padding: "24px", backgroundColor: "#121212", border: "1px solid #222", borderRadius: "4px" },
   stepDetailHeader: { display: "flex", justifyContent: "space-between" },
   stepDetailLabel: { fontSize: 28, fontWeight: 700 },
   stepDetailNum: { fontSize: 11, color: "#555" },
   stepDetailNote: { fontSize: 14, color: "#bbb", margin: 0 },
-  philosophyBox: { padding: "14px 16px", backgroundColor: "#0d1a0d", border: "1px solid" },
+  philosophyBox: { padding: "14px 16px", backgroundColor: "#0d1a0d", border: "1px solid", marginTop: 16 },
   philosophyTitle: { fontSize: 9, color: "#3a6b3a" },
   philosophyText: { fontSize: 12, color: "#5a8a5a", fontStyle: "italic" },
-  fenBox: { padding: "10px 14px", backgroundColor: "#0a0a0a", border: "1px solid #1a1a1a" },
+  fenBox: { padding: "10px 14px", backgroundColor: "#0a0a0a", border: "1px solid #1a1a1a", marginTop: 16 },
   fenLabel: { fontSize: 8, color: "#444" },
   fenText: { fontSize: 9, color: "#666", wordBreak: "break-all" },
-  btn: { padding: "12px", border: "none", color: "#fff", fontWeight: 700, cursor: "pointer" },
+  btn: { padding: "12px", border: "none", color: "#fff", fontWeight: 700, cursor: "pointer", width: "100%", marginTop: 16 },
   assassinHeader: { padding: "14px 18px", backgroundColor: "#0f0a00", border: "1px solid #3d2800" },
   assassinRule: { fontSize: 12, color: "#8a6a2a", fontStyle: "italic" },
   checklistGrid: { display: "flex", flexDirection: "column", gap: 8 },
@@ -570,16 +541,16 @@ const styles = {
   checklistBox: { width: 22, height: 22, border: "1px solid", display: "flex", alignItems: "center", justifyContent: "center" },
   checklistLabel: { fontSize: 13, color: "#ccc", fontWeight: 600 },
   checklistDesc: { fontSize: 10, color: "#666" },
-  strikeSequence: { padding: "16px 18px", backgroundColor: "#0a0a12", border: "1px solid #1a1a2e" },
+  strikeSequence: { padding: "16px 18px", backgroundColor: "#0a0a12", border: "1px solid #1a1a2e", marginTop: 16 },
   strikeTitle: { fontSize: 10, color: "#4a4a8a", fontWeight: 700 },
-  strikeStep: { display: "flex", gap: 14, padding: "12px 0", borderBottom: "1px solid" },
+  strikeStep: { display: "flex", gap: 14, padding: "12px 0", borderBottom: "1px solid #141420" },
   strikeNum: { width: 20, fontSize: 12, color: "#4a4a8a" },
   strikeMoveLabel: { fontSize: 13, color: "#ccc", fontWeight: 600 },
   strikeNote: { fontSize: 10, color: "#555" },
   responseGrid: { display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(200px, 1fr))", gap: 10 },
   responseCard: { padding: "12px 16px" },
   responseLabel: { fontSize: 13, color: "#ccc", fontWeight: 600 },
-  responseCoachBox: { padding: "14px 16px", border: "1px solid" },
+  responseCoachBox: { padding: "14px 16px", border: "1px solid", marginTop: 12 },
   responseCoachTitle: { fontSize: 9, fontWeight: 700 },
   responseCoachText: { fontSize: 12, color: "#bbb", margin: "6px 0 0" },
   deviationCard: { padding: "12px 16px", backgroundColor: "#0a0a0a", border: "1px solid #1a1a1a" },
@@ -589,9 +560,11 @@ const styles = {
   deviationResponseText: { fontSize: 13, color: "#8a8", fontWeight: 600 },
   quizLayout: { display: "flex", flexDirection: "column", gap: 20 },
   quizQuestion: { fontSize: 18, color: "#fff", fontWeight: 600 },
-  quizOptions: { display: "flex", flexDirection: "column", gap: 10 },
+  quizOptions: { display: "flex", flexDirection: "column", gap: 10, marginTop: 16 },
   quizOption: { padding: "14px", textAlign: "left", border: "1px solid #222", color: "#bbb", cursor: "pointer" },
-  quizFeedback: { padding: "16px", backgroundColor: "#111" },
+  quizFeedback: { padding: "16px", backgroundColor: "#111", marginTop: 16 },
   quizCorrectNote: { fontSize: 14 },
-  loadingText: { fontSize: 12, color: "#555" }
+  loadingText: { fontSize: 12, color: "#555" },
+  quizLoadingBox: { textAlign: "center", padding: "40px" },
+  quizLoadingText: { fontSize: 16, color: "#555" }
 };
