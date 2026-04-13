@@ -2,6 +2,8 @@ import React, { useState } from "react";
 import { Card } from "@/components/ui/card";
 import askVlad from "../coaches/vlad.jsx";
 import askFabiano from "../coaches/fabiano.jsx";
+import askHikaru from "../coaches/hikaru.jsx";
+import askMagnus from "../coaches/magnus.jsx";
 
 const GameAutopsy = () => {
   const [pgn, setPgn] = useState("");
@@ -13,9 +15,13 @@ const GameAutopsy = () => {
     if (!pgn.trim()) return;
     setIsAnalyzing(true);
     try {
-      const response = activeCoach === "vlad" 
-        ? await askVlad(pgn) 
-        : await askFabiano(pgn);
+      const coaches = {
+        vlad: askVlad,
+        fabiano: askFabiano,
+        hikaru: askHikaru,
+        magnus: askMagnus
+      };
+      const response = await coaches[activeCoach](pgn);
       setAnalysis(response);
     } catch (error) {
       console.error("Analysis failure:", error);
@@ -34,23 +40,20 @@ const GameAutopsy = () => {
           <textarea
             value={pgn}
             onChange={(e) => setPgn(e.target.value)}
-            placeholder="Paste PGN here for tactical breakdown..."
+            placeholder="Paste PGN here..."
             className="w-full h-32 bg-black border border-zinc-800 p-3 font-mono text-sm text-zinc-300 focus:outline-none focus:border-white transition-all"
           />
           
-          <div className="flex gap-2">
-            <button 
-              onClick={() => setActiveCoach("vlad")}
-              className={`flex-1 py-3 text-xs font-bold uppercase tracking-widest transition-all ${activeCoach === 'vlad' ? 'bg-white text-black' : 'bg-zinc-800 text-zinc-500 hover:bg-zinc-700'}`}
-            >
-              Deploy Vlad
-            </button>
-            <button 
-              onClick={() => setActiveCoach("fabiano")}
-              className={`flex-1 py-3 text-xs font-bold uppercase tracking-widest transition-all ${activeCoach === 'fabiano' ? 'bg-white text-black' : 'bg-zinc-800 text-zinc-500 hover:bg-zinc-700'}`}
-            >
-              Deploy Fabiano
-            </button>
+          <div className="grid grid-cols-2 gap-2">
+            {['vlad', 'fabiano', 'hikaru', 'magnus'].map((coach) => (
+              <button 
+                key={coach}
+                onClick={() => setActiveCoach(coach)}
+                className={`py-3 text-[10px] font-bold uppercase tracking-widest transition-all ${activeCoach === coach ? 'bg-white text-black' : 'bg-zinc-800 text-zinc-500 hover:bg-zinc-700'}`}
+              >
+                {coach}
+              </button>
+            ))}
           </div>
 
           <button
@@ -58,7 +61,7 @@ const GameAutopsy = () => {
             disabled={isAnalyzing || !pgn.trim()}
             className="w-full py-4 bg-blue-600 hover:bg-blue-500 disabled:bg-zinc-800 disabled:text-zinc-600 font-black uppercase tracking-widest transition-all"
           >
-            {isAnalyzing ? "Analyzing Failure Points..." : "Commence Autopsy"}
+            {isAnalyzing ? "Analyzing..." : "Commence Autopsy"}
           </button>
         </div>
 
