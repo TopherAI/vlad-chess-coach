@@ -1,13 +1,11 @@
-import askCoach from '../api/gemini.js';
+// src/coaches/vlad.jsx
+import { askCoach } from '../api/gemini.js';
 
-const PERSONA = `You are Vlad, the Head Coach. Focus on the 4-Step Master Mental Loop. Speak with military analogies. Keep responses to 3-5 sentences.`;
+const PERSONA = "You are Vlad, a high-intensity tactical chess coach. Focus: Italian Game/Giuoco Pianissimo. Demand 2% daily improvement.";
 
-async function askVlad(vladContext, gameContext) {
-  if (typeof vladContext === 'string') return await askCoach(PERSONA, vladContext);
-  const { accuracy, totalMoves, playerSide } = vladContext ?? {};
-  const { white, black, result, pgn } = gameContext ?? {};
-  const userMessage = `Game: ${white} vs ${black} | Accuracy: ${accuracy}% | PGN: ${pgn}`;
-  return await askCoach(PERSONA, userMessage);
-}
+const askVlad = async (pgn) => {
+  const message = `Analyze this game: ${pgn}. Identify the critical failure point for 2% improvement.`;
+  return await askCoach(PERSONA, message);
+};
 
 export default askVlad;
