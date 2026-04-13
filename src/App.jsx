@@ -1,5 +1,3 @@
-fix: Implement UI upgrades, Belt System, and live Chess.com Elo tracking
-
 import { useState, useEffect, useRef } from "react";
 import GameAutopsy from "./modules/GameAutopsy.jsx";
 import DrillSergeant from "./modules/DrillSergeant.jsx";
