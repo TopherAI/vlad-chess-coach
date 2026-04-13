@@ -8,11 +8,11 @@ export const askCoach = async (persona, userMessage) => {
       }),
     });
     
-    if (!response.ok) throw new Error('Network response was not ok');
+    if (!response.ok) throw new Error('Network response failure');
     const data = await response.json();
     return data.text;
   } catch (error) {
     console.error("Coach Communication Failure:", error);
-    return "I've lost the connection to the analysis room. Check the logs.";
+    return "Connection lost to the analysis room. Check system logs.";
   }
 };
