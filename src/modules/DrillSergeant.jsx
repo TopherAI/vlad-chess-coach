@@ -1,25 +1,34 @@
 /**
  * src/modules/DrillSergeant.jsx
- * vlad-chess-coach — Drill Sergeant Module
+ * vlad-chess-coach — Drill Sergeant Module (Super AI Consensus Edition)
  *
- * Auto-loads blunder positions from vlad_last_autopsy localStorage.
- * Also accepts initialDrills prop and manual FEN input.
+ * Calibrated to ingest critical positions from the Super AI Consensus engine.
+ * Displays coach-specific critiques and Super AI Synthesis as tactical hints.
  */
 
 import { useState, useEffect, useCallback, useRef } from "react";
-import { getClassificationColor } from "../engine/stockfish.js";
 import { askVlad } from "../coaches/vlad.jsx";
 
-const FEEDBACK = {
-  correct:  { emoji: "✅", color: "#27ae60", text: "Correct! That's the move." },
-  close:    { emoji: "🟡", color: "#f39c12", text: "Not bad — but there's a better move." },
-  wrong:    { emoji: "❌", color: "#e74c3c", text: "Not quite. Look again." },
-  revealed: { emoji: "💡", color: "#3498db", text: "Solution revealed." },
+// ── Helpers ──────────────────────────────────────────────────────────────────
+
+const CLASSIFICATION_COLORS = {
+  best: "#27ae60",
+  excellent: "#2ecc71",
+  good: "#95a5a6",
+  inaccuracy: "#f1c40f",
+  mistake: "#e67e22",
+  blunder: "#e74c3c",
+  critical: "#f39c12", // AI Consensus color
 };
 
-// ---------------------------------------------------------------------------
-// Chessboard renderer
-// ---------------------------------------------------------------------------
+const FEEDBACK = {
+  correct:  { emoji: "✅", color: "#27ae60", text: "Correct! Italian Cage execution confirmed." },
+  close:    { emoji: "🟡", color: "#f39c12", text: "Reasonable, but deviates from the GM Plan." },
+  wrong:    { emoji: "❌", color: "#e74c3c", text: "CCT violation. Check the 4-Step Loop." },
+  revealed: { emoji: "💡", color: "#3498db", text: "Tactical solution revealed." },
+};
+
+// ── Chessboard Component ──────────────────────────────────────────────────────
 
 function ChessBoard({ fen, orientation, onMove, highlightSquares = [], disabled = false }) {
   const boardRef      = useRef(null);
@@ -66,12 +75,10 @@ function ChessBoard({ fen, orientation, onMove, highlightSquares = [], disabled 
   );
 }
 
-// ---------------------------------------------------------------------------
-// Sub-components
-// ---------------------------------------------------------------------------
+// ── Sub-components ────────────────────────────────────────────────────────────
 
 function DrillQueueItem({ drill, index, isActive, onClick }) {
-  const color = getClassificationColor(drill.classification);
+  const color = CLASSIFICATION_COLORS.critical;
   return (
     <div
       style={{
@@ -87,72 +94,34 @@ function DrillQueueItem({ drill, index, isActive, onClick }) {
       </span>
       <div style={styles.queueInfo}>
         <span style={styles.queueMove}>Move {drill.moveNumber} · {drill.side}</span>
-        {drill.weaknessTag && <span style={styles.queueTag}>{drill.weaknessTag}</span>}
+        <span style={styles.queueTag}>🚨 AI Consensus Moment</span>
       </div>
-      <span style={{ ...styles.queueCp, color: "#e74c3c" }}>−{drill.cpLoss}cp</span>
     </div>
   );
 }
 
-function FeedbackBanner({ feedback, vladNote }) {
-  if (!feedback) return null;
-  const f = FEEDBACK[feedback];
+function FeedbackBanner({ feedback, vladNote, superAIHint }) {
+  if (!feedback && !superAIHint) return null;
+  const f = feedback ? FEEDBACK[feedback] : { color: "#888" };
+  
   return (
-    <div style={{ ...styles.feedbackBanner, borderColor: f.color, backgroundColor: f.color + "11" }}>
-      <span style={styles.feedbackEmoji}>{f.emoji}</span>
+    <div style={{ ...styles.feedbackBanner, borderColor: f.color || "#333", backgroundColor: (f.color || "#333") + "11" }}>
+      {f.emoji && <span style={styles.feedbackEmoji}>{f.emoji}</span>}
       <div style={styles.feedbackContent}>
-        <p style={{ ...styles.feedbackText, color: f.color }}>{f.text}</p>
+        {feedback && <p style={{ ...styles.feedbackText, color: f.color }}>{f.text}</p>}
+        {superAIHint && (
+          <div style={styles.superAiHintBox}>
+            <span style={styles.superAiHintLabel}>SUPER AI SYNTHESIS</span>
+            <p style={styles.superAiHintText}>{superAIHint}</p>
+          </div>
+        )}
         {vladNote && <p style={styles.vladNote}>🎖️ Vlad: "{vladNote}"</p>}
       </div>
     </div>
   );
 }
 
-function DrillProgress({ total, solved }) {
-  const pct = total > 0 ? Math.round((solved / total) * 100) : 0;
-  return (
-    <div style={styles.drillProgressWrap}>
-      <span style={styles.drillProgressLabel}>{solved}/{total} drills</span>
-      <div style={styles.drillProgressBar}>
-        <div style={{ ...styles.drillProgressFill, width: `${pct}%` }} />
-      </div>
-      <span style={styles.drillProgressPct}>{pct}%</span>
-    </div>
-  );
-}
-
-function ManualFENInput({ onSubmit }) {
-  const [fen, setFen]   = useState("");
-  const [best, setBest] = useState("");
-  return (
-    <div style={styles.manualPanel}>
-      <p style={styles.manualTitle}>Add Custom Drill Position</p>
-      <input
-        style={styles.manualInput}
-        placeholder="Paste FEN string…"
-        value={fen}
-        onChange={e => setFen(e.target.value)}
-      />
-      <input
-        style={styles.manualInput}
-        placeholder="Best move (UCI, e.g. e2e4)…"
-        value={best}
-        onChange={e => setBest(e.target.value)}
-      />
-      <button
-        style={{ ...styles.btn, opacity: fen && best ? 1 : 0.4 }}
-        disabled={!fen || !best}
-        onClick={() => { onSubmit(fen, best); setFen(""); setBest(""); }}
-      >
-        Add Drill
-      </button>
-    </div>
-  );
-}
-
-// ---------------------------------------------------------------------------
-// Main Component
-// ---------------------------------------------------------------------------
+// ── Main Module ───────────────────────────────────────────────────────────────
 
 export default function DrillSergeant({ initialDrills = [] }) {
   const [drills, setDrills]             = useState(initialDrills);
@@ -163,41 +132,35 @@ export default function DrillSergeant({ initialDrills = [] }) {
   const [highlights, setHighlights]     = useState([]);
   const [attempts, setAttempts]         = useState(0);
   const [sessionStats, setSessionStats] = useState({ solved: 0, attempts: 0, streak: 0 });
-  const [showManual, setShowManual]     = useState(false);
   const [vladLoading, setVladLoading]   = useState(false);
 
-  // ── Auto-load from GameAutopsy localStorage on mount ──
+  // ── Auto-load from Super AI Consensus List ──
   useEffect(() => {
     if (initialDrills.length > 0) return;
     try {
-      const raw = localStorage.getItem("vlad_last_autopsy");
+      const raw = localStorage.getItem("vlad_critical_list");
       if (!raw) return;
-      const saved = JSON.parse(raw);
-      const moves = saved?.analysis?.moves ?? [];
-      const fens  = saved?.analysis?.fens  ?? [];
-      const built = moves
-        .filter(m => ["blunder", "mistake"].includes(m.classification) && m.bestMove && fens[m.moveIndex])
-        .map((m, i) => ({
-          id:             `autopsy-${i}`,
-          source:         "autopsy",
-          fen:            fens[m.moveIndex],
-          solutionMove:   m.bestMove,
-          playerMove:     m.actualMove,
-          classification: m.classification,
-          cpLoss:         m.cpLoss,
-          moveNumber:     m.moveNumber,
-          side:           m.side,
-          weaknessTag:    m.moveNumber >= 8 && m.moveNumber <= 12
-                            ? "Move 9 Speed Trap"
-                            : m.cpLoss > 200 ? "Missing Forcing Moves" : null,
-          attempted:      false,
-          solved:         false,
-        }));
+      const record = JSON.parse(raw);
+      const moves = record.moves ?? [];
+      
+      const built = moves.map((m, i) => ({
+        id: `consensus-${i}`,
+        fen: m.fen,
+        solutionMove: m.uci || m.bestMove, // Fallback support
+        playerMove: m.actualMove,
+        moveNumber: m.moveNumber,
+        side: m.side,
+        vladCritique: m.vlad,
+        superAI: m.superAI,
+        solved: false,
+      }));
+
       if (built.length > 0) setDrills(built);
-    } catch { /* fail silently */ }
+    } catch (err) {
+      console.error("Failed to load drills from consensus", err);
+    }
   }, []);
 
-  // Reset state when switching drills
   useEffect(() => {
     setFeedback(null);
     setVladNote(null);
@@ -208,16 +171,12 @@ export default function DrillSergeant({ initialDrills = [] }) {
 
   const activeDrill = drills[activeIndex] ?? null;
 
-  // ── Move handler ──
   const handleMove = useCallback(async (from, to) => {
     if (!activeDrill || showSolution) return false;
-    const uciMove  = from + to;
+    const uciMove = from + to;
     const solution = activeDrill.solutionMove;
-    const isExact  = uciMove === solution;
-    const isClose  = !isExact && (
-      uciMove.slice(0, 2) === solution.slice(0, 2) ||
-      uciMove.slice(2, 4) === solution.slice(2, 4)
-    );
+    const isExact = uciMove === solution;
+    
     const newAttempts = attempts + 1;
     setAttempts(newAttempts);
     setSessionStats(prev => ({ ...prev, attempts: prev.attempts + 1 }));
@@ -234,63 +193,46 @@ export default function DrillSergeant({ initialDrills = [] }) {
       return true;
     }
 
-    setFeedback(isClose ? "close" : "wrong");
-    if (!isClose) setSessionStats(prev => ({ ...prev, streak: 0 }));
+    setFeedback("wrong");
+    setSessionStats(prev => ({ ...prev, streak: 0 }));
     setHighlights([
       { square: from, color: "#e74c3c" },
       { square: to,   color: "#e74c3c" },
     ]);
+    
     if (newAttempts >= 3) revealSolution();
     return false;
   }, [activeDrill, attempts, showSolution, activeIndex]);
 
-  // ── Reveal solution ──
   const revealSolution = useCallback(() => {
     if (!activeDrill) return;
     setShowSolution(true);
     setFeedback("revealed");
     const sol = activeDrill.solutionMove;
-    setHighlights([
-      { square: sol.slice(0, 2), color: "#3498db" },
-      { square: sol.slice(2, 4), color: "#3498db" },
-    ]);
+    if (sol && sol.length >= 4) {
+      setHighlights([
+        { square: sol.slice(0, 2), color: "#3498db" },
+        { square: sol.slice(2, 4), color: "#3498db" },
+      ]);
+    }
     fireVladFeedback(activeDrill, false, attempts);
   }, [activeDrill, attempts]);
 
-  // ── Vlad micro-coaching ──
   const fireVladFeedback = useCallback(async (drill, solved, attemptsCount) => {
     setVladLoading(true);
     try {
-      const context = `Drill position — Move ${drill.moveNumber} (${drill.side}). Classification: ${drill.classification} (−${drill.cpLoss}cp). Solution: ${drill.solutionMove}. Result: ${solved ? `SOLVED in ${attemptsCount} attempt(s)` : "Required reveal"}. Weakness: ${drill.weaknessTag ?? "general"}. Give one sharp sentence of coaching. Be Vlad.`;
-      const response = await askVlad(context, {});
+      const prompt = `Drill Result: ${solved ? "Solved" : "Failed"} in ${attemptsCount} tries. 
+      Original AI critique: ${drill.vladCritique}. 
+      Provide one short, sharp Vlad-style follow-up sentence for TopherBettis.`;
+      const response = await askVlad(prompt);
       setVladNote(response);
     } catch {
-      setVladNote(null);
+      setVladNote(drill.vladCritique); // Fallback to original consensus critique
     } finally {
       setVladLoading(false);
     }
   }, []);
 
-  // ── Add manual drill ──
-  const addManualDrill = useCallback((fen, bestMove) => {
-    setDrills(prev => [...prev, {
-      id: `manual-${Date.now()}`,
-      source: "manual",
-      fen,
-      solutionMove:   bestMove,
-      playerMove:     null,
-      classification: "mistake",
-      cpLoss:         0,
-      moveNumber:     0,
-      side:           "white",
-      weaknessTag:    null,
-      attempted:      false,
-      solved:         false,
-    }]);
-    setShowManual(false);
-  }, []);
-
-  // ── Empty state ──
   if (drills.length === 0) {
     return (
       <div style={styles.root}>
@@ -298,33 +240,28 @@ export default function DrillSergeant({ initialDrills = [] }) {
           <span style={styles.headerIcon}>⚔️</span>
           <div>
             <h1 style={styles.headerTitle}>Drill Sergeant</h1>
-            <p style={styles.headerSub}>Targeted drills from your blunder positions</p>
+            <p style={styles.headerSub}>Awaiting fresh Game Autopsy data...</p>
           </div>
         </div>
         <div style={styles.emptyState}>
-          <p style={styles.emptyTitle}>No drills loaded yet.</p>
-          <p style={styles.emptySub}>Run a Game Autopsy first — blunder positions will auto-populate here.</p>
-          <p style={styles.emptySub}>Or add a custom position below.</p>
-          <button style={styles.btn} onClick={() => setShowManual(true)}>+ Add Custom Position</button>
+          <p style={styles.emptyTitle}>The queue is empty.</p>
+          <p style={styles.emptySub}>Run a **Game Autopsy** to generate the Critical AI Consensus list. Your blunders will automatically manifest here as training drills.</p>
         </div>
-        {showManual && <ManualFENInput onSubmit={addManualDrill} />}
       </div>
     );
   }
 
-  const solved      = drills.filter(d => d.solved).length;
+  const solvedCount = drills.filter(d => d.solved).length;
   const orientation = activeDrill?.side === "black" ? "black" : "white";
 
-  // ── Render ──
   return (
     <div style={styles.root}>
-
       <div style={styles.header}>
         <div style={styles.headerLeft}>
           <span style={styles.headerIcon}>⚔️</span>
           <div>
             <h1 style={styles.headerTitle}>Drill Sergeant</h1>
-            <p style={styles.headerSub}>Drills from your blunders · {drills.length} positions loaded</p>
+            <p style={styles.headerSub}>Tactical calibration · {drills.length} Consensus points</p>
           </div>
         </div>
         <div style={styles.streakBox}>
@@ -333,12 +270,9 @@ export default function DrillSergeant({ initialDrills = [] }) {
         </div>
       </div>
 
-      <DrillProgress total={drills.length} solved={solved} />
-
       <div style={styles.mainLayout}>
-
         <div style={styles.sidebar}>
-          <p style={styles.sidebarTitle}>DRILL QUEUE</p>
+          <p style={styles.sidebarTitle}>CRITICAL QUEUE</p>
           {drills.map((drill, i) => (
             <DrillQueueItem
               key={drill.id}
@@ -348,41 +282,23 @@ export default function DrillSergeant({ initialDrills = [] }) {
               onClick={() => setActiveIndex(i)}
             />
           ))}
-          <button style={styles.btnSmall} onClick={() => setShowManual(v => !v)}>
-            + Custom Position
-          </button>
-          {showManual && <ManualFENInput onSubmit={addManualDrill} />}
+          <div style={styles.progressCounter}>
+             {solvedCount} / {drills.length} Reps Complete
+          </div>
         </div>
 
         <div style={styles.drillArea}>
-          {activeDrill ? (
+          {activeDrill && (
             <>
               <div style={styles.drillHeader}>
                 <div style={styles.drillMeta}>
-                  <span style={{
-                    ...styles.drillBadge,
-                    color: getClassificationColor(activeDrill.classification),
-                    backgroundColor: getClassificationColor(activeDrill.classification) + "22",
-                  }}>
-                    {activeDrill.classification.toUpperCase()}
-                  </span>
-                  <span style={styles.drillDesc}>Move {activeDrill.moveNumber} · {activeDrill.side} to move</span>
-                  {activeDrill.weaknessTag && (
-                    <span style={styles.weaknessTag}>⚠️ {activeDrill.weaknessTag}</span>
-                  )}
+                  <span style={styles.drillBadge}>🚨 CRITICAL CALIBRATION</span>
+                  <span style={styles.drillDesc}>Move {activeDrill.moveNumber} · You are {activeDrill.side}</span>
                 </div>
                 <span style={styles.attemptsLabel}>
-                  {attempts > 0 ? `${attempts} attempt${attempts > 1 ? "s" : ""}` : "Find the best move"}
+                  {attempts > 0 ? `${attempts} attempts` : "Find the winning move"}
                 </span>
               </div>
-
-              <p style={styles.drillInstruction}>
-                {showSolution
-                  ? `Solution: ${activeDrill.solutionMove.slice(0, 2)} → ${activeDrill.solutionMove.slice(2, 4)}`
-                  : activeDrill.solved
-                  ? "✓ Solved — move to next drill"
-                  : "Drag a piece to make your move"}
-              </p>
 
               <ChessBoard
                 fen={activeDrill.fen}
@@ -394,39 +310,30 @@ export default function DrillSergeant({ initialDrills = [] }) {
 
               <FeedbackBanner
                 feedback={feedback}
-                vladNote={vladLoading ? "Vlad is thinking…" : vladNote}
+                vladNote={vladLoading ? "Vlad is observing..." : vladNote}
+                superAIHint={(!activeDrill.solved && !showSolution) ? activeDrill.superAI : null}
               />
 
               <div style={styles.controls}>
                 {!activeDrill.solved && !showSolution && (
                   <button style={styles.btnGhost} onClick={revealSolution}>
-                    💡 Show Solution
+                    💡 Reveal Solution
                   </button>
                 )}
-                {activeIndex < drills.length - 1 && (
+                {(activeDrill.solved || showSolution) && activeIndex < drills.length - 1 && (
                   <button style={styles.btn} onClick={() => setActiveIndex(i => i + 1)}>
                     Next Drill →
                   </button>
                 )}
-                {activeIndex === drills.length - 1 && activeDrill.solved && (
-                  <div style={styles.sessionComplete}>
-                    🎖️ Session complete! {solved}/{drills.length} solved.
-                  </div>
-                )}
               </div>
 
               <div style={styles.mentalLoop}>
-                <p style={styles.mentalLoopTitle}>4-STEP LOOP</p>
-                <ol style={styles.mentalLoopList}>
-                  <li>Opponent's intent — what do they want?</li>
-                  <li>CCT — Checks, Captures, Threats</li>
-                  <li>Lazy piece upgrade</li>
-                  <li>Pre-move verify — can they take anything?</li>
-                </ol>
+                <p style={styles.mentalLoopTitle}>4-STEP GENTLEMAN ASSASSIN LOOP</p>
+                <div style={styles.loopGrid}>
+                  <span>1. Intent</span><span>2. CCT</span><span>3. Lazy Piece</span><span>4. Blunder Check</span>
+                </div>
               </div>
             </>
-          ) : (
-            <p style={styles.emptySub}>Select a drill from the queue.</p>
           )}
         </div>
       </div>
@@ -434,109 +341,46 @@ export default function DrillSergeant({ initialDrills = [] }) {
   );
 }
 
-// ---------------------------------------------------------------------------
-// Styles
-// ---------------------------------------------------------------------------
-
 const styles = {
-  root: {
-    display: "flex", flexDirection: "column", gap: 20,
-    padding: "28px 32px", minHeight: "100vh",
-    backgroundColor: "#0d0d0d", color: "#e8e8e8",
-    fontFamily: "'IBM Plex Mono', 'Courier New', monospace",
-    maxWidth: 1000, margin: "0 auto",
-  },
-  header: {
-    display: "flex", justifyContent: "space-between", alignItems: "center",
-    borderBottom: "1px solid #222", paddingBottom: 20, flexWrap: "wrap", gap: 12,
-  },
+  root: { display: "flex", flexDirection: "column", gap: 20, padding: "28px 32px", minHeight: "100vh", backgroundColor: "#0d0d0d", color: "#e8e8e8", fontFamily: "'IBM Plex Mono', monospace", maxWidth: 1000, margin: "0 auto" },
+  header: { display: "flex", justifyContent: "space-between", alignItems: "center", borderBottom: "1px solid #222", paddingBottom: 20 },
   headerLeft:  { display: "flex", alignItems: "center", gap: 14 },
   headerIcon:  { fontSize: 36 },
-  headerTitle: { margin: 0, fontSize: 26, fontWeight: 700, letterSpacing: "-0.5px", color: "#fff" },
-  headerSub:   { margin: "2px 0 0", fontSize: 12, color: "#666", letterSpacing: "0.5px" },
-  streakBox: {
-    display: "flex", flexDirection: "column", alignItems: "center",
-    padding: "10px 20px", backgroundColor: "#1a1200",
-    border: "1px solid #3d2e00", borderRadius: 8,
-  },
+  headerTitle: { margin: 0, fontSize: 26, fontWeight: 700, color: "#fff" },
+  headerSub:   { margin: "2px 0 0", fontSize: 12, color: "#666" },
+  streakBox: { display: "flex", flexDirection: "column", alignItems: "center", padding: "10px 20px", backgroundColor: "#1a1200", border: "1px solid #3d2e00", borderRadius: 8 },
   streakNum:   { fontSize: 28, fontWeight: 700, color: "#f39c12", lineHeight: 1 },
   streakLabel: { fontSize: 10, color: "#888", marginTop: 2 },
-  drillProgressWrap:  { display: "flex", alignItems: "center", gap: 12 },
-  drillProgressLabel: { fontSize: 11, color: "#666", minWidth: 60 },
-  drillProgressBar:   { flex: 1, height: 5, backgroundColor: "#1a1a1a", borderRadius: 3, overflow: "hidden" },
-  drillProgressFill:  { height: "100%", backgroundColor: "#c0392b", borderRadius: 3, transition: "width 0.4s ease" },
-  drillProgressPct:   { fontSize: 11, color: "#555", minWidth: 32, textAlign: "right" },
   mainLayout: { display: "flex", gap: 24, alignItems: "flex-start" },
   sidebar: { display: "flex", flexDirection: "column", gap: 4, width: 220, flexShrink: 0 },
   sidebarTitle: { margin: "0 0 8px", fontSize: 10, color: "#444", letterSpacing: "1px" },
-  queueItem: {
-    display: "flex", alignItems: "center", gap: 10,
-    padding: "10px 10px 10px 12px", borderRadius: 4,
-    cursor: "pointer", transition: "background 0.15s",
-  },
+  progressCounter: { marginTop: 12, fontSize: 11, color: "#27ae60", fontWeight: 700, textAlign: "center" },
+  queueItem: { display: "flex", alignItems: "center", gap: 10, padding: "10px 12px", borderRadius: 4, cursor: "pointer", transition: "background 0.15s" },
   queueBadge: { width: 24, height: 24, borderRadius: 4, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 11, fontWeight: 700, flexShrink: 0 },
   queueInfo:  { display: "flex", flexDirection: "column", gap: 2, flex: 1, minWidth: 0 },
   queueMove:  { fontSize: 11, color: "#aaa" },
-  queueTag:   { fontSize: 9, color: "#666", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" },
-  queueCp:    { fontSize: 10, flexShrink: 0 },
+  queueTag:   { fontSize: 9, color: "#666" },
   drillArea:  { flex: 1, display: "flex", flexDirection: "column", gap: 16 },
-  drillHeader: { display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: 8 },
-  drillMeta:  { display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap" },
-  drillBadge: { padding: "3px 10px", borderRadius: 3, fontSize: 11, fontWeight: 700, letterSpacing: "0.5px" },
+  drillHeader: { display: "flex", justifyContent: "space-between", alignItems: "center" },
+  drillMeta:  { display: "flex", alignItems: "center", gap: 10 },
+  drillBadge: { padding: "3px 10px", borderRadius: 3, fontSize: 11, fontWeight: 700, backgroundColor: "#c0392b22", color: "#c0392b" },
   drillDesc:  { fontSize: 13, color: "#aaa" },
-  weaknessTag: { fontSize: 10, color: "#f39c12", backgroundColor: "#2a1f00", padding: "2px 8px", borderRadius: 3 },
   attemptsLabel: { fontSize: 11, color: "#555" },
-  drillInstruction: { margin: 0, fontSize: 12, color: "#777", letterSpacing: "0.3px" },
-  feedbackBanner: {
-    display: "flex", alignItems: "flex-start", gap: 12,
-    padding: "14px 16px", border: "1px solid", borderRadius: 6,
-  },
+  feedbackBanner: { display: "flex", alignItems: "flex-start", gap: 12, padding: "14px 16px", border: "1px solid", borderRadius: 6 },
   feedbackEmoji:   { fontSize: 22, flexShrink: 0 },
-  feedbackContent: { display: "flex", flexDirection: "column", gap: 6 },
+  feedbackContent: { display: "flex", flexDirection: "column", gap: 8, flex: 1 },
   feedbackText:    { margin: 0, fontSize: 14, fontWeight: 600 },
-  vladNote:        { margin: 0, fontSize: 12, color: "#aaa", fontStyle: "italic", lineHeight: 1.6 },
-  controls: { display: "flex", gap: 12, flexWrap: "wrap", alignItems: "center" },
-  btn: {
-    padding: "10px 22px", backgroundColor: "#c0392b", color: "#fff",
-    border: "none", borderRadius: 6, fontSize: 13,
-    fontFamily: "'IBM Plex Mono', monospace", fontWeight: 700, cursor: "pointer",
-  },
-  btnGhost: {
-    padding: "10px 22px", backgroundColor: "transparent", color: "#666",
-    border: "1px solid #333", borderRadius: 6, fontSize: 13,
-    fontFamily: "'IBM Plex Mono', monospace", cursor: "pointer",
-  },
-  btnSmall: {
-    marginTop: 8, padding: "6px 12px", backgroundColor: "#1a1a1a",
-    color: "#666", border: "1px solid #2a2a2a", borderRadius: 4,
-    fontSize: 11, fontFamily: "'IBM Plex Mono', monospace", cursor: "pointer",
-  },
-  sessionComplete: {
-    padding: "10px 16px", backgroundColor: "#0f2010",
-    border: "1px solid #1e4d20", borderRadius: 6, fontSize: 13, color: "#27ae60",
-  },
-  mentalLoop: {
-    padding: "14px 16px", backgroundColor: "#0d0d0d",
-    border: "1px solid #1a1a1a", borderRadius: 6, marginTop: 8,
-  },
-  mentalLoopTitle: { margin: "0 0 8px", fontSize: 9, color: "#444", letterSpacing: "1.5px" },
-  mentalLoopList: {
-    margin: 0, paddingLeft: 18, display: "flex", flexDirection: "column",
-    gap: 4, fontSize: 11, color: "#555", lineHeight: 1.6,
-  },
-  emptyState: { display: "flex", flexDirection: "column", gap: 12, padding: "48px 0", alignItems: "flex-start" },
-  emptyTitle: { margin: 0, fontSize: 18, color: "#ccc" },
-  emptySub:   { margin: 0, fontSize: 13, color: "#555" },
-  manualPanel: {
-    display: "flex", flexDirection: "column", gap: 10,
-    padding: "16px", backgroundColor: "#111",
-    border: "1px solid #222", borderRadius: 6, marginTop: 8,
-  },
-  manualTitle: { margin: 0, fontSize: 12, color: "#888", letterSpacing: "0.5px" },
-  manualInput: {
-    padding: "8px 12px", backgroundColor: "#0d0d0d",
-    border: "1px solid #2a2a2a", borderRadius: 4,
-    color: "#ccc", fontSize: 12,
-    fontFamily: "'IBM Plex Mono', monospace", outline: "none",
-  },
+  superAiHintBox: { padding: "10px 12px", backgroundColor: "#1e1e2f", border: "1px solid #3e3e5f", borderRadius: 4 },
+  superAiHintLabel: { fontSize: 9, color: "#a8a8ff", fontWeight: 700, letterSpacing: "1px" },
+  superAiHintText: { margin: "4px 0 0", fontSize: 12, color: "#e8e8ff", lineHeight: 1.5 },
+  vladNote:        { margin: 0, fontSize: 12, color: "#aaa", fontStyle: "italic" },
+  controls: { display: "flex", gap: 12, alignItems: "center" },
+  btn: { padding: "10px 22px", backgroundColor: "#c0392b", color: "#fff", border: "none", borderRadius: 6, fontSize: 13, fontWeight: 700, cursor: "pointer" },
+  btnGhost: { padding: "10px 22px", backgroundColor: "transparent", color: "#666", border: "1px solid #333", borderRadius: 6, fontSize: 13, cursor: "pointer" },
+  mentalLoop: { padding: "12px 16px", backgroundColor: "#080808", border: "1px solid #1a1a1a", borderRadius: 6 },
+  mentalLoopTitle: { margin: "0 0 8px", fontSize: 9, color: "#444", letterSpacing: "1px" },
+  loopGrid: { display: "flex", justifyContent: "space-between", fontSize: 10, color: "#666" },
+  emptyState: { display: "flex", flexDirection: "column", gap: 12, padding: "48px 0" },
+  emptyTitle: { fontSize: 18, color: "#ccc", margin: 0 },
+  emptySub:   { fontSize: 13, color: "#555", margin: 0, lineHeight: 1.6 },
 };
