@@ -1,7 +1,7 @@
 01 /**
 02  * src/modules/GameAutopsy.jsx
 03  * vlad-chess-coach — Game Autopsy Terminal
-04  * MISSION: AI Consensus Protocol & Manual PGN Analysis
+04  * Standard: Braceless default imports
 05  */
 06 
 07 import { useState, useCallback, useRef, useEffect } from "react";
@@ -45,7 +45,7 @@
 45 
 46     try {
 47       const stats = { accuracy: 75, playerSide: "white" };
-48       const game = { white: "TopherBettis", black: "Opponent", result: "1-0", pgn };
+48       const game = { white: "TopherBettis", black: "Mateo", result: "1-0", pgn };
 49 
 50       const [v, f, h, m] = await Promise.all([
 51         askVlad(stats, game),
@@ -76,27 +76,27 @@
 76             value={pgn}
 77             onChange={(e) => setPgn(e.target.value)}
 78             onKeyDown={handleKeyDown}
-79             placeholder="Paste PGN and hit [Enter]..."
+79             placeholder="Paste PGN and hit [Enter] to analyze..."
 80             rows={10}
 81           />
 82           <button ref={runBtnRef} style={styles.btn} onClick={runAutopsy}>Analyze</button>
-83         </div>
-84       )}
-85       {loading && <p style={styles.loading}>Coaching team assembling consensus...</p>}
-86       {phase === "done" && (
-87         <div style={styles.results}>
-88           {['vlad', 'fabiano', 'hikaru', 'magnus'].map(key => (
-89             <div key={key} style={styles.card}>
-90               <h3 style={styles.coachHeader}>{key.toUpperCase()}</h3>
-91               <p style={styles.coachText}>{coaches[key]}</p>
-92             </div>
-93           ))}
-94           <button style={styles.btnSmall} onClick={() => setPhase("idle")}>＋ New Analysis</button>
-95         </div>
-96       )}
-97     </div>
-98   );
-99 }
+083         </div>
+084       )}
+085       {loading && <p style={styles.loading}>Coaching team assembling consensus...</p>}
+086       {phase === "done" && (
+087         <div style={styles.results}>
+088           {['vlad', 'fabiano', 'hikaru', 'magnus'].map(key => (
+089             <div key={key} style={styles.card}>
+090               <h3 style={styles.coachHeader}>{key.toUpperCase()}</h3>
+091               <p style={styles.coachText}>{coaches[key]}</p>
+092             </div>
+093           ))}
+094           <button style={styles.btnSmall} onClick={() => setPhase("idle")}>＋ New Analysis</button>
+095         </div>
+096       )}
+097     </div>
+098   );
+099 }
 100 
 101 const styles = {
 102   root: { padding: 40, maxWidth: 850, margin: "0 auto", backgroundColor: "#0d0d0d", color: "#e8e8e8", minHeight: "100vh", fontFamily: "monospace" },
