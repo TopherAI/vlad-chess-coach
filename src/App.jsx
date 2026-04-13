@@ -26,15 +26,48 @@ function GameClock() {
   const [isRunning, setIsRunning] = useState(false);
   const [selectedTime, setSelectedTime] = useState(30);
   const timerRef = useRef(null);
+  const audioCtxRef = useRef(null);
+
+  const initAudio = () => {
+    if (!audioCtxRef.current) {
+      const AudioContext = window.AudioContext || window.webkitAudioContext;
+      if (AudioContext) audioCtxRef.current = new AudioContext();
+    }
+    if (audioCtxRef.current?.state === 'suspended') {
+      audioCtxRef.current.resume();
+    }
+  };
+
+  const playBeep = () => {
+    if (!audioCtxRef.current) return;
+    const ctx = audioCtxRef.current;
+    
+    const beep = (timeOffset) => {
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+      osc.type = "square";
+      osc.frequency.setValueAtTime(880, ctx.currentTime + timeOffset); // A5
+      gain.gain.setValueAtTime(0.05, ctx.currentTime + timeOffset);
+      osc.start(ctx.currentTime + timeOffset);
+      osc.stop(ctx.currentTime + timeOffset + 0.15);
+    };
+
+    beep(0);
+    beep(0.2); // Double beep alert
+  };
 
   const startTimer = () => {
     if (isRunning) return;
+    initAudio();
     setIsRunning(true);
     timerRef.current = setInterval(() => {
       setTimeLeft((prev) => {
         if (prev <= 1) {
           clearInterval(timerRef.current);
           setIsRunning(false);
+          playBeep();
           return 0;
         }
         return prev - 1;
@@ -71,26 +104,27 @@ function GameClock() {
   }, []);
 
   return (
-    <div style={{ ...S.moduleCard, borderTop: `3px solid #3498db`, alignItems: "center", justifyContent: "center", textAlign: "center" }}>
-      <p style={{ margin: "0 0 8px", fontSize: 10, color: "#444", letterSpacing: "1.5px" }}>TACTICAL CLOCK</p>
+    <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end", justifyContent: "space-between", height: "100%" }}>
+      <p style={{ margin: 0, fontSize: 10, color: "#444", letterSpacing: "1.5px", lineHeight: 1 }}>TACTICAL CLOCK</p>
       
-      <div style={{ fontSize: 42, fontWeight: 700, color: timeLeft <= 5 ? "#e74c3c" : "#e8e8e8", fontFamily: "'IBM Plex Mono', monospace", marginBottom: 12 }}>
+      <div style={{ fontSize: 42, fontWeight: 700, color: timeLeft <= 5 && timeLeft > 0 ? "#e74c3c" : timeLeft === 0 ? "#c0392b" : "#e8e8e8", fontFamily: "'IBM Plex Mono', monospace", lineHeight: 1 }}>
         {formatTime(timeLeft)}
       </div>
 
-      <div style={{ display: "flex", gap: 8, marginBottom: 16 }}>
-        <button onClick={isRunning ? pauseTimer : startTimer} style={{ ...S.btnSmall, backgroundColor: isRunning ? "#c0392b" : "#27ae60", color: "#fff", borderColor: isRunning ? "#c0392b" : "#27ae60" }}>
+      <div style={{ display: "flex", gap: 6, alignItems: "center" }}>
+        <select value={selectedTime} onChange={handleTimeChange} style={{ backgroundColor: "#111", color: "#aaa", border: "1px solid #333", borderRadius: 4, padding: "4px 6px", fontFamily: "'IBM Plex Mono', monospace", fontSize: 10, outline: "none" }}>
+          <option value={30}>30s</option>
+          <option value={60}>1m</option>
+          <option value={120}>2m</option>
+          <option value={300}>5m</option>
+        </select>
+        <button onClick={isRunning ? pauseTimer : startTimer} style={{ ...S.btnSmall, backgroundColor: isRunning ? "#c0392b" : "#27ae60", color: "#fff", borderColor: isRunning ? "#c0392b" : "#27ae60", padding: "4px 12px", fontSize: 10, fontWeight: 700 }}>
           {isRunning ? "Pause" : "Start"}
         </button>
-        <button onClick={resetTimer} style={{ ...S.btnSmall, backgroundColor: "#333", color: "#ccc", borderColor: "#444" }}>Reset</button>
+        <button onClick={resetTimer} style={{ ...S.btnSmall, backgroundColor: "#222", color: "#ccc", borderColor: "#333", padding: "4px 12px", fontSize: 10 }}>
+          Reset
+        </button>
       </div>
-
-      <select value={selectedTime} onChange={handleTimeChange} style={{ backgroundColor: "#111", color: "#aaa", border: "1px solid #333", borderRadius: 4, padding: "4px 8px", fontFamily: "'IBM Plex Mono', monospace", fontSize: 11 }}>
-        <option value={30}>30 Sec (Default)</option>
-        <option value={60}>1 Min</option>
-        <option value={120}>2 Min</option>
-        <option value={300}>5 Min</option>
-      </select>
     </div>
   );
 }
@@ -194,18 +228,21 @@ function Dashboard({ onNavigate, currentElo }) {
   return (
     <div style={S.dashRoot}>
 
-      {/* Hero */}
+      {/* Hero Header with Embedded Game Clock */}
       <div style={S.hero}>
         <div style={S.heroLeft}>
-          <p style={S.heroGreeting}>MISSION BRIEFING</p>
-          <h1 style={S.heroTitle}>
-            <span style={{ color: "#c0392b" }}>{currentElo}</span>
-            <span style={S.heroArrow}> → </span>
-            <span style={{ color: "#27ae60" }}>2000</span>
-          </h1>
+          <div>
+            <p style={S.heroGreeting}>MISSION BRIEFING</p>
+            <h1 style={S.heroTitle}>
+              <span style={{ color: "#c0392b" }}>{currentElo}</span>
+              <span style={S.heroArrow}> → </span>
+              <span style={{ color: "#27ae60" }}>2000</span>
+            </h1>
+          </div>
           <p style={S.heroSub}>18–24 month campaign · Gentleman Assassin system</p>
         </div>
-        <div style={S.heroRight}>
+        
+        <div style={S.heroCenter}>
           <p style={S.progressLabel}>CAMPAIGN PROGRESS</p>
           <div style={S.progressTrack}>
             <div style={{ ...S.progressFill, width: `${Math.min(100, Math.max(0, progress))}%` }} />
@@ -227,6 +264,10 @@ function Dashboard({ onNavigate, currentElo }) {
             <span>400</span>
             <span>2000</span>
           </div>
+        </div>
+
+        <div style={S.heroRight}>
+          <GameClock />
         </div>
       </div>
 
@@ -285,10 +326,9 @@ function Dashboard({ onNavigate, currentElo }) {
         </div>
       </div>
 
-      {/* Module cards & Game Clock */}
+      {/* Module cards */}
       <p style={S.sectionTitle}>TRAINING MODULES</p>
       <div style={S.moduleGrid}>
-        <GameClock />
         <PgnDropCard onNavigate={onNavigate} />
         {[
           { id: "autopsy",    icon: "🔬", title: "Game Autopsy",   desc: "Upload PGN → Super AI Consensus & Coach debrief.",    color: "#c0392b" },
@@ -527,17 +567,18 @@ const S = {
     fontFamily: "'IBM Plex Mono', monospace",
   },
   hero: {
-    display: "flex", justifyContent: "space-between", alignItems: "flex-end",
+    display: "flex", justifyContent: "space-between", alignItems: "stretch",
     flexWrap: "wrap", gap: 24,
     paddingBottom: 24,
     borderBottom: "1px solid #1a1a1a",
   },
-  heroLeft:     {},
-  heroGreeting: { margin: "0 0 6px", fontSize: 10, color: "#444", letterSpacing: "2px" },
+  heroLeft:     { display: "flex", flexDirection: "column", justifyContent: "space-between" },
+  heroCenter:   { flex: 1, minWidth: 280, display: "flex", flexDirection: "column", justifyContent: "flex-end" },
+  heroRight:    { display: "flex", flexDirection: "column", justifyContent: "space-between", alignItems: "flex-end", minWidth: 160 },
+  heroGreeting: { margin: "0 0 6px", fontSize: 10, color: "#444", letterSpacing: "2px", lineHeight: 1 },
   heroTitle:    { margin: "0 0 6px", fontSize: 48, fontWeight: 700, lineHeight: 1, letterSpacing: "-1px" },
   heroArrow:    { color: "#333" },
-  heroSub:      { margin: 0, fontSize: 12, color: "#555" },
-  heroRight:    { minWidth: 280 },
+  heroSub:      { margin: 0, fontSize: 12, color: "#555", lineHeight: 1 },
   progressLabel: { margin: "0 0 8px", fontSize: 9, color: "#444", letterSpacing: "1.5px" },
   progressTrack: {
     position: "relative", height: 8,
