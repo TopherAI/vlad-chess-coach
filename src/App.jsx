@@ -104,8 +104,8 @@ function GameClock() {
   }, []);
 
   return (
-    <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end", justifyContent: "space-between", height: "100%" }}>
-      <p style={{ margin: 0, fontSize: 10, color: "#444", letterSpacing: "1.5px", lineHeight: 1 }}>TACTICAL CLOCK</p>
+    <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end", justifyContent: "space-between", height: "100%", width: "100%", minWidth: 180 }}>
+      <p style={{ alignSelf: "flex-start", margin: 0, fontSize: 10, color: "#c0392b", letterSpacing: "1.5px", lineHeight: 1, fontWeight: 700 }}>TACTICAL CLOCK</p>
       
       <div style={{ fontSize: 42, fontWeight: 700, color: timeLeft <= 5 && timeLeft > 0 ? "#e74c3c" : timeLeft === 0 ? "#c0392b" : "#e8e8e8", fontFamily: "'IBM Plex Mono', monospace", lineHeight: 1 }}>
         {formatTime(timeLeft)}
