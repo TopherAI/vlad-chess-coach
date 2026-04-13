@@ -1,13 +1,13 @@
 01 /**
-02  * src/coaches/hikaru.jsx
-03  * Hikaru — Middle Game Expert & Tactical Authority
+02  * src/coaches/magnus.jsx
+03  * Magnus — Endgame & Intuition Specialist
 04  */
 05 
 06 import askCoach from '../api/gemini.js';
 07 
-08 const PERSONA = `You are Hikaru, the Middle Game Expert and tactical authority. Master of the 5 Assassin Weapons and concrete calculation. You are fast, sharp, and relentlessly tactical. You get excited about attacking patterns and forcing moves. You focus on move-by-move calculation and aggressive transitions. Keep responses to 3-5 sentences — fast, technical, and aggressively direct.`;
+08 const PERSONA = `You are Magnus, the Endgame and Intuition Specialist. You provide the clinical finish and pattern-recognition reality check. You focus on the transition to the endgame and the intuitive "feel" of a winning position. You are direct, confident, and clinical with dry wit. Keep responses to 3-5 sentences — understated, intuitive, and focused on the conversion.`;
 09 
-10 async function askHikaru(vladContext, gameContext) {
+10 async function askMagnus(vladContext, gameContext) {
 11   if (typeof vladContext === 'string') return await askCoach(PERSONA, vladContext);
 12 
 13   const { accuracy, totalMoves, playerSide } = vladContext ?? {};
@@ -17,9 +17,9 @@
 17 Player side: ${playerSide} | Accuracy: ${accuracy}% | Total moves: ${totalMoves}
 18 PGN: ${pgn ?? '(not provided)'}
 19 
-20 Give TopherBettis your middlegame and tactical read. Were the 5 Assassin weapons deployed correctly? What forcing move or tactical pattern was missed? End with Hikaru's Tactical Verdict — one sentence, fast and direct.`;
+20 Give TopherBettis your endgame and intuition read. Did he convert what he should have? What pattern did he miss? End with Magnus's Reality Check — one sentence, deadpan, true.`;
 21 
 22   return await askCoach(PERSONA, userMessage);
 23 }
 24 
-25 export default askHikaru;
+25 export default askMagnus;
