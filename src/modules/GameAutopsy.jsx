@@ -1,113 +1,71 @@
-01 /**
-02  * src/modules/GameAutopsy.jsx
-03  * vlad-chess-coach — Game Autopsy Terminal
-04  * Standard: Braceless default imports
-05  */
-06 
-07 import { useState, useCallback, useRef, useEffect } from "react";
-08 import askVlad from "../coaches/vlad.jsx";
-09 import askFabiano from "../coaches/fabiano.jsx";
-10 import askHikaru from "../coaches/hikaru.jsx";
-11 import askMagnus from "../coaches/magnus.jsx";
-12 
-13 const STORAGE_KEY = "vlad_last_autopsy";
-14 
-15 export default function GameAutopsy() {
-16   const [phase, setPhase] = useState("idle");
-17   const [pgn, setPgn] = useState("");
-18   const [coaches, setCoaches] = useState({ vlad: null, fabiano: null, hikaru: null, magnus: null });
-19   const [loading, setLoading] = useState(false);
-20   const runBtnRef = useRef(null);
-21 
-22   useEffect(() => {
-23     const saved = localStorage.getItem(STORAGE_KEY);
-24     if (saved) {
-25       try {
-26         const data = JSON.parse(saved);
-27         setPgn(data.pgn || "");
-28         setCoaches(data.coaches || {});
-29         setPhase("done");
-30       } catch (e) { console.error("Cache clear"); }
-31     }
-32   }, []);
-33 
-34   const handleKeyDown = (e) => {
-35     if (e.key === "Enter" && !e.shiftKey) {
-36       e.preventDefault();
-37       if (pgn.trim() && phase === "idle") runAutopsy();
-38     }
-39   };
-40 
-41   const runAutopsy = useCallback(async () => {
-42     if (!pgn.trim()) return;
-43     setPhase("coaching");
-44     setLoading(true);
-45 
-46     try {
-47       const stats = { accuracy: 75, playerSide: "white" };
-48       const game = { white: "TopherBettis", black: "Mateo", result: "1-0", pgn };
-49 
-50       const [v, f, h, m] = await Promise.all([
-51         askVlad(stats, game),
-52         askFabiano(stats, game),
-53         askHikaru(stats, game),
-54         askMagnus(stats, game)
-55       ]);
-56 
-57       const results = { vlad: v, fabiano: f, hikaru: h, magnus: m };
-58       setCoaches(results);
-59       localStorage.setItem(STORAGE_KEY, JSON.stringify({ pgn, coaches: results }));
-60       setPhase("done");
-61     } catch (err) {
-62       console.error("Autopsy Failed:", err);
-63       setPhase("idle");
-64     } finally {
-65       setLoading(false);
-66     }
-67   }, [pgn]);
-68 
-69   return (
-70     <div style={styles.root}>
-71       <h1 style={styles.title}>🔬 Game Autopsy</h1>
-72       {phase === "idle" && (
-73         <div style={styles.inputArea}>
-74           <textarea
-75             style={styles.pgnInput}
-76             value={pgn}
-77             onChange={(e) => setPgn(e.target.value)}
-78             onKeyDown={handleKeyDown}
-79             placeholder="Paste PGN and hit [Enter] to analyze..."
-80             rows={10}
-81           />
-82           <button ref={runBtnRef} style={styles.btn} onClick={runAutopsy}>Analyze</button>
-083         </div>
-084       )}
-085       {loading && <p style={styles.loading}>Coaching team assembling consensus...</p>}
-086       {phase === "done" && (
-087         <div style={styles.results}>
-088           {['vlad', 'fabiano', 'hikaru', 'magnus'].map(key => (
-089             <div key={key} style={styles.card}>
-090               <h3 style={styles.coachHeader}>{key.toUpperCase()}</h3>
-091               <p style={styles.coachText}>{coaches[key]}</p>
-092             </div>
-093           ))}
-094           <button style={styles.btnSmall} onClick={() => setPhase("idle")}>＋ New Analysis</button>
-095         </div>
-096       )}
-097     </div>
-098   );
-099 }
-100 
-101 const styles = {
-102   root: { padding: 40, maxWidth: 850, margin: "0 auto", backgroundColor: "#0d0d0d", color: "#e8e8e8", minHeight: "100vh", fontFamily: "monospace" },
-103   title: { fontSize: 28, borderBottom: "1px solid #222", paddingBottom: 20, marginBottom: 30 },
-104   inputArea: { display: "flex", flexDirection: "column", gap: 16 },
-105   pgnInput: { width: "100%", backgroundColor: "#111", border: "1px solid #333", color: "#ccc", padding: 16, borderRadius: 8, outline: "none", resize: "none" },
-106   btn: { padding: "14px 28px", backgroundColor: "#c0392b", color: "#fff", border: "none", borderRadius: 6, fontWeight: "bold", cursor: "pointer", alignSelf: "flex-start" },
-107   btnSmall: { marginTop: 20, padding: "10px 20px", backgroundColor: "#333", border: "none", color: "#eee", cursor: "pointer", borderRadius: 4 },
-108   loading: { color: "#f39c12", paddingTop: 40, textAlign: "center" },
-109   results: { display: "flex", flexDirection: "column", gap: 16 },
-110   card: { backgroundColor: "#111", border: "1px solid #222", padding: 20, borderRadius: 8 },
-111   coachHeader: { margin: "0 0 10px 0", fontSize: 16, color: "#aaa" },
-112   coachText: { margin: 0, lineHeight: 1.6, fontSize: 14 }
-113 };
+import React, { useState, useCallback, useRef, useEffect } from "react";
+import { Card } from "@/components/ui/card";
+import { askVlad } from "../coaches/vlad.jsx";
+import { askFabiano } from "../coaches/fabiano.jsx";
+
+/**
+ * VLAD CHESS COACH: GAME AUTOPSY
+ * Goal: 2% Daily Improvement through precision analysis.
+ * Performance: Optimized for Apple/Vercel ecosystem.
+ */
+
+const GameAutopsy = () => {
+  const [analysis, setAnalysis] = useState("");
+  const [isAnalyzing, setIsAnalyzing] = useState(false);
+  const [activeCoach, setActiveCoach] = useState("vlad");
+
+  const runAnalysis = async (pgn) => {
+    setIsAnalyzing(true);
+    try {
+      // Direct call to personality modules
+      const response = activeCoach === "vlad" 
+        ? await askVlad(pgn) 
+        : await askFabiano(pgn);
+      setAnalysis(response);
+    } catch (error) {
+      console.error("Analysis Breach:", error);
+      setAnalysis("Technical failure in the analysis room. Reset the board.");
+    } finally {
+      setIsAnalyzing(false);
+    }
+  };
+
+  return (
+    <div className="flex flex-col gap-4 p-4 bg-black text-white min-h-screen">
+      <Card className="p-6 bg-zinc-900 border-zinc-800">
+        <h2 className="text-2xl font-bold mb-4 tracking-tighter uppercase">
+          Post-Game Autopsy
+        </h2>
+        
+        <div className="flex gap-2 mb-4">
+          <button 
+            onClick={() => setActiveCoach("vlad")}
+            className={`px-4 py-2 rounded text-xs font-bold ${activeCoach === 'vlad' ? 'bg-white text-black' : 'bg-zinc-800 text-zinc-400'}`}
+          >
+            VLAD (Tactical)
+          </button>
+          <button 
+            onClick={() => setActiveCoach("fabiano")}
+            className={`px-4 py-2 rounded text-xs font-bold ${activeCoach === 'fabiano' ? 'bg-white text-black' : 'bg-zinc-800 text-zinc-400'}`}
+          >
+            FABI (Positional)
+          </button>
+        </div>
+
+        <div className="bg-black border border-zinc-800 p-4 rounded-md min-h-[200px] font-mono text-sm">
+          {isAnalyzing ? (
+            <div className="animate-pulse text-zinc-500 italic">Vlad is reviewing the footage...</div>
+          ) : (
+            <div className="whitespace-pre-wrap">{analysis || "Awaiting PGN input for breakdown."}</div>
+          )}
+        </div>
+      </Card>
+
+      <div className="text-[10px] text-zinc-600 uppercase tracking-widest text-center">
+        TopherAI / Vlad-Chess-Coach / v1.0.4
+      </div>
+    </div>
+  );
+};
+
+export default GameAutopsy;
