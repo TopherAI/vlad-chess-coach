@@ -66,7 +66,6 @@ function GameClock() {
     return `${m}:${s.toString().padStart(2, "0")}`;
   };
 
-  // Cleanup on unmount
   useEffect(() => {
     return () => clearInterval(timerRef.current);
   }, []);
@@ -211,7 +210,6 @@ function Dashboard({ onNavigate, currentElo }) {
           <div style={S.progressTrack}>
             <div style={{ ...S.progressFill, width: `${Math.min(100, Math.max(0, progress))}%` }} />
             <div style={{ ...S.progressMarker, left: `${Math.min(100, Math.max(0, progress))}%` }} />
-            {/* Live Elo rating attached to the marker, aligned left/right to prevent middle clipping */}
             <div style={{
               position: "absolute",
               top: 14,
@@ -232,30 +230,38 @@ function Dashboard({ onNavigate, currentElo }) {
         </div>
       </div>
 
-      {/* Phase tracker - WARRIORS BELT SYSTEM */}
+      {/* Phase tracker - WARRIORS BELT SYSTEM (Dynamic to currentElo) */}
       <div style={S.phaseRow}>
         {[
-          { range: "400→600",   label: "White Belt",  mission: "Fundamentals (Complete)", active: false, color: "#e8e8e8" },
-          { range: "600→1000",  label: "Blue Belt",   mission: "No Blunders + Triage",    active: true,  color: "#3498db" },
-          { range: "1000→1400", label: "Purple Belt", mission: "Piece activity + Structure",active: false, color: "#9b59b6" },
-          { range: "1400→1800", label: "Brown Belt",  mission: "Deep prep + Technique",     active: false, color: "#a0522d" },
-          { range: "1800→2000", label: "Black Belt",  mission: "Candidate moves + Mastery", active: false, color: "#333333" },
-          { range: "2000+",     label: "Red Belt",    mission: "Grandmaster Execution",     active: false, color: "#c0392b" },
-        ].map((phase, i) => (
-          <div
-            key={i}
-            style={{
-              ...S.phaseCard,
-              border: `1px solid ${phase.active ? phase.color : "#1a1a1a"}`,
-              backgroundColor: phase.active ? `${phase.color}15` : "#0d0d0d",
-            }}
-          >
-            <p style={{ ...S.phaseRange, color: phase.active ? phase.color : "#555" }}>{phase.range}</p>
-            <p style={{ ...S.phaseLabel, color: phase.color }}>{phase.label}</p>
-            <p style={S.phaseMission}>{phase.mission}</p>
-            {phase.active && <span style={{ ...S.activeChip, backgroundColor: phase.color, color: "#fff" }}>ACTIVE</span>}
-          </div>
-        ))}
+          { min: 0,    max: 600,  range: "400→600",   label: "White Belt",  mission: "Fundamentals", color: "#e8e8e8" },
+          { min: 600,  max: 1000, range: "600→1000",  label: "Blue Belt",   mission: "No Blunders + Triage", color: "#3498db" },
+          { min: 1000, max: 1400, range: "1000→1400", label: "Purple Belt", mission: "Piece activity + Structure", color: "#9b59b6" },
+          { min: 1400, max: 1800, range: "1400→1800", label: "Brown Belt",  mission: "Deep prep + Technique", color: "#a0522d" },
+          { min: 1800, max: 2000, range: "1800→2000", label: "Black Belt",  mission: "Candidate moves + Mastery", color: "#333333" },
+          { min: 2000, max: 9999, range: "2000+",     label: "Red Belt",    mission: "Grandmaster Execution", color: "#c0392b" },
+        ].map((phase, i) => {
+          const isActive = currentElo >= phase.min && currentElo < phase.max;
+          const isComplete = currentElo >= phase.max;
+          
+          return (
+            <div
+              key={i}
+              style={{
+                ...S.phaseCard,
+                border: `1px solid ${isActive ? phase.color : "#1a1a1a"}`,
+                backgroundColor: isActive ? `${phase.color}15` : "#0d0d0d",
+                opacity: isComplete ? 0.6 : 1,
+              }}
+            >
+              <p style={{ ...S.phaseRange, color: isActive || isComplete ? phase.color : "#555" }}>{phase.range}</p>
+              <p style={{ ...S.phaseLabel, color: isActive || isComplete ? phase.color : "#888" }}>
+                {phase.label} {isComplete && "✓"}
+              </p>
+              <p style={S.phaseMission}>{phase.mission}</p>
+              {isActive && <span style={{ ...S.activeChip, backgroundColor: phase.color, color: "#fff" }}>ACTIVE</span>}
+            </div>
+          );
+        })}
       </div>
 
       {/* 4-Step Loop */}
@@ -356,15 +362,13 @@ function Dashboard({ onNavigate, currentElo }) {
 export default function App() {
   const [active, setActive]   = useState("dashboard");
   const [navOpen, setNavOpen] = useState(true);
-  const [currentElo, setCurrentElo] = useState(617); // Fallback Elo
+  const [currentElo, setCurrentElo] = useState(617);
 
-  // Fetch live Elo from chess.com
   useEffect(() => {
     const fetchElo = async () => {
       try {
         const response = await fetch("https://api.chess.com/pub/player/topherbettis/stats");
         const data = await response.json();
-        // Assuming rapid rating is the primary campaign target. Fallback to 617 if unavailable.
         const rapidElo = data?.chess_rapid?.last?.rating || 617;
         setCurrentElo(rapidElo);
       } catch (error) {
@@ -397,8 +401,10 @@ export default function App() {
             <>
               <span style={S.navLogoIcon}>♟️</span>
               <div style={S.navTitleContainer}>
-                <p style={S.navLogoTitle}>VLAD</p>
-                <p style={S.navLogoSub}>Chess Coach</p>
+                <div style={S.navLogoTitle}>
+                  <span>V</span><span>L</span><span>A</span><span>D</span>
+                </div>
+                <div style={S.navLogoSub}>CHESS COACH</div>
               </div>
             </>
           ) : (
@@ -476,8 +482,17 @@ const S = {
   },
   navLogoIcon:  { fontSize: 42, flexShrink: 0 },
   navTitleContainer: { display: "flex", flexDirection: "column", justifyContent: "center" },
-  navLogoTitle: { margin: "0 0 -2px", fontSize: 24, fontWeight: 700, fontFamily: "'IBM Plex Mono', monospace", color: "#fff", letterSpacing: "2px", lineHeight: 1 },
-  navLogoSub:   { margin: 0, fontSize: 11, color: "#666", letterSpacing: "1px", lineHeight: 1 },
+  navLogoTitle: { 
+    margin: "0 0 2px", 
+    fontSize: 24, 
+    fontWeight: 700, 
+    fontFamily: "'IBM Plex Mono', monospace", 
+    color: "#fff", 
+    display: "flex", 
+    justifyContent: "space-between", 
+    lineHeight: 1 
+  },
+  navLogoSub:   { margin: 0, fontSize: 10, color: "#666", letterSpacing: "1px", lineHeight: 1, whiteSpace: "nowrap" },
   playerChip: {
     margin: "12px 12px 4px",
     padding: "10px 12px",
