@@ -1,24 +1,102 @@
-import { useState, useEffect } from "react";
-import GameAutopsy from "@modules/GameAutopsy.jsx";
-import DrillSergeant from "@modules/DrillSergeant.jsx";
-import OpeningLab from "@modules/OpeningLab.jsx";
-import MiddlegameMat from "@modules/MiddlegameMat.jsx";
-import EndgameDojo from "@modules/EndgameDojo.jsx";
+fix: Implement UI upgrades, Belt System, and live Chess.com Elo tracking
+
+import { useState, useEffect, useRef } from "react";
+import GameAutopsy from "./modules/GameAutopsy.jsx";
+import DrillSergeant from "./modules/DrillSergeant.jsx";
+import OpeningLab from "./modules/OpeningLab.jsx";
+import MiddlegameMat from "./modules/MiddlegameMat.jsx";
+import EndgameDojo from "./modules/EndgameDojo.jsx";
 
 // ── Constants ───────────────────────────────────────────────────────────────
 
 const NAV = [
-  { id: "dashboard",   label: "Dashboard",       icon: "🏠" },
-  { id: "autopsy",     label: "Game Autopsy",    icon: "🔬" },
-  { id: "drills",      label: "Drill Sergeant",  icon: "⚔️" },
-  { id: "opening",     label: "Opening Lab",     icon: "🏛️" },
-  { id: "middlegame",  label: "Middlegame Mat",  icon: "🗡️" },
-  { id: "endgame",     label: "Endgame Dojo",    icon: "👑" },
+  { id: "dashboard",  label: "Dashboard",      icon: "🏠" },
+  { id: "autopsy",    label: "Game Autopsy",   icon: "🔬" },
+  { id: "drills",     label: "Drill Sergeant", icon: "⚔️" },
+  { id: "opening",    label: "Opening Lab",    icon: "🏛️" },
+  { id: "middlegame", label: "Middlegame Mat", icon: "🗡️" },
+  { id: "endgame",    label: "Endgame Dojo",   icon: "👑" },
 ];
 
 const PLAYER = "TopherBettis";
-const ELO    = 617;
 const TARGET = 2000;
+
+// ── Game Clock ────────────────────────────────────────────────────────────────
+
+function GameClock() {
+  const [timeLeft, setTimeLeft] = useState(30);
+  const [isRunning, setIsRunning] = useState(false);
+  const [selectedTime, setSelectedTime] = useState(30);
+  const timerRef = useRef(null);
+
+  const startTimer = () => {
+    if (isRunning) return;
+    setIsRunning(true);
+    timerRef.current = setInterval(() => {
+      setTimeLeft((prev) => {
+        if (prev <= 1) {
+          clearInterval(timerRef.current);
+          setIsRunning(false);
+          return 0;
+        }
+        return prev - 1;
+      });
+    }, 1000);
+  };
+
+  const pauseTimer = () => {
+    clearInterval(timerRef.current);
+    setIsRunning(false);
+  };
+
+  const resetTimer = () => {
+    clearInterval(timerRef.current);
+    setIsRunning(false);
+    setTimeLeft(selectedTime);
+  };
+
+  const handleTimeChange = (e) => {
+    const newTime = parseInt(e.target.value, 10);
+    setSelectedTime(newTime);
+    setTimeLeft(newTime);
+    pauseTimer();
+  };
+
+  const formatTime = (seconds) => {
+    const m = Math.floor(seconds / 60);
+    const s = seconds % 60;
+    return `${m}:${s.toString().padStart(2, "0")}`;
+  };
+
+  // Cleanup on unmount
+  useEffect(() => {
+    return () => clearInterval(timerRef.current);
+  }, []);
+
+  return (
+    <div style={{ ...S.moduleCard, borderTop: `3px solid #3498db`, alignItems: "center", justifyContent: "center", textAlign: "center" }}>
+      <p style={{ margin: "0 0 8px", fontSize: 10, color: "#444", letterSpacing: "1.5px" }}>TACTICAL CLOCK</p>
+      
+      <div style={{ fontSize: 42, fontWeight: 700, color: timeLeft <= 5 ? "#e74c3c" : "#e8e8e8", fontFamily: "'IBM Plex Mono', monospace", marginBottom: 12 }}>
+        {formatTime(timeLeft)}
+      </div>
+
+      <div style={{ display: "flex", gap: 8, marginBottom: 16 }}>
+        <button onClick={isRunning ? pauseTimer : startTimer} style={{ ...S.btnSmall, backgroundColor: isRunning ? "#c0392b" : "#27ae60", color: "#fff", borderColor: isRunning ? "#c0392b" : "#27ae60" }}>
+          {isRunning ? "Pause" : "Start"}
+        </button>
+        <button onClick={resetTimer} style={{ ...S.btnSmall, backgroundColor: "#333", color: "#ccc", borderColor: "#444" }}>Reset</button>
+      </div>
+
+      <select value={selectedTime} onChange={handleTimeChange} style={{ backgroundColor: "#111", color: "#aaa", border: "1px solid #333", borderRadius: 4, padding: "4px 8px", fontFamily: "'IBM Plex Mono', monospace", fontSize: 11 }}>
+        <option value={30}>30 Sec (Default)</option>
+        <option value={60}>1 Min</option>
+        <option value={120}>2 Min</option>
+        <option value={300}>5 Min</option>
+      </select>
+    </div>
+  );
+}
 
 // ── PGN Drop Zone Card ────────────────────────────────────────────────────────
 
@@ -113,8 +191,8 @@ function PgnDropCard({ onNavigate }) {
 
 // ── Dashboard ────────────────────────────────────────────────────────────────
 
-function Dashboard({ onNavigate }) {
-  const progress = Math.round(((ELO - 400) / (TARGET - 400)) * 100);
+function Dashboard({ onNavigate, currentElo }) {
+  const progress = Math.round(((currentElo - 400) / (TARGET - 400)) * 100);
 
   return (
     <div style={S.dashRoot}>
@@ -124,7 +202,7 @@ function Dashboard({ onNavigate }) {
         <div style={S.heroLeft}>
           <p style={S.heroGreeting}>MISSION BRIEFING</p>
           <h1 style={S.heroTitle}>
-            <span style={{ color: "#c0392b" }}>609</span>
+            <span style={{ color: "#c0392b" }}>{currentElo}</span>
             <span style={S.heroArrow}> → </span>
             <span style={{ color: "#27ae60" }}>2000</span>
           </h1>
@@ -133,37 +211,51 @@ function Dashboard({ onNavigate }) {
         <div style={S.heroRight}>
           <p style={S.progressLabel}>CAMPAIGN PROGRESS</p>
           <div style={S.progressTrack}>
-            <div style={{ ...S.progressFill, width: `${progress}%` }} />
-            <div style={{ ...S.progressMarker, left: `${progress}%` }} />
+            <div style={{ ...S.progressFill, width: `${Math.min(100, Math.max(0, progress))}%` }} />
+            <div style={{ ...S.progressMarker, left: `${Math.min(100, Math.max(0, progress))}%` }} />
+            {/* Live Elo rating attached to the marker, aligned left/right to prevent middle clipping */}
+            <div style={{
+              position: "absolute",
+              top: 14,
+              left: `${Math.min(100, Math.max(0, progress))}%`,
+              transform: progress > 85 ? "translateX(-100%)" : progress < 15 ? "translateX(0)" : "translateX(-50%)",
+              fontSize: 10,
+              fontWeight: 700,
+              color: "#c0392b",
+              transition: "left 1s ease",
+            }}>
+              {currentElo}
+            </div>
           </div>
           <div style={S.progressEnds}>
             <span>400</span>
-            <span style={{ color: "#e8e8e8", fontWeight: 700 }}>{ELO}</span>
             <span>2000</span>
           </div>
         </div>
       </div>
 
-      {/* Phase tracker */}
+      {/* Phase tracker - WARRIORS BELT SYSTEM */}
       <div style={S.phaseRow}>
         {[
-          { range: "609→1000",  label: "Phase 1: Triage",    mission: "No Blunders + Zero hanging pieces",          active: true  },
-          { range: "1000→1400", label: "Phase 2: Structure", mission: "Piece activity + Structure",   active: false },
-          { range: "1400→1800", label: "Phase 3: Weaponize", mission: "Deep prep + Technique",        active: false },
-          { range: "1800→2000", label: "Phase 4: Mastery",   mission: "Candidate moves + Psychology", active: false },
+          { range: "400→600",   label: "White Belt",  mission: "Fundamentals (Complete)", active: false, color: "#e8e8e8" },
+          { range: "600→1000",  label: "Blue Belt",   mission: "No Blunders + Triage",    active: true,  color: "#3498db" },
+          { range: "1000→1400", label: "Purple Belt", mission: "Piece activity + Structure",active: false, color: "#9b59b6" },
+          { range: "1400→1800", label: "Brown Belt",  mission: "Deep prep + Technique",     active: false, color: "#a0522d" },
+          { range: "1800→2000", label: "Black Belt",  mission: "Candidate moves + Mastery", active: false, color: "#333333" },
+          { range: "2000+",     label: "Red Belt",    mission: "Grandmaster Execution",     active: false, color: "#c0392b" },
         ].map((phase, i) => (
           <div
             key={i}
             style={{
               ...S.phaseCard,
-              border: `1px solid ${phase.active ? "#c0392b" : "#1a1a1a"}`,
-              backgroundColor: phase.active ? "#1a0808" : "#0d0d0d",
+              border: `1px solid ${phase.active ? phase.color : "#1a1a1a"}`,
+              backgroundColor: phase.active ? `${phase.color}15` : "#0d0d0d",
             }}
           >
-            <p style={{ ...S.phaseRange, color: phase.active ? "#c0392b" : "#333" }}>{phase.range}</p>
-            <p style={S.phaseLabel}>{phase.label}</p>
+            <p style={{ ...S.phaseRange, color: phase.active ? phase.color : "#555" }}>{phase.range}</p>
+            <p style={{ ...S.phaseLabel, color: phase.color }}>{phase.label}</p>
             <p style={S.phaseMission}>{phase.mission}</p>
-            {phase.active && <span style={S.activeChip}>ACTIVE</span>}
+            {phase.active && <span style={{ ...S.activeChip, backgroundColor: phase.color, color: "#fff" }}>ACTIVE</span>}
           </div>
         ))}
       </div>
@@ -174,7 +266,7 @@ function Dashboard({ onNavigate }) {
         <div style={S.loopSteps}>
           {[
             { num: "1", label: "OPPONENT'S INTENT", desc: "What does my opponent want? Is my queen safe?" },
-            { num: "2", label: "CCT CHECK",          desc: "Checks, Captures, Threats" },
+            { num: "2", label: "CCT CHECK",         desc: "Checks, Captures, Threats" },
             { num: "3", label: "LAZY PIECE",         desc: "Move my worst piece? Forward & central." },
             { num: "4", label: "PRE-MOVE VERIFY",    desc: "Look away. Is this move a blunder?" },
           ].map(step => (
@@ -189,15 +281,17 @@ function Dashboard({ onNavigate }) {
         </div>
       </div>
 
-      {/* Module cards */}
+      {/* Module cards & Game Clock */}
       <p style={S.sectionTitle}>TRAINING MODULES</p>
       <div style={S.moduleGrid}>
+        <GameClock />
+        <PgnDropCard onNavigate={onNavigate} />
         {[
-          { id: "autopsy",    icon: "🔬", title: "Game Autopsy",    desc: "Upload PGN → Coach debrief, Critical moves, Move list.",    color: "#c0392b" },
-          { id: "drills",     icon: "⚔️", title: "Drill Sergeant",  desc: "Targeted puzzles from YOUR blunder positions", color: "#e67e22" },
-          { id: "opening",    icon: "🏛️", title: "Opening Lab",     desc: "Italian Cage deep prep · Quiz mode",          color: "#2980b9" },
-          { id: "middlegame", icon: "🗡️", title: "Middlegame Mat",  desc: "5 Assassin weapons · Hikaru tactical coaching", color: "#f39c12" },
-          { id: "endgame",    icon: "👑", title: "Endgame Dojo",    desc: "Magnus-voiced conversion training",           color: "#27ae60" },
+          { id: "autopsy",    icon: "🔬", title: "Game Autopsy",   desc: "Upload PGN → Super AI Consensus & Coach debrief.",    color: "#c0392b" },
+          { id: "drills",     icon: "⚔️", title: "Drill Sergeant", desc: "Targeted puzzles from YOUR blunder positions", color: "#e67e22" },
+          { id: "opening",    icon: "🏛️", title: "Opening Lab",    desc: "Italian Cage deep prep · Quiz mode",         color: "#2980b9" },
+          { id: "middlegame", icon: "🗡️", title: "Middlegame Mat", desc: "5 Assassin weapons · Hikaru tactical coaching", color: "#f39c12" },
+          { id: "endgame",    icon: "👑", title: "Endgame Dojo",   desc: "Magnus-voiced conversion training",            color: "#27ae60" },
         ].map(mod => (
           <div
             key={mod.id}
@@ -210,17 +304,16 @@ function Dashboard({ onNavigate }) {
             <span style={{ ...S.moduleArrow, color: mod.color }}>→</span>
           </div>
         ))}
-        <PgnDropCard onNavigate={onNavigate} />
       </div>
 
       {/* Coaching team */}
       <p style={S.sectionTitle}>COACHING TEAM</p>
       <div style={S.coachRow}>
         {[
-          { emoji: "🎖️", name: "Vlad",    based: "Vladimir Chuchelov", role: "Head Coach · Drill prescription · Weekly plan",    color: "#c0392b" },
-          { emoji: "♟️", name: "Fabiano", based: "Fabiano Caruana",    role: "Opening prep · Positional benchmarking",            color: "#2980b9" },
-          { emoji: "👑", name: "Magnus",  based: "Magnus Carlsen",     role: "Endgame conversion · Intuition · Reality checks",   color: "#27ae60" },
+          { emoji: "🎖️", name: "Vlad",    based: "Vladimir Chuchelov", role: "Week review & plan • Long term plan", color: "#c0392b" },
+          { emoji: "♟️", name: "Fabiano", based: "Fabiano Caruana",    role: "Positional perfection", color: "#2980b9" },
           { emoji: "⚡", name: "Hikaru",  based: "Hikaru Nakamura",    role: "Middlegame tactics · Attack patterns · 5 weapons",  color: "#f39c12" },
+          { emoji: "👑", name: "Magnus",  based: "Magnus Carlsen",     role: "Endgame conversion · Intuition · Reality checks",   color: "#27ae60" },
         ].map(coach => (
           <div key={coach.name} style={S.coachCard}>
             <span style={S.coachEmoji}>{coach.emoji}</span>
@@ -265,16 +358,33 @@ function Dashboard({ onNavigate }) {
 export default function App() {
   const [active, setActive]   = useState("dashboard");
   const [navOpen, setNavOpen] = useState(true);
+  const [currentElo, setCurrentElo] = useState(617); // Fallback Elo
+
+  // Fetch live Elo from chess.com
+  useEffect(() => {
+    const fetchElo = async () => {
+      try {
+        const response = await fetch("https://api.chess.com/pub/player/topherbettis/stats");
+        const data = await response.json();
+        // Assuming rapid rating is the primary campaign target. Fallback to 617 if unavailable.
+        const rapidElo = data?.chess_rapid?.last?.rating || 617;
+        setCurrentElo(rapidElo);
+      } catch (error) {
+        console.error("Failed to fetch chess.com Elo:", error);
+      }
+    };
+    fetchElo();
+  }, []);
 
   const renderContent = () => {
     switch (active) {
-      case "dashboard":  return <Dashboard onNavigate={setActive} />;
+      case "dashboard":  return <Dashboard onNavigate={setActive} currentElo={currentElo} />;
       case "autopsy":    return <GameAutopsy />;
       case "drills":     return <DrillSergeant />;
       case "opening":    return <OpeningLab />;
       case "middlegame": return <MiddlegameMat />;
       case "endgame":    return <EndgameDojo />;
-      default:           return <Dashboard onNavigate={setActive} />;
+      default:           return <Dashboard onNavigate={setActive} currentElo={currentElo} />;
     }
   };
 
@@ -288,7 +398,7 @@ export default function App() {
           {navOpen ? (
             <>
               <span style={S.navLogoIcon}>♟️</span>
-              <div>
+              <div style={S.navTitleContainer}>
                 <p style={S.navLogoTitle}>VLAD</p>
                 <p style={S.navLogoSub}>Chess Coach</p>
               </div>
@@ -302,7 +412,7 @@ export default function App() {
           <div style={S.playerChip}>
             <p style={S.playerName}>{PLAYER}</p>
             <p style={S.playerElo}>
-              ELO <span style={{ color: "#c0392b", fontWeight: 700 }}>{ELO}</span>
+              ELO <span style={{ color: "#c0392b", fontWeight: 700 }}>{currentElo}</span>
               {" → "}
               <span style={{ color: "#27ae60" }}>{TARGET}</span>
             </p>
@@ -334,7 +444,7 @@ export default function App() {
 
         {navOpen && (
           <div style={S.navFooter}>
-            <p style={S.navFooterText}>609 → 2000</p>
+            <p style={S.navFooterText}>{currentElo} → 2000</p>
             <p style={S.navFooterSub}>The machine is running.</p>
           </div>
         )}
@@ -366,9 +476,10 @@ const S = {
     borderBottom: "1px solid #1a1a1a",
     cursor: "pointer",
   },
-  navLogoIcon:  { fontSize: 28, flexShrink: 0 },
-  navLogoTitle: { margin: 0, fontSize: 16, fontWeight: 700, fontFamily: "'IBM Plex Mono', monospace", color: "#fff", letterSpacing: "2px" },
-  navLogoSub:   { margin: 0, fontSize: 10, color: "#444", letterSpacing: "1px" },
+  navLogoIcon:  { fontSize: 42, flexShrink: 0 },
+  navTitleContainer: { display: "flex", flexDirection: "column", justifyContent: "center" },
+  navLogoTitle: { margin: "0 0 -2px", fontSize: 24, fontWeight: 700, fontFamily: "'IBM Plex Mono', monospace", color: "#fff", letterSpacing: "2px", lineHeight: 1 },
+  navLogoSub:   { margin: 0, fontSize: 11, color: "#666", letterSpacing: "1px", lineHeight: 1 },
   playerChip: {
     margin: "12px 12px 4px",
     padding: "10px 12px",
@@ -436,23 +547,22 @@ const S = {
     display: "flex", justifyContent: "space-between",
     marginTop: 6, fontSize: 10, color: "#444",
   },
-  phaseRow: { display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(200px, 1fr))", gap: 12 },
+  phaseRow: { display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(150px, 1fr))", gap: 12 },
   phaseCard: {
     padding: "14px 16px", borderRadius: 8,
     display: "flex", flexDirection: "column", gap: 4,
     position: "relative",
   },
   phaseRange:   { margin: 0, fontSize: 11, fontWeight: 700 },
-  phaseLabel:   { margin: 0, fontSize: 13, color: "#ccc", fontWeight: 600 },
+  phaseLabel:   { margin: 0, fontSize: 13, fontWeight: 600 },
   phaseMission: { margin: 0, fontSize: 10, color: "#555", lineHeight: 1.5 },
   activeChip: {
     position: "absolute", top: 10, right: 10,
     padding: "2px 6px",
-    backgroundColor: "#3a0808",
-    color: "#e74c3c",
     fontSize: 8,
     borderRadius: 2,
     letterSpacing: "1px",
+    fontWeight: 700,
   },
   loopBox: {
     padding: "20px",
@@ -509,4 +619,10 @@ const S = {
   severityChip:  { padding: "3px 8px", borderRadius: 3, fontSize: 9, fontWeight: 700, letterSpacing: "1px", flexShrink: 0, marginTop: 2 },
   weaknessLabel: { margin: "0 0 2px", fontSize: 13, color: "#ccc", fontWeight: 600 },
   weaknessDesc:  { margin: 0, fontSize: 11, color: "#555" },
+  btnSmall: {
+    padding: "6px 14px", backgroundColor: "#1a3a1a",
+    color: "#4a9a4a", border: "1px solid #2a5a2a",
+    borderRadius: 4, fontSize: 12, cursor: "pointer",
+    fontFamily: "'IBM Plex Mono', monospace",
+  },
 };
