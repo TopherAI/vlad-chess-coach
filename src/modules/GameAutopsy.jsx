@@ -1,5 +1,6 @@
 import React, { useState } from "react";
-import { Card } from "@/components/ui/card";
+// FIXED: Path redirected to standard shadcn structure
+import { Card } from "../components/ui/card.jsx";
 import askVlad from "../coaches/vlad.jsx";
 import askFabiano from "../coaches/fabiano.jsx";
 import askHikaru from "../coaches/hikaru.jsx";
