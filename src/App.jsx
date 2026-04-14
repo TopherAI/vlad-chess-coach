@@ -9,12 +9,12 @@ import EndgameDojo from "./modules/EndgameDojo.jsx";
 
 const NAV = [
   { id: "dashboard",  label: "Dashboard",      icon: "🏠" },
+  { id: "profile",    label: "Profile",         icon: "👤" },
   { id: "autopsy",    label: "Game Autopsy",   icon: "🔬" },
   { id: "drills",     label: "Drill Sergeant", icon: "⚔️" },
   { id: "opening",    label: "Opening Lab",    icon: "🏛️" },
   { id: "middlegame", label: "Middlegame Mat", icon: "🗡️" },
   { id: "endgame",    label: "Endgame Dojo",   icon: "👑" },
-  { id: "profile",    label: "Profile",         icon: "👤" },
 ];
 
 const TARGET = 2000;
@@ -22,11 +22,12 @@ const TARGET = 2000;
 // ── Chess stages (no belts) ───────────────────────────────────────────────────
 
 const STAGES = [
-  { min: 0,    max: 600,  range: "400–600",   label: "Beginner",      mission: "Fundamentals & pattern recognition", color: "#aaaaaa" },
-  { min: 600,  max: 1000, range: "600–1000",  label: "Intermediate",  mission: "No blunders · Piece triage",         color: "#3498db" },
-  { min: 1000, max: 1400, range: "1000–1400", label: "Club Player",   mission: "Piece activity · Pawn structure",    color: "#9b59b6" },
-  { min: 1400, max: 1800, range: "1400–1800", label: "Advanced",      mission: "Deep prep · Technique",              color: "#c8932a" },
-  { min: 1800, max: 2000, range: "1800–2000", label: "Expert",        mission: "Candidate moves · Precision",        color: "#1abc9c" },          color: "#c0392b" },
+  { min: 0,    max: 600,  range: "400-600",   label: "Beginner",      mission: "Fundamentals & pattern recognition", color: "#aaaaaa" },
+  { min: 600,  max: 1000, range: "600-1000",  label: "Intermediate",  mission: "No blunders - Piece triage",         color: "#3498db" },
+  { min: 1000, max: 1400, range: "1000-1400", label: "Club Player",   mission: "Piece activity - Pawn structure",    color: "#9b59b6" },
+  { min: 1400, max: 1800, range: "1400-1800", label: "Advanced",      mission: "Deep prep - Technique",              color: "#c8932a" },
+  { min: 1800, max: 2000, range: "1800-2000", label: "Expert",        mission: "Candidate moves - Precision",        color: "#1abc9c" },
+  { min: 2000, max: 9999, range: "2000+",     label: "Master",        mission: "Grandmaster execution",              color: "#c0392b" },
 ];
 
 function getStage(elo) {
