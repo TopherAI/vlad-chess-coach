@@ -1,25 +1,20 @@
 /**
  * src/modules/MiddlegameMat.jsx
- * vlad-chess-coach — Middlegame Mat Module
- *
- * The 5 Assassin Weapons + Hikaru tactical coaching
- * Principles: locked center -> Ng5 stranglehold -> dual flank -> queenside first -> central explosion
+ * vlad-chess-coach -- Middlegame Mat Module
+ * The 6 Assassin Weapons + Hikaru tactical coaching
+ * 01 Lock Center -> 02 Stranglehold -> 03 Dual Flank -> 04 Queenside Crush -> 05 Kingside Rush -> 06 Central Explosion
  */
 
 import { useState, useCallback } from "react";
 import askHikaru from "../coaches/hikaru.jsx";
 import askVlad from "../coaches/vlad.jsx";
 
-// ---------------------------------------------------------------------------
-// The 5 Assassin Weapons
-// ---------------------------------------------------------------------------
-
 const WEAPONS = [
   {
     id: "search",
     icon: "🎯",
     name: "Search and Destroy",
-    subtitle: "b4 Push",
+    subtitle: "b4 Queenside Crush",
     color: "#e67e22",
     trigger: "Black's Bc5 is blocked by d6 or unprotected. Queenside space available.",
     execution: [
@@ -80,12 +75,29 @@ const WEAPONS = [
     hikaruNote: "When you have the knight on f5 and queen on d2, Bxh6 is almost always just winning. Calculate it once and play it.",
   },
   {
+    id: "kingside",
+    icon: "🔥",
+    name: "Kingside Rush",
+    subtitle: "f4-f5 Pawn Storm",
+    color: "#e74c3c",
+    trigger: "Cage complete. Black castled kingside. Center locked. Queenside bind achieved. f5 is defended so Strangler is blocked.",
+    execution: [
+      "f4 -- load the storm. Rook on f1 now has open file potential.",
+      "f5 -- advance immediately before Black can reorganize.",
+      "If gxf5, recapture exf5 -- the f-pawn becomes a battering ram.",
+      "f6 -- push to f6, permanently weakening g7 and h7.",
+      "Ng5 or Nf5 joins the attack. Two pieces on the kingside. Black cannot hold.",
+    ],
+    principle: "When the Strangler is blocked, the pawns do the strangling. f4-f5-f6 is unstoppable once it rolls.",
+    hikaruNote: "f4-f5 is just a steamroller. If they've stopped the knight getting to f5, the pawn gets there instead. Same result.",
+  },
+  {
     id: "explosion",
     icon: "🌋",
     name: "Central Explosion",
     subtitle: "d4 Release",
     color: "#27ae60",
-    trigger: "Cage is complete. Black commits heavily to a flank. Center is locked.",
+    trigger: "Cage is complete. Black commits heavily to a flank. Center is locked. All other weapons are prepared.",
     execution: [
       "Wait until Black overcommits on one flank.",
       "d4 -- snap the coiled spring.",
@@ -97,10 +109,6 @@ const WEAPONS = [
     hikaruNote: "This is why you build the cage. Every quiet move was preparation for this one explosion.",
   },
 ];
-
-// ---------------------------------------------------------------------------
-// Middlegame Principles
-// ---------------------------------------------------------------------------
 
 const PRINCIPLES = [
   {
@@ -130,24 +138,28 @@ const PRINCIPLES = [
   {
     id: "queenside",
     num: "04",
-    title: "Queenside First",
+    title: "Queenside Crush",
     color: "#27ae60",
     desc: "The b4 push cramps Black's queenside and fixes their pieces before we attack the king. It forces defensive moves that lose tempo.",
     rule: "If b4 is available, play it before starting the kingside attack.",
   },
   {
-    id: "explosion",
+    id: "kingside",
     num: "05",
+    title: "Kingside Rush",
+    color: "#e74c3c",
+    desc: "When the Strangler is blocked, launch f4-f5-f6 pawn storm. The pawns do what the knight cannot. Black's king shelter is shattered.",
+    rule: "f4 only when center is locked and queenside bind is secure. Never rush the storm prematurely.",
+  },
+  {
+    id: "explosion",
+    num: "06",
     title: "Central Explosion as Finisher",
     color: "#f39c12",
     desc: "If Black's defense is perfect on both flanks, d4 blows the center open. We are always 3 tempos ahead when this fires.",
     rule: "d4 is the nuclear option. Use it when all else is prepared -- never as desperation.",
   },
 ];
-
-// ---------------------------------------------------------------------------
-// Gentleman Phase
-// ---------------------------------------------------------------------------
 
 const GENTLEMAN_PHASE = [
   { move: "Nf1", note: "Knight begins the march. Cage is complete. Now we pivot." },
@@ -156,10 +168,6 @@ const GENTLEMAN_PHASE = [
   { move: "Nf1->g3", note: "Knight reaches g3. The spring is loaded. f5 is one move away." },
   { move: "Ng3->f5", note: "THE STRANGLER LANDS. Knight on f5. Black suffocates." },
 ];
-
-// ---------------------------------------------------------------------------
-// Main Component
-// ---------------------------------------------------------------------------
 
 export default function MiddlegameMat() {
   const [activeTab, setActiveTab]         = useState("principles");
@@ -174,7 +182,7 @@ export default function MiddlegameMat() {
     if (hikaruTake[weapon.id]) return;
     setLoadingHikaru(weapon.id);
     try {
-      const prompt = `TopherBettis (609 ELO, target 2000) is playing the Italian Cage. They want to deploy the "${weapon.name}" weapon (${weapon.subtitle}). Trigger condition: ${weapon.trigger}. In Hikaru's voice: confirm whether the conditions look right, and give the exact first move to play. 2-3 sentences, fast and direct.`;
+      const prompt = `TopherBettis (617 ELO, target 2000) is playing the Italian Cage. They want to deploy the "${weapon.name}" weapon (${weapon.subtitle}). Trigger condition: ${weapon.trigger}. In Hikaru's voice: confirm whether the conditions look right, and give the exact first move to play. 2-3 sentences, fast and direct.`;
       const resp = await askHikaru(prompt);
       setHikaruTake(prev => ({ ...prev, [weapon.id]: resp }));
     } catch {
@@ -188,7 +196,7 @@ export default function MiddlegameMat() {
     if (vladTake[weapon.id]) return;
     setLoadingVlad(weapon.id);
     try {
-      const prompt = `TopherBettis is about to deploy the "${weapon.name}" weapon in the Italian Cage. In Vlad's philosophical voice: why does this weapon matter in the journey from 609 to 2000? What is the deeper principle behind it? 2 sentences maximum.`;
+      const prompt = `TopherBettis is about to deploy the "${weapon.name}" weapon in the Italian Cage. In Vlad's philosophical voice: why does this weapon matter in the journey from 617 to 2000? What is the deeper principle behind it? 2 sentences maximum.`;
       const resp = await askVlad(prompt);
       setVladTake(prev => ({ ...prev, [weapon.id]: resp }));
     } catch {
@@ -207,7 +215,7 @@ export default function MiddlegameMat() {
   const tabs = [
     { id: "principles", label: "PRINCIPLES" },
     { id: "gentleman",  label: "GENTLEMAN PHASE" },
-    { id: "weapons",    label: "5 WEAPONS" },
+    { id: "weapons",    label: "6 WEAPONS" },
   ];
 
   return (
@@ -263,8 +271,7 @@ export default function MiddlegameMat() {
         <div style={styles.principlesList}>
           <div style={styles.principlesIntro}>
             <p style={styles.principlesIntroText}>
-              The cage is built. Now the real game begins. These 5 principles govern every middlegame
-              decision -- in order of priority. Execute them sequentially.
+              The cage is built. These 6 principles govern every middlegame decision -- in order of priority. Execute them sequentially.
             </p>
           </div>
           {PRINCIPLES.map((p) => (
