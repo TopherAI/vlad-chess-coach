@@ -53,6 +53,13 @@ function isGmDeviation(moveNumber, side, sanMove) {
   return expected && sanMove !== expected;
 }
 
+const PAUSE_THRESHOLD_CS = 3000; // 30 seconds in centiseconds
+
+function extractTimestamps(pgn) {
+  const matches = [...pgn.matchAll(/\[%timestamp\s+(\d+(?:\.\d+)?)\]/g)];
+  return matches.map(m => parseFloat(m[1]));
+}
+
 function parsePGN(pgn) {
   if (typeof Chess === "undefined") throw new Error("chess.js not loaded. Check index.html.");
   const game = new Chess();
@@ -62,12 +69,17 @@ function parsePGN(pgn) {
   const result     = game.header().Result ?? "*";
   const date       = game.header().Date   ?? "";
   const playerSide = white.toLowerCase().includes(PLAYER.toLowerCase()) ? "white" : "black";
-  const moves = game.history({ verbose: true }).map((h, i) => ({
-    moveNumber: Math.floor(i / 2) + 1,
-    side:       i % 2 === 0 ? "white" : "black",
-    actualMove: h.san,
-  }));
-  return { moves, white, black, result, date, playerSide, pgn };
+  const timestamps = extractTimestamps(pgn);
+  const moves = game.history({ verbose: true }).map((h, i) => {
+    const moveNumber = Math.floor(i / 2) + 1;
+    const side       = i % 2 === 0 ? "white" : "black";
+    const timestamp  = timestamps[i] ?? null;
+    const seconds    = timestamp !== null ? (timestamp / 100).toFixed(1) : null;
+    const speedTrap  = moveNumber >= 10 && timestamp !== null && timestamp < PAUSE_THRESHOLD_CS;
+    return { moveNumber, side, actualMove: h.san, timestamp, seconds, speedTrap };
+  });
+  const speedViolations = moves.filter(m => m.speedTrap);
+  return { moves, white, black, result, date, playerSide, pgn, speedViolations };
 }
 
 function CoachCard({ coachKey, response, loading }) {
@@ -137,9 +149,17 @@ export default function GameAutopsy() {
 
     let criticalMoves = [];
     try {
+      const speedReport = speedViolations.length > 0
+        ? `SPEED VIOLATIONS (30-second rule broken on move 10+): ${speedViolations.map(m => `Move ${m.moveNumber} (${m.seconds}s)`).join(", ")}. Vlad must address this.`
+        : "No speed violations detected on moves 10+.";
+
       const consensusPrompt = `You are the VLAD Super AI Consensus Engine. Analyze this chess game for ${PLAYER} (playing ${parsed.playerSide}): ${target}
 
-Identify the 2-3 most critical turning points relative to the Gentleman's Assassin Italian Pianissimo system. Check for 4-Step Mental Loop violations.
+CRITICAL RULE: Moves 1-9 are the Italian Cage setup — do NOT critique them. Only analyze move 10 onward.
+
+${speedReport}
+
+Identify the 2-3 most critical turning points relative to the Gentleman's Assassin Italian Pianissimo system. Check for 4-Step Mental Loop violations. If there are speed violations, Vlad's critique must lead with the 30-second rule breach.
 
 Return ONLY a valid JSON array, no markdown:
 [{"moveNumber": 12, "side": "white", "actualMove": "d4", "vlad": "critique", "fabiano": "critique", "hikaru": "critique", "magnus": "critique", "superAI": "synthesis"}]`;
@@ -150,10 +170,17 @@ Return ONLY a valid JSON array, no markdown:
     }
 
     const deviations = parsed.moves.filter(m => isGmDeviation(m.moveNumber, m.side, m.actualMove)).length;
+    const speedViolations = parsed.speedViolations ?? [];
     const gameAnalysis = {
       moves: parsed.moves,
       critical: criticalMoves,
-      summary: { totalMoves: parsed.moves.length, deviations, criticalCount: criticalMoves.length },
+      summary: {
+        totalMoves: parsed.moves.length,
+        deviations,
+        criticalCount: criticalMoves.length,
+        speedViolations: speedViolations.length,
+        hasTimestamps: parsed.moves.some(m => m.timestamp !== null),
+      },
     };
     setAnalysis(gameAnalysis);
     saveCriticalList(parsed, criticalMoves);
@@ -267,7 +294,22 @@ Return ONLY a valid JSON array, no markdown:
             <StatPill label="Total Moves"    value={analysis.summary.totalMoves}    color="#95a5a6" />
             <StatPill label="GM Deviations"  value={analysis.summary.deviations}    color="#f39c12" />
             <StatPill label="Critical Turns" value={analysis.summary.criticalCount} color="#e74c3c" />
+            {analysis.summary.hasTimestamps && (
+              <StatPill label="Speed Traps" value={analysis.summary.speedViolations} color={analysis.summary.speedViolations > 0 ? "#c0392b" : "#27ae60"} />
+            )}
           </div>
+          {analysis.summary.hasTimestamps && analysis.summary.speedViolations > 0 && (
+            <div style={S.vladWarning}>
+              <span style={S.vladWarningIcon}>🎖️</span>
+              <div>
+                <p style={S.vladWarningTitle}>VLAD — 30-SECOND RULE VIOLATION</p>
+                <p style={S.vladWarningText}>
+                  {analysis.summary.speedViolations} move{analysis.summary.speedViolations > 1 ? "s" : ""} after move 9 played in under 30 seconds.
+                  The pause is not optional. The cage demands respect.
+                </p>
+              </div>
+            </div>
+          )}
 
           <div style={S.tabs}>
             {[
@@ -325,9 +367,14 @@ Return ONLY a valid JSON array, no markdown:
               {analysis.moves.map((move, i) => {
                 const dev = isGmDeviation(move.moveNumber, move.side, move.actualMove);
                 return (
-                  <div key={i} style={S.moveRow}>
+                  <div key={i} style={{
+                    ...S.moveRow,
+                    backgroundColor: move.speedTrap ? "#1a0808" : "transparent",
+                  }}>
                     <span style={S.moveNum}>{move.moveNumber}{move.side === "white" ? "." : "..."}</span>
                     <span style={S.moveUCI}>{move.actualMove}</span>
+                    {move.seconds && <span style={S.timeChip}>{move.seconds}s</span>}
+                    {move.speedTrap && <span style={S.speedTrapBadge}>⚡ Speed Trap</span>}
                     {dev && <span style={S.deviationBadge}>Off-Plan</span>}
                   </div>
                 );
@@ -394,4 +441,10 @@ const S = {
   moveUCI: { width: 60, fontSize: 13, fontWeight: 600, color: "#ccc" },
   deviationBadge: { padding: "2px 7px", borderRadius: 3, fontSize: 10, backgroundColor: "#2a1a00", color: "#f39c12", border: "1px solid #5c3a00" },
   btnSmall: { padding: "6px 14px", backgroundColor: "#1a1a1a", border: "1px solid #333", borderRadius: 4, color: "#aaa", fontSize: 11, cursor: "pointer", fontFamily: "'IBM Plex Mono', monospace" },
+  vladWarning: { display: "flex", gap: 14, alignItems: "flex-start", padding: "14px 18px", backgroundColor: "#1a0808", border: "1px solid #c0392b55", borderRadius: 6 },
+  vladWarningIcon: { fontSize: 22, flexShrink: 0 },
+  vladWarningTitle: { margin: "0 0 4px", fontSize: 10, color: "#c0392b", fontWeight: 700, letterSpacing: "1px" },
+  vladWarningText: { margin: 0, fontSize: 13, color: "#aaa", lineHeight: 1.6 },
+  timeChip: { padding: "2px 6px", borderRadius: 3, fontSize: 9, backgroundColor: "#1a1a1a", color: "#666", fontFamily: "'IBM Plex Mono', monospace" },
+  speedTrapBadge: { padding: "2px 7px", borderRadius: 3, fontSize: 10, backgroundColor: "#3a0808", color: "#e74c3c", border: "1px solid #5c1a1a" },
 };
