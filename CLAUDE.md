@@ -1,4 +1,4 @@
-[CLAUDE.md](https://github.com/user-attachments/files/26696784/CLAUDE.md)
+[CLAUDE (2).md](https://github.com/user-attachments/files/26699362/CLAUDE.2.md)
 # VLAD CHESS COACH — MASTER CONTEXT DOCUMENT
 > **FOR ANY AI READING THIS:** This is the single source of truth for the vlad-chess-coach project.
 > Read this entire file before touching any code. Every architectural decision is documented here.
@@ -30,6 +30,7 @@ GitHub web interface only — NO terminal, NO local clone
 - Click folder → click file → click pencil → edit → commit
 - Never use `/blob/` in URLs when giving navigation instructions. Always say: click the folder, click the file, click the pencil.
 - Always give complete file paths (e.g. `src/modules/OpeningLab.jsx`), never just filenames.
+- Topher is on a Mac — always use Cmd not Ctrl.
 
 ---
 
@@ -46,14 +47,14 @@ src/
 │   ├── magnus.jsx             # Danish dry positive — Magnus Carlsen
 │   └── hikaru.jsx             # American tactical genius — Hikaru Nakamura
 ├── modules/
-│   ├── GameAutopsy.jsx        # PGN upload → AI consensus analysis
-│   ├── DrillSergeant.jsx      # Auto-loads from vlad_last_autopsy localStorage
+│   ├── GameAutopsy.jsx        # PGN auto-load → AI consensus + timestamp/speed analysis
+│   ├── DrillSergeant.jsx      # Auto-loads from vlad_critical_list localStorage
 │   ├── OpeningLab.jsx         # Gentleman's Assassin system trainer (v3.0)
-│   ├── MiddlegameMat.jsx      # 5 Assassin weapons + Hikaru coaching
+│   ├── MiddlegameMat.jsx      # 6 Assassin weapons + Hikaru coaching
 │   ├── EndgameDojo.jsx        # Magnus-voiced conversion training
-│   └── (MiddlegameMat.jsx)    # Between Opening Lab and Endgame Dojo in nav
+│   └── VideoLibrary.jsx       # Chuchelov video library — 220 videos, concept-tagged
 └── engine/
-    └── stockfish.js           # Saves FEN per move for DrillSergeant
+    └── stockfish.js           # DEPRECATED — not used. Custom AI consensus only.
 ```
 
 ---
@@ -72,6 +73,12 @@ const askVlad = (msg) => askCoach(VLAD_PERSONA_STRING, msg);
 export default askVlad;
 ```
 
+**CRITICAL — IMPORT RULE (LOCKED):** All coach files use `export default`. Always import WITHOUT curly braces:
+```javascript
+import askVlad from "../coaches/vlad.jsx";     // CORRECT
+import { askVlad } from "../coaches/vlad.jsx"; // WRONG — breaks build
+```
+
 **CRITICAL:** There is no gateway, no Railway proxy, no separate backend.
 Gemini API calls go directly from the frontend via `/api/chat`.
 Do NOT attempt to re-introduce a gateway or proxy architecture.
@@ -82,10 +89,10 @@ Do NOT attempt to re-introduce a gateway or proxy architecture.
 
 | Coach | Based On | Tone | Primary Role |
 |-------|----------|------|--------------|
-| **Vlad** | Vladimir Chuchelov | Demanding, Eastern European, precise, intense | Week review, long-term plan, opening system |
+| **Vlad** | Vladimir Chuchelov | Demanding, Eastern European, precise, intense | Week review, long-term plan, opening system, 30-second rule enforcement |
 | **Fabiano** | Fabiano Caruana | Italian, upbeat, logical, methodical | Positional perfection, structure |
 | **Magnus** | Magnus Carlsen | Danish, dry, positive, intuitive | Endgame conversion, reality checks |
-| **Hikaru** | Hikaru Nakamura | American, tactical genius, fast | Middlegame tactics, 5 weapons, attack patterns |
+| **Hikaru** | Hikaru Nakamura | American, tactical genius, fast | Middlegame tactics, 6 weapons, attack patterns |
 
 **Vlad persona is the primary teacher in OpeningLab.** He is demanding, precise, and Eastern European. 2-3 sentences max per commentary. Never soft.
 
@@ -106,6 +113,10 @@ Do NOT attempt to re-introduce a gateway or proxy architecture.
 9. Re1   — Cage complete. Central support.
 ```
 
+### The 30-Second Rule (SACRED)
+After move 9 Re1 — STOP. Hit the dashboard timer. Look away. Run the 6-rule checklist. THEN play move 10.
+Game Autopsy enforces this: any move 10+ played under 30 seconds (3000 centiseconds via `%timestamp`) is flagged as a Speed Trap. Vlad leads the debrief with the violation.
+
 ### 4 Black Response Lines
 | Line | Trigger | Subtitle | Key Weapon |
 |------|---------|----------|------------|
@@ -120,6 +131,30 @@ Nbd2 → Nf1 → Ng3 → Ba2 → Nh5/Nf5 → Re3 → d4 break
 ```
 This is called "The Strangler Sequence."
 
+### 6 Middlegame Principles (in order)
+```
+01 Lock the Center
+02 Establish Ng5 Stranglehold (Nf1→Ng3→Nf5)
+03 Dual Flank Attack
+04 Queenside Crush (b4)
+05 Kingside Rush (f4-f5 pawn storm)
+06 Central Explosion (d4 — nuclear option, last resort)
+```
+
+### 6 Weapons → Endgame Map
+| Weapon | Creates | Endgame Type |
+|--------|---------|--------------|
+| Search & Destroy (b4) | Queenside pawn majority | Passed pawn race |
+| The Strangler (Nf5) | Dominant knight | Superior minor piece endgame |
+| Toxic Bait (Bg5+h4) | Weak pawn structure | Structural advantage endgame |
+| High-Velocity Sacrifice (Bxh6) | Open king | Material advantage endgame |
+| Kingside Rush (f4-f5) | Kingside pawn majority | 4v3 kingside majority |
+| Central Explosion (d4) | Mass exchanges | Pure skill endgame |
+
+**Master Conversion Rule:** "If everything gets traded after this... am I winning the endgame?" If YES — go. If NO — don't attack yet.
+
+**System Identity:** "I don't attack to win quickly. I attack to make winning inevitable."
+
 ---
 
 ## 7. localStorage KEYS
@@ -127,26 +162,33 @@ This is called "The Strangler Sequence."
 | Key | Used By | Contents |
 |-----|---------|----------|
 | `vlad_last_autopsy` | DrillSergeant | FEN positions from last game analysis |
-| `vlad_pending_pgn` | GameAutopsy | PGN dropped on dashboard, passed to autopsy |
+| `vlad_pending_pgn` | GameAutopsy | PGN dropped on dashboard, auto-runs on mount |
+| `vlad_autopsy_save` | GameAutopsy | Full session save (pgn, gameInfo, analysis, coaches) |
+| `vlad_critical_list` | DrillSergeant | Critical moments from last autopsy |
+| `vlad_profile` | App.jsx | Player profile (name, email, goal, style, openings) |
 
 ---
 
 ## 8. NAV ORDER (App.jsx)
 
 ```
-Dashboard → Game Autopsy → Drill Sergeant → Opening Lab → Middlegame Mat → Endgame Dojo
+Dashboard → Profile → Game Autopsy → Drill Sergeant → Opening Lab → Middlegame Mat → Endgame Dojo
 ```
 
 ---
 
-## 9. DASHBOARD — KEY FEATURES
+## 9. GAME AUTOPSY — ARCHITECTURE (v4.0)
 
-- **ELO:** Live-fetched from `https://api.chess.com/pub/player/topherbettis/stats` (rapid rating). Falls back to 617.
-- **Progress bar:** 400→2000 campaign progress. ELO marker sits above the bar.
-- **Belt system:** White 400-600 → Blue 600-1000 → Purple 1000-1400 → Brown 1400-1800 → Black 1800-2000 → Red 2000+
-- **4-Step Mental Loop:** Displayed on dashboard. Execute before every move.
-- **Game Clock:** 30s/1m/2m/5m dropdown timer. Next to PGN drop zone.
-- **Weakness Alerts:** 4 active alerts shown on dashboard.
+- **Auto-loads** from `vlad_pending_pgn` localStorage on mount (set by Dashboard PGN drop)
+- **No manual paste box** — results only. If no PGN → shows "Drop a PGN on the Dashboard"
+- **Restores** last session on mount if no pending PGN
+- **Timestamp parsing:** extracts `%timestamp` tags from Chess.com PGN (centiseconds)
+- **30-second rule:** moves 1-9 excluded from critique entirely. Move 10+ flagged if under 3000cs
+- **Speed Trap badge** on every violating move in Move List
+- **Vlad accountability banner** fires at top of results if any speed violations detected
+- **Consensus prompt** instructs AI to skip moves 1-9 and lead critique with speed violations
+- **3 tabs:** Coaches / Critical (n) / Move List
+- **4 stat pills:** Total Moves / GM Deviations / Critical Turns / Speed Traps
 
 ---
 
@@ -155,9 +197,11 @@ Dashboard → Game Autopsy → Drill Sergeant → Opening Lab → Middlegame Mat
 | Role | Tool | Responsibility |
 |------|------|---------------|
 | **Primary Dev/Architecture** | Claude | All code, all architecture decisions, all file writes |
-| **Analysis/Strategy** | Grok | Strategic analysis, position evaluation |
+| **Chess/Strategy** | Grok | Chess methodology, position evaluation, middlegame weapons |
+| **Brainstorm/Voice** | ChatGPT | Feature brainstorming, product thinking, voice notes |
 | **Research ONLY** | Gemini | Research only — never directly edits code or files |
-| **Validation** | ChatGPT | Code review and validation |
+
+**Collab protocol:** ChatGPT brainstorm → Grok chess methodology → Gemini research → Claude synthesizes + builds.
 
 **CRITICAL RULE:** All Gemini output must be validated by Claude or ChatGPT before touching GitHub.
 **CRITICAL RULE:** No nicknames for LLMs. Always full names.
@@ -189,52 +233,138 @@ Topher is on a Mac. Always use:
 
 ---
 
-## 13. PENDING TARGETS (PRIORITIZED)
+## 13. VIDEO LIBRARY — ARCHITECTURE
+
+- **File:** `src/modules/VideoLibrary.jsx`
+- **220 Chuchelov videos** tagged by concept slug — placeholder YouTube IDs pending
+- **Topher owns:** the app, curation, concept map, tagging system
+- **Topher does NOT own:** the video content (Chuchelov's IP)
+- **Videos downloaded locally** and ingested into NotebookLM
+- **NotebookLM** is the query layer — "what does Vlad say about Nf5?"
+- **Phase 2:** Watch Video button in OpeningLab per move → links to matching Chuchelov video
+- **Phase 3:** If Chuchelov partnership happens, videos move in-app with proper licensing
+- **YouTube IDs** to be populated from NotebookLM concept mapping next session
+
+---
+
+## 14. PENDING TARGETS (PRIORITIZED)
+
+### Priority One — Next Session
+- [ ] **MCP Gateway** — wrap `topher-ai-command` as MCP server → connect to Claude.ai Settings → Connectors
+- [ ] **ChatGPT Custom GPT Action** — same Railway endpoint, enables voice brainstorm → team pipeline
+
+### Feature Builds
+- [ ] **OpeningLab** — Watch Video button per move (Chuchelov YouTube by concept slug)
+- [ ] **OpeningLab** — Interactive 6-rule conversion checklist panel after move 9
+- [ ] **MiddlegameMat** — Attack→Endgame conversion map tab on each weapon card
+- [ ] **Endgame Dojo** — Auto-populate from Game Autopsy (detect endgame type → route to drill)
+- [ ] **Endgame Dojo** — Missed mate detection from PGN
+- [ ] **VideoLibrary** — Populate real YouTube IDs from NotebookLM concept mapping
 
 ### UI Fixes
 - [ ] VLAD logo 50% larger
-- [ ] VLAD text larger + line spacing to match text below
-- [ ] Coaching Team: swap Magnus & Hikaru positions
-- [ ] ELO marker on progress bar: not center-justified, sits above the red dot
-
-### Live Data
-- [ ] ELO live from chess.com — verify accuracy on dashboard
-- [ ] Campaign progress driven by live chess.com ELO
-
-### Feature Builds
-- [ ] **OpeningLab v3.0** ✅ COMPLETED THIS SESSION — Gentleman's Assassin 9-move system, 4 Black responses, Phase 2 attack maps, Vlad commentary, quiz engine
-- [ ] **Magnus wired into OpeningLab** — Opening Lab currently uses askVlad/askFabiano/askMagnus but Magnus not wired into the new system view
-- [ ] **Coach Engine: Vlad** — Week review & long-term plan feature
-- [ ] **Coach Engine: Fabiano** — Positional perfection module
-- [ ] **Engine Protocol:** Remove Stockfish. Use chess.com for move lists. Critical tab uses custom AI consensus (Vlad, Fabiano, Magnus, Hikaru) for personalized best moves based on tailored game plan.
-
-### Progression System
-- [ ] Warrior Belt System fully implemented (dashboard shows it — verify all 6 belts render correctly)
+- [ ] VLAD text larger + line spacing
+- [ ] Font contrast: grey on black in some areas
+- [ ] Dashboard mobile responsive pass
 
 ---
 
-## 14. COMPLETED THIS SESSION (April 13, 2026)
+## 15. COMPLETED THIS SESSION (April 13, 2026)
 
-### OpeningLab.jsx v3.0
-Complete rebuild of `src/modules/OpeningLab.jsx`. New features:
-- **9-Move System view** — Universal cage sequence with Vlad commentary per move (hardcoded + live AI call option). Mark-as-studied progress tracking.
-- **4 Black Responses view** — Giuoco Piano, Sicilian e6/d6, Dragon Sicilian, Two Knights. Each has: Phase 2 attack map (Nbd2→Nf1→Ng3→Ba2→Nf5), deviations if/then cards, live Vlad coaching call.
-- **Assassin Checklist** — 7-condition pre-attack checklist + Phase 2 strike sequence.
-- **Quiz** — 7 questions on the system. Vlad grades wrong answers via live AI call.
-- All existing functionality preserved. Mobile responsive. IBM Plex Mono font consistent with app.
+### App.jsx — Dashboard v2
+- Profile chip at top + Profile tab + full profile page with localStorage persistence
+- Hero: 3 equal columns (ELO/Mission | Game Clock | PGN Drop)
+- Campaign Progress section removed
+- 4-Step Loop moved above stage tracker, title white, "Mission Briefing" white
+- Stage system renamed: Beginner / Intermediate / Club Player / Advanced / Expert (no Master/Red Belt)
+- 3x2 module grid
+- Coach cards link to YouTube best games searches
+- Weakness Alerts removed from Dashboard
+- Subtitle changed to: The Italian-Spanish System "The Gentleman Assassin"
+
+### GameAutopsy.jsx — v4.0 (complete rebuild)
+- Auto-loads PGN from `vlad_pending_pgn` localStorage on mount — no paste box
+- Restores last session if no pending PGN
+- Timestamp parsing: extracts `%timestamp` centiseconds from Chess.com PGN
+- 30-second rule enforcement: moves 1-9 excluded, move 10+ flagged if under 3000cs
+- Speed Trap badge on Move List for violations
+- Vlad accountability banner fires on any violations
+- Consensus prompt skips moves 1-9, leads with speed violations
+
+### OpeningLab.jsx — v3.0 (complete rebuild)
+- 9-Move System view with Vlad commentary per move + live AI call option
+- 4 Black Responses with Phase 2 attack maps, deviations, live Vlad coaching
+- Assassin Checklist (7 conditions) + Phase 2 strike sequence
+- Quiz engine (7 questions) with Vlad grading wrong answers via live AI call
+
+### MiddlegameMat.jsx
+- 6 weapons: added Kingside Rush (05 — f4-f5 pawn storm), renumbered Central Explosion to 06
+- Queenside First renamed to Queenside Crush
+- 6 principles updated and renumbered to match
+- Gentleman Phase description updated: "coil loading phase"
+- Fixed default imports (removed curly braces)
+
+### EndgameDojo.jsx
+- Stockfish removed entirely
+- Key Concept always visible, styled like Goal box (no toggle)
+- FEN copy button added, font white
+- Fixed askMagnus default import
+
+### All module files — import fixes
+- DrillSergeant: `{askVlad}` → `askVlad`
+- MiddlegameMat: `{askHikaru}` + `{askVlad}` → default imports
+- EndgameDojo: `{askMagnus}` → default import, stockfish imports removed
+- GameAutopsy: `{Card}` non-existent import removed
+
+### CLAUDE.md — v3.0
+- Full architecture context, import rules, timestamp system, team protocol
+- Attack→Endgame weapon map added
+- MCP Gateway + ChatGPT pipeline scheduled as Priority One
 
 ---
 
-## 15. KNOWN ISSUES / WATCH LIST
+## 16. KEY TEAM INSIGHTS (April 13, 2026)
 
-- Gemini API credits exhaust during heavy sessions. Reset midnight Pacific or via billing at aistudio.google.com.
+- **ChatGPT:** Every attack engineers a specific endgame. Master rule: "Attack to make winning inevitable." Identity: "I don't attack to win quickly — I attack to make winning inevitable."
+- **Grok:** At 617 ELO, master rules 01+04 first. The 6-rule checklist eliminates decision paralysis. Skip Kingside Rush (05) until 01+04 are automatic. After Re1 — pause 10 seconds, run the list in order.
+- **Gemini:** System cures "King Phobia." 700-900 ELO players cannot defend both flanks simultaneously. f1-g3 knight routing draws attention to the king's theater of war.
+
+---
+
+## 17. KNOWN ISSUES / WATCH LIST
+
+- Gemini API credits exhaust during heavy sessions. Reset midnight Pacific or via billing at aistudio.google.com. When coaches show "Connection lost to the analysis room" — it's the API, not the code.
 - Font contrast: grey on black in some areas — ongoing UI debt.
-- Vercel Git repo connection not yet confirmed (Production Checklist shows 0/5). Verify auto-deploy is wired.
-- `node_modules` committed to repo (visible in GitHub root). Should be in `.gitignore`. Low priority.
+- `node_modules` committed to repo root — should be in `.gitignore`. Low priority.
 
 ---
 
-## 16. LONG-TERM VISION
+## 18. NEXT SESSION — SCHEDULED INFRASTRUCTURE BUILD
+
+### MCP Gateway Server
+Wrap `topher-ai-command` (github.com/TopherAI/topher-ai-command) as MCP server.
+- Add `/mcp` SSE endpoint to FastAPI server (~50 lines)
+- Redeploy to Railway
+- Connect in Claude.ai: Settings → Connectors → Add MCP server → Railway URL
+- Result: Claude calls full 4-model team from any conversation automatically
+
+### ChatGPT Integration
+- Build Custom GPT with gateway as its Action (OpenAPI schema)
+- Voice brainstorm in ChatGPT → hits gateway → all 4 models respond → bring to Claude to build
+- Dependency: MCP Gateway must be built first
+
+### Full Connected Workflow (end state)
+```
+Voice brainstorm (ChatGPT)
+        ↓
+Gateway → Grok (chess) + Claude (architecture) + ChatGPT (validation) + Gemini (research)
+        ↓
+Unified output → Claude builds → GitHub commit → Vercel deploy
+```
+
+---
+
+## 19. LONG-TERM VISION
 
 1. **Chess app commercialization:** Approach GM Vladimir Chuchelov with a profit-sharing arrangement after demonstrating ELO improvement. The app is the proof of concept.
 2. **Mortgage AI:** Topher is the leading AI mind in the US mortgage industry. Parallel track — Responsible AI Mortgage Agent repo under TopherAI org.
