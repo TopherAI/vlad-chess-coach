@@ -3,12 +3,12 @@
  * vlad-chess-coach — Middlegame Mat Module
  *
  * The 5 Assassin Weapons + Hikaru tactical coaching
- * Principles: locked center → Ng5 stranglehold → dual flank → queenside first → central explosion
+ * Principles: locked center -> Ng5 stranglehold -> dual flank -> queenside first -> central explosion
  */
 
 import { useState, useCallback } from "react";
-import { askHikaru } from "../coaches/hikaru.jsx";
-import { askVlad } from "../coaches/vlad.jsx";
+import askHikaru from "../coaches/hikaru.jsx";
+import askVlad from "../coaches/vlad.jsx";
 
 // ---------------------------------------------------------------------------
 // The 5 Assassin Weapons
@@ -38,8 +38,8 @@ const WEAPONS = [
     color: "#c0392b",
     trigger: "Black has a hole on f5 or g7. No g6 pawn or h6 has been played. Ng3 square is clear.",
     execution: [
-      "Nf1 → Ng3 (loading the spring).",
-      "Ng3 → Nf5 (the strangler lands on f5).",
+      "Nf1 -> Ng3 (loading the spring).",
+      "Ng3 -> Nf5 (the strangler lands on f5).",
       "Knight on f5 paralyzes Black's entire defensive setup.",
       "Setup Nxg7 or Bxh6 sacrifices from here.",
     ],
@@ -56,7 +56,7 @@ const WEAPONS = [
     execution: [
       "Do NOT retreat the bishop when they play h6.",
       "Play h4 immediately.",
-      "If hxg5, play hxg5 — the h-file rips open.",
+      "If hxg5, play hxg5 -- the h-file rips open.",
       "Rook to h1, queen to d2. Attack down the h-file.",
     ],
     principle: "They walked into it. The pawn trade opens the h-file for free.",
@@ -70,7 +70,7 @@ const WEAPONS = [
     color: "#c0392b",
     trigger: "Black is castled kingside. h6 defended once. Qd2 aligned. Knight on f5.",
     execution: [
-      "Bxh6 — violently sacrifice the bishop.",
+      "Bxh6 -- violently sacrifice the bishop.",
       "gxh6 is forced (if they decline, h7 falls anyway).",
       "Qd2-h6 battery assembled.",
       "Ng5 follows. Rook to e3 or f1-f3 swing.",
@@ -88,7 +88,7 @@ const WEAPONS = [
     trigger: "Cage is complete. Black commits heavily to a flank. Center is locked.",
     execution: [
       "Wait until Black overcommits on one flank.",
-      "d4 — snap the coiled spring.",
+      "d4 -- snap the coiled spring.",
       "exd4 or cxd4 opens the center immediately.",
       "We are 3 tempos ahead in development.",
       "All pieces activate simultaneously.",
@@ -108,7 +108,7 @@ const PRINCIPLES = [
     num: "01",
     title: "Lock the Center",
     color: "#2980b9",
-    desc: "Before attacking, stabilize the center. A locked center forces the fight to the flanks — where our preparation is deeper.",
+    desc: "Before attacking, stabilize the center. A locked center forces the fight to the flanks -- where our preparation is deeper.",
     rule: "Do not push d4 until all 7 Assassin checklist conditions are met.",
   },
   {
@@ -116,8 +116,8 @@ const PRINCIPLES = [
     num: "02",
     title: "Establish Ng5 Stranglehold",
     color: "#c0392b",
-    desc: "The Nf1→Ng3→Nf5 route is the engine of the Gentleman's Assassin. The knight on f5 is the anchor of every attack.",
-    rule: "Clear the Ng3 square first. Never rush — load the spring methodically.",
+    desc: "The Nf1->Ng3->Nf5 route is the engine of the Gentleman's Assassin. The knight on f5 is the anchor of every attack.",
+    rule: "Clear the Ng3 square first. Never rush -- load the spring methodically.",
   },
   {
     id: "flank",
@@ -125,7 +125,7 @@ const PRINCIPLES = [
     title: "Dual Flank Attack",
     color: "#e67e22",
     desc: "Attack on both flanks simultaneously. Start queenside with b4 to fix Black's bishop, then pivot kingside with the Strangler.",
-    rule: "Queenside bind first. Kingside attack second. Never both at once — exhaust them.",
+    rule: "Queenside bind first. Kingside attack second. Never both at once -- exhaust them.",
   },
   {
     id: "queenside",
@@ -141,20 +141,20 @@ const PRINCIPLES = [
     title: "Central Explosion as Finisher",
     color: "#f39c12",
     desc: "If Black's defense is perfect on both flanks, d4 blows the center open. We are always 3 tempos ahead when this fires.",
-    rule: "d4 is the nuclear option. Use it when all else is prepared — never as desperation.",
+    rule: "d4 is the nuclear option. Use it when all else is prepared -- never as desperation.",
   },
 ];
 
 // ---------------------------------------------------------------------------
-// Gentleman Phase (transition from opening to middlegame)
+// Gentleman Phase
 // ---------------------------------------------------------------------------
 
 const GENTLEMAN_PHASE = [
   { move: "Nf1", note: "Knight begins the march. Cage is complete. Now we pivot." },
-  { move: "Nf1→d2", note: "Knight reroutes through d2 — or goes directly to g3 depending on pawn structure." },
-  { move: "Nd2→f1", note: "Alternative route. Knight heads to g3 via f1." },
-  { move: "Nf1→g3", note: "Knight reaches g3. The spring is loaded. f5 is one move away." },
-  { move: "Ng3→f5", note: "THE STRANGLER LANDS. Knight on f5. Black suffocates." },
+  { move: "Nf1->d2", note: "Knight reroutes through d2 -- or goes directly to g3 depending on pawn structure." },
+  { move: "Nd2->f1", note: "Alternative route. Knight heads to g3 via f1." },
+  { move: "Nf1->g3", note: "Knight reaches g3. The spring is loaded. f5 is one move away." },
+  { move: "Ng3->f5", note: "THE STRANGLER LANDS. Knight on f5. Black suffocates." },
 ];
 
 // ---------------------------------------------------------------------------
@@ -175,7 +175,7 @@ export default function MiddlegameMat() {
     setLoadingHikaru(weapon.id);
     try {
       const prompt = `TopherBettis (609 ELO, target 2000) is playing the Italian Cage. They want to deploy the "${weapon.name}" weapon (${weapon.subtitle}). Trigger condition: ${weapon.trigger}. In Hikaru's voice: confirm whether the conditions look right, and give the exact first move to play. 2-3 sentences, fast and direct.`;
-      const resp = await askHikaru(prompt, {});
+      const resp = await askHikaru(prompt);
       setHikaruTake(prev => ({ ...prev, [weapon.id]: resp }));
     } catch {
       setHikaruTake(prev => ({ ...prev, [weapon.id]: "Trust the pattern. Play the move." }));
@@ -189,7 +189,7 @@ export default function MiddlegameMat() {
     setLoadingVlad(weapon.id);
     try {
       const prompt = `TopherBettis is about to deploy the "${weapon.name}" weapon in the Italian Cage. In Vlad's philosophical voice: why does this weapon matter in the journey from 609 to 2000? What is the deeper principle behind it? 2 sentences maximum.`;
-      const resp = await askVlad(prompt, {});
+      const resp = await askVlad(prompt);
       setVladTake(prev => ({ ...prev, [weapon.id]: resp }));
     } catch {
       setVladTake(prev => ({ ...prev, [weapon.id]: "Every weapon is a lesson. The position teaches you when to strike." }));
@@ -213,13 +213,12 @@ export default function MiddlegameMat() {
   return (
     <div style={styles.root}>
 
-      {/* Header */}
       <div style={styles.header}>
         <div style={styles.headerLeft}>
           <span style={styles.headerIcon}>⚔️</span>
           <div>
             <h1 style={styles.headerTitle}>Middlegame Mat</h1>
-            <p style={styles.headerSub}>GENTLEMAN'S ASSASSIN — ATTACK PHASE</p>
+            <p style={styles.headerSub}>GENTLEMAN'S ASSASSIN -- ATTACK PHASE</p>
           </div>
         </div>
         <div style={styles.coachBadge}>
@@ -231,33 +230,28 @@ export default function MiddlegameMat() {
         </div>
       </div>
 
-      {/* Phase banner */}
       <div style={styles.phaseBanner}>
         <div style={styles.phaseStep}>
           <span style={{ ...styles.phaseLabel, color: "#27ae60" }}>PHASE 1</span>
-          <span style={styles.phaseText}>Opening — Build the Cage (9 moves)</span>
+          <span style={styles.phaseText}>Opening -- Build the Cage (9 moves)</span>
         </div>
         <span style={styles.phaseArrow}>→</span>
         <div style={styles.phaseStep}>
           <span style={{ ...styles.phaseLabel, color: "#f39c12" }}>PHASE 2</span>
-          <span style={styles.phaseText}>Gentleman — Load the Spring (Nf1→g3→f5)</span>
+          <span style={styles.phaseText}>Gentleman -- Load the Spring (Nf1-g3-f5)</span>
         </div>
         <span style={styles.phaseArrow}>→</span>
         <div style={styles.phaseStep}>
           <span style={{ ...styles.phaseLabel, color: "#c0392b" }}>PHASE 3</span>
-          <span style={styles.phaseText}>Assassin — Deploy the Weapon</span>
+          <span style={styles.phaseText}>Assassin -- Deploy the Weapon</span>
         </div>
       </div>
 
-      {/* Tabs */}
       <div style={styles.tabs}>
         {tabs.map(tab => (
           <button
             key={tab.id}
-            style={{
-              ...styles.tab,
-              ...(activeTab === tab.id ? styles.tabActive : {}),
-            }}
+            style={{ ...styles.tab, ...(activeTab === tab.id ? styles.tabActive : {}) }}
             onClick={() => setActiveTab(tab.id)}
           >
             {tab.label}
@@ -265,16 +259,15 @@ export default function MiddlegameMat() {
         ))}
       </div>
 
-      {/* ── PRINCIPLES TAB ── */}
       {activeTab === "principles" && (
         <div style={styles.principlesList}>
           <div style={styles.principlesIntro}>
             <p style={styles.principlesIntroText}>
               The cage is built. Now the real game begins. These 5 principles govern every middlegame
-              decision — in order of priority. Execute them sequentially.
+              decision -- in order of priority. Execute them sequentially.
             </p>
           </div>
-          {PRINCIPLES.map((p, i) => (
+          {PRINCIPLES.map((p) => (
             <div key={p.id} style={{ ...styles.principleCard, borderLeft: `4px solid ${p.color}` }}>
               <div style={styles.principleHeader}>
                 <span style={{ ...styles.principleNum, color: p.color }}>{p.num}</span>
@@ -291,25 +284,23 @@ export default function MiddlegameMat() {
             <span style={styles.hikaruQuoteIcon}>⚡</span>
             <p style={styles.hikaruQuoteText}>
               "The whole point of the Italian Cage is that by move 9 you're just better.
-              The middlegame isn't about finding the right plan — it's about executing the plan
+              The middlegame isn't about finding the right plan -- it's about executing the plan
               you already decided on move 1."
             </p>
-            <span style={styles.hikaruQuoteAttrib}>— Hikaru</span>
+            <span style={styles.hikaruQuoteAttrib}>-- Hikaru</span>
           </div>
         </div>
       )}
 
-      {/* ── GENTLEMAN PHASE TAB ── */}
       {activeTab === "gentleman" && (
         <div style={styles.gentlemanLayout}>
           <div style={styles.gentlemanIntro}>
             <p style={styles.gentlemanIntroText}>
-              The cage is complete. Now begins the <strong style={{ color: "#f39c12" }}>Gentleman Phase</strong> —
+              The cage is complete. Now begins the Gentleman Phase --
               quietly rerouting the knight from f1 toward g3 and then f5.
               Black sees nothing dangerous. The spring loads in silence.
             </p>
           </div>
-
           <div style={styles.gentlemanSteps}>
             {GENTLEMAN_PHASE.map((step, i) => (
               <div
@@ -322,10 +313,7 @@ export default function MiddlegameMat() {
                 }}
                 onClick={() => setGentlemanStep(i)}
               >
-                <div style={{
-                  ...styles.gentlemanStepNum,
-                  backgroundColor: gentlemanStep === i ? "#f39c12" : "#1a1a1a",
-                }}>
+                <div style={{ ...styles.gentlemanStepNum, backgroundColor: gentlemanStep === i ? "#f39c12" : "#1a1a1a" }}>
                   {i + 1}
                 </div>
                 <div style={styles.gentlemanStepInfo}>
@@ -334,40 +322,26 @@ export default function MiddlegameMat() {
                   </span>
                   <span style={styles.gentlemanStepNote}>{step.note}</span>
                 </div>
-                {i < GENTLEMAN_PHASE.length - 1 && (
-                  <span style={styles.gentlemanArrow}>↓</span>
-                )}
               </div>
             ))}
           </div>
-
           <div style={styles.gentlemanCallout}>
             <div style={styles.gentlemanCalloutHeader}>
               <span style={{ color: "#c0392b", fontSize: 20 }}>🐍</span>
-              <span style={{ ...styles.gentlemanCalloutTitle, color: "#c0392b" }}>
-                THE STRANGLER IS SET
-              </span>
+              <span style={{ ...styles.gentlemanCalloutTitle, color: "#c0392b" }}>THE STRANGLER IS SET</span>
             </div>
             <p style={styles.gentlemanCalloutText}>
               Knight on f5. Black's position is paralyzed. Now choose your weapon.
-              The d7 square, the h7 pawn, the g7 weakness — all accessible.
-              This is why every quiet move in the opening existed.
             </p>
-            <button
-              style={styles.btn}
-              onClick={() => setActiveTab("weapons")}
-            >
+            <button style={styles.btn} onClick={() => setActiveTab("weapons")}>
               Choose Your Weapon →
             </button>
           </div>
         </div>
       )}
 
-      {/* ── 5 WEAPONS TAB ── */}
       {activeTab === "weapons" && (
         <div style={styles.weaponsLayout}>
-
-          {/* Weapon selector */}
           <div style={styles.weaponSelector}>
             {WEAPONS.map(w => (
               <button
@@ -390,41 +364,31 @@ export default function MiddlegameMat() {
             ))}
           </div>
 
-          {/* Active weapon detail */}
           <div style={styles.weaponDetail}>
             <div style={{ ...styles.weaponDetailHeader, borderBottom: `2px solid ${activeWeapon.color}33` }}>
               <span style={styles.weaponDetailIcon}>{activeWeapon.icon}</span>
               <div>
-                <h2 style={{ ...styles.weaponDetailName, color: activeWeapon.color }}>
-                  {activeWeapon.name}
-                </h2>
+                <h2 style={{ ...styles.weaponDetailName, color: activeWeapon.color }}>{activeWeapon.name}</h2>
                 <p style={styles.weaponDetailSubtitle}>{activeWeapon.subtitle}</p>
               </div>
             </div>
-
             <div style={styles.weaponTriggerBox}>
               <span style={styles.weaponTriggerLabel}>TRIGGER CONDITIONS</span>
               <p style={styles.weaponTriggerText}>{activeWeapon.trigger}</p>
             </div>
-
             <div style={styles.weaponExecution}>
               <span style={styles.weaponExecutionLabel}>EXECUTION</span>
               {activeWeapon.execution.map((step, i) => (
                 <div key={i} style={styles.weaponExecutionStep}>
-                  <div style={{ ...styles.weaponExecutionNum, backgroundColor: activeWeapon.color }}>
-                    {i + 1}
-                  </div>
+                  <div style={{ ...styles.weaponExecutionNum, backgroundColor: activeWeapon.color }}>{i + 1}</div>
                   <span style={styles.weaponExecutionText}>{step}</span>
                 </div>
               ))}
             </div>
-
             <div style={{ ...styles.weaponPrinciple, borderColor: `${activeWeapon.color}44` }}>
               <span style={styles.weaponPrincipleLabel}>PRINCIPLE</span>
               <p style={styles.weaponPrincipleText}>{activeWeapon.principle}</p>
             </div>
-
-            {/* Hikaru take */}
             <div style={styles.coachBox}>
               <div style={styles.coachBoxHeader}>
                 <span style={styles.coachBoxIcon}>⚡</span>
@@ -439,8 +403,6 @@ export default function MiddlegameMat() {
                 <p style={styles.coachBoxPlaceholder}>"{activeWeapon.hikaruNote}"</p>
               )}
             </div>
-
-            {/* Vlad take */}
             <div style={{ ...styles.coachBox, borderColor: "#c0392b33" }}>
               <div style={styles.coachBoxHeader}>
                 <span style={styles.coachBoxIcon}>🎖️</span>
@@ -462,170 +424,82 @@ export default function MiddlegameMat() {
   );
 }
 
-// ---------------------------------------------------------------------------
-// Styles
-// ---------------------------------------------------------------------------
-
 const styles = {
-  root: {
-    display: "flex", flexDirection: "column", gap: 20,
-    padding: "28px 32px", minHeight: "100vh",
-    backgroundColor: "#0d0d0d", color: "#e8e8e8",
-    fontFamily: "'IBM Plex Mono', 'Courier New', monospace",
-    maxWidth: 960, margin: "0 auto",
-  },
-  header: {
-    display: "flex", justifyContent: "space-between", alignItems: "center",
-    borderBottom: "1px solid #222", paddingBottom: 20, flexWrap: "wrap", gap: 12,
-  },
-  headerLeft:  { display: "flex", alignItems: "center", gap: 14 },
-  headerIcon:  { fontSize: 36 },
-  headerTitle: { margin: 0, fontSize: 26, fontWeight: 700, letterSpacing: "-0.5px", color: "#fff" },
-  headerSub:   { margin: "2px 0 0", fontSize: 12, color: "#666", letterSpacing: "0.5px" },
-  coachBadge: {
-    display: "flex", alignItems: "center", gap: 10,
-    padding: "10px 16px", backgroundColor: "#1a1200",
-    border: "1px solid #f39c1244", borderRadius: 8,
-  },
+  root: { display: "flex", flexDirection: "column", gap: 20, padding: "28px 32px", minHeight: "100vh", backgroundColor: "#0d0d0d", color: "#e8e8e8", fontFamily: "'IBM Plex Mono', 'Courier New', monospace", maxWidth: 960, margin: "0 auto" },
+  header: { display: "flex", justifyContent: "space-between", alignItems: "center", borderBottom: "1px solid #222", paddingBottom: 20, flexWrap: "wrap", gap: 12 },
+  headerLeft: { display: "flex", alignItems: "center", gap: 14 },
+  headerIcon: { fontSize: 36 },
+  headerTitle: { margin: 0, fontSize: 26, fontWeight: 700, color: "#fff" },
+  headerSub: { margin: "2px 0 0", fontSize: 12, color: "#666" },
+  coachBadge: { display: "flex", alignItems: "center", gap: 10, padding: "10px 16px", backgroundColor: "#1a1200", border: "1px solid #f39c1244", borderRadius: 8 },
   coachEmoji: { fontSize: 24 },
-  coachName:  { fontSize: 14, fontWeight: 700, color: "#f39c12" },
-  coachRole:  { fontSize: 10, color: "#666", marginTop: 2 },
-  phaseBanner: {
-    display: "flex", alignItems: "center", gap: 12, flexWrap: "wrap",
-    padding: "12px 16px", backgroundColor: "#111",
-    border: "1px solid #1a1a1a", borderRadius: 6,
-  },
-  phaseStep:  { display: "flex", flexDirection: "column", gap: 2 },
+  coachName: { fontSize: 14, fontWeight: 700, color: "#f39c12" },
+  coachRole: { fontSize: 10, color: "#666", marginTop: 2 },
+  phaseBanner: { display: "flex", alignItems: "center", gap: 12, flexWrap: "wrap", padding: "12px 16px", backgroundColor: "#111", border: "1px solid #1a1a1a", borderRadius: 6 },
+  phaseStep: { display: "flex", flexDirection: "column", gap: 2 },
   phaseLabel: { fontSize: 9, fontWeight: 700, letterSpacing: "1.5px" },
-  phaseText:  { fontSize: 11, color: "#888" },
+  phaseText: { fontSize: 11, color: "#888" },
   phaseArrow: { fontSize: 18, color: "#333", flexShrink: 0 },
   tabs: { display: "flex", gap: 0, borderBottom: "1px solid #222" },
-  tab: {
-    padding: "10px 20px", backgroundColor: "transparent",
-    border: "none", borderBottom: "2px solid transparent",
-    color: "#555", fontSize: 11,
-    fontFamily: "'IBM Plex Mono', monospace",
-    cursor: "pointer", letterSpacing: "0.5px",
-  },
+  tab: { padding: "10px 20px", backgroundColor: "transparent", border: "none", borderBottom: "2px solid transparent", color: "#555", fontSize: 11, fontFamily: "'IBM Plex Mono', monospace", cursor: "pointer", letterSpacing: "0.5px" },
   tabActive: { color: "#f39c12", borderBottom: "2px solid #f39c12" },
   principlesList: { display: "flex", flexDirection: "column", gap: 14 },
-  principlesIntro: {
-    padding: "14px 16px", backgroundColor: "#111",
-    border: "1px solid #1a1a1a", borderRadius: 6,
-  },
+  principlesIntro: { padding: "14px 16px", backgroundColor: "#111", border: "1px solid #1a1a1a", borderRadius: 6 },
   principlesIntroText: { margin: 0, fontSize: 13, color: "#888", lineHeight: 1.7 },
-  principleCard: {
-    padding: "16px 18px", backgroundColor: "#0a0a0a",
-    border: "1px solid #1a1a1a", borderRadius: 6,
-    display: "flex", flexDirection: "column", gap: 10,
-  },
+  principleCard: { padding: "16px 18px", backgroundColor: "#0a0a0a", border: "1px solid #1a1a1a", borderRadius: 6, display: "flex", flexDirection: "column", gap: 10 },
   principleHeader: { display: "flex", alignItems: "center", gap: 12 },
-  principleNum:    { fontSize: 22, fontWeight: 700, lineHeight: 1, minWidth: 36 },
-  principleTitle:  { margin: 0, fontSize: 16, fontWeight: 700, color: "#ccc" },
-  principleDesc:   { margin: 0, fontSize: 13, color: "#888", lineHeight: 1.7 },
-  principleRule: {
-    display: "flex", gap: 10, alignItems: "flex-start",
-    padding: "8px 12px", backgroundColor: "#111",
-    border: "1px solid #1a1a1a", borderRadius: 4,
-  },
+  principleNum: { fontSize: 22, fontWeight: 700, lineHeight: 1, minWidth: 36 },
+  principleTitle: { margin: 0, fontSize: 16, fontWeight: 700, color: "#ccc" },
+  principleDesc: { margin: 0, fontSize: 13, color: "#888", lineHeight: 1.7 },
+  principleRule: { display: "flex", gap: 10, alignItems: "flex-start", padding: "8px 12px", backgroundColor: "#111", border: "1px solid #1a1a1a", borderRadius: 4 },
   principleRuleLabel: { fontSize: 8, color: "#555", letterSpacing: "1.5px", flexShrink: 0, marginTop: 3 },
-  principleRuleText:  { fontSize: 11, color: "#aaa", lineHeight: 1.6 },
-  hikaruQuote: {
-    display: "flex", flexDirection: "column", gap: 8,
-    padding: "16px 18px", backgroundColor: "#1a1200",
-    border: "1px solid #f39c1233", borderRadius: 6,
-  },
-  hikaruQuoteIcon:   { fontSize: 20 },
-  hikaruQuoteText:   { margin: 0, fontSize: 13, color: "#f39c12", lineHeight: 1.8, fontStyle: "italic" },
+  principleRuleText: { fontSize: 11, color: "#aaa", lineHeight: 1.6 },
+  hikaruQuote: { display: "flex", flexDirection: "column", gap: 8, padding: "16px 18px", backgroundColor: "#1a1200", border: "1px solid #f39c1233", borderRadius: 6 },
+  hikaruQuoteIcon: { fontSize: 20 },
+  hikaruQuoteText: { margin: 0, fontSize: 13, color: "#f39c12", lineHeight: 1.8, fontStyle: "italic" },
   hikaruQuoteAttrib: { fontSize: 11, color: "#8a6a2a", alignSelf: "flex-end" },
   gentlemanLayout: { display: "flex", flexDirection: "column", gap: 16 },
-  gentlemanIntro: {
-    padding: "14px 16px", backgroundColor: "#111",
-    border: "1px solid #1a1a1a", borderRadius: 6,
-  },
+  gentlemanIntro: { padding: "14px 16px", backgroundColor: "#111", border: "1px solid #1a1a1a", borderRadius: 6 },
   gentlemanIntroText: { margin: 0, fontSize: 13, color: "#888", lineHeight: 1.7 },
-  gentlemanSteps: { display: "flex", flexDirection: "column", gap: 0 },
-  gentlemanStep: {
-    display: "flex", alignItems: "center", gap: 14,
-    padding: "14px 16px", borderRadius: 6,
-    transition: "all 0.15s", marginBottom: 4, position: "relative",
-  },
-  gentlemanStepNum: {
-    width: 28, height: 28, borderRadius: 4,
-    display: "flex", alignItems: "center", justifyContent: "center",
-    fontSize: 12, fontWeight: 700, color: "#fff", flexShrink: 0,
-    transition: "background 0.15s",
-  },
+  gentlemanSteps: { display: "flex", flexDirection: "column", gap: 4 },
+  gentlemanStep: { display: "flex", alignItems: "center", gap: 14, padding: "14px 16px", borderRadius: 6, transition: "all 0.15s" },
+  gentlemanStepNum: { width: 28, height: 28, borderRadius: 4, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 12, fontWeight: 700, color: "#fff", flexShrink: 0 },
   gentlemanStepInfo: { display: "flex", flexDirection: "column", gap: 3, flex: 1 },
-  gentlemanStepMove: { fontSize: 15, fontWeight: 700, transition: "color 0.15s" },
+  gentlemanStepMove: { fontSize: 15, fontWeight: 700 },
   gentlemanStepNote: { fontSize: 11, color: "#666", lineHeight: 1.5 },
-  gentlemanArrow:    { fontSize: 16, color: "#333", flexShrink: 0 },
-  gentlemanCallout: {
-    padding: "18px 20px", backgroundColor: "#1a0808",
-    border: "1px solid #c0392b44", borderRadius: 8,
-    display: "flex", flexDirection: "column", gap: 12,
-  },
+  gentlemanCallout: { padding: "18px 20px", backgroundColor: "#1a0808", border: "1px solid #c0392b44", borderRadius: 8, display: "flex", flexDirection: "column", gap: 12 },
   gentlemanCalloutHeader: { display: "flex", alignItems: "center", gap: 10 },
-  gentlemanCalloutTitle:  { fontSize: 13, fontWeight: 700, letterSpacing: "0.5px" },
-  gentlemanCalloutText:   { margin: 0, fontSize: 13, color: "#aaa", lineHeight: 1.7 },
+  gentlemanCalloutTitle: { fontSize: 13, fontWeight: 700, letterSpacing: "0.5px" },
+  gentlemanCalloutText: { margin: 0, fontSize: 13, color: "#aaa", lineHeight: 1.7 },
   weaponsLayout: { display: "flex", gap: 20, alignItems: "flex-start", flexWrap: "wrap" },
-  weaponSelector: {
-    display: "flex", flexDirection: "column", gap: 6,
-    width: 220, flexShrink: 0,
-  },
-  weaponBtn: {
-    display: "flex", alignItems: "center", gap: 10,
-    padding: "10px 12px", borderRadius: 6,
-    cursor: "pointer", fontFamily: "'IBM Plex Mono', monospace",
-    transition: "all 0.15s", textAlign: "left",
-  },
+  weaponSelector: { display: "flex", flexDirection: "column", gap: 6, width: 220, flexShrink: 0 },
+  weaponBtn: { display: "flex", alignItems: "center", gap: 10, padding: "10px 12px", borderRadius: 6, cursor: "pointer", fontFamily: "'IBM Plex Mono', monospace", transition: "all 0.15s", textAlign: "left" },
   weaponBtnIcon: { fontSize: 20, flexShrink: 0 },
-  weaponBtnName: { fontSize: 12, fontWeight: 700, transition: "color 0.15s" },
-  weaponBtnSub:  { fontSize: 10, color: "#555", marginTop: 2 },
-  weaponDetail:  { flex: 1, display: "flex", flexDirection: "column", gap: 14, minWidth: 280 },
-  weaponDetailHeader: {
-    display: "flex", alignItems: "center", gap: 14,
-    paddingBottom: 14,
-  },
-  weaponDetailIcon:     { fontSize: 36 },
-  weaponDetailName:     { margin: 0, fontSize: 22, fontWeight: 700 },
+  weaponBtnName: { fontSize: 12, fontWeight: 700 },
+  weaponBtnSub: { fontSize: 10, color: "#555", marginTop: 2 },
+  weaponDetail: { flex: 1, display: "flex", flexDirection: "column", gap: 14, minWidth: 280 },
+  weaponDetailHeader: { display: "flex", alignItems: "center", gap: 14, paddingBottom: 14 },
+  weaponDetailIcon: { fontSize: 36 },
+  weaponDetailName: { margin: 0, fontSize: 22, fontWeight: 700 },
   weaponDetailSubtitle: { margin: "2px 0 0", fontSize: 12, color: "#666" },
-  weaponTriggerBox: {
-    padding: "12px 14px", backgroundColor: "#111",
-    border: "1px solid #1a1a1a", borderRadius: 6,
-  },
+  weaponTriggerBox: { padding: "12px 14px", backgroundColor: "#111", border: "1px solid #1a1a1a", borderRadius: 6 },
   weaponTriggerLabel: { display: "block", fontSize: 8, color: "#555", letterSpacing: "1.5px", marginBottom: 6 },
-  weaponTriggerText:  { margin: 0, fontSize: 12, color: "#aaa", lineHeight: 1.6 },
-  weaponExecution:    { display: "flex", flexDirection: "column", gap: 8 },
+  weaponTriggerText: { margin: 0, fontSize: 12, color: "#aaa", lineHeight: 1.6 },
+  weaponExecution: { display: "flex", flexDirection: "column", gap: 8 },
   weaponExecutionLabel: { fontSize: 8, color: "#555", letterSpacing: "1.5px" },
   weaponExecutionStep: { display: "flex", alignItems: "flex-start", gap: 10 },
-  weaponExecutionNum: {
-    width: 20, height: 20, borderRadius: 3,
-    display: "flex", alignItems: "center", justifyContent: "center",
-    fontSize: 10, color: "#fff", fontWeight: 700, flexShrink: 0, marginTop: 1,
-  },
+  weaponExecutionNum: { width: 20, height: 20, borderRadius: 3, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 10, color: "#fff", fontWeight: 700, flexShrink: 0, marginTop: 1 },
   weaponExecutionText: { fontSize: 12, color: "#bbb", lineHeight: 1.6 },
-  weaponPrinciple: {
-    padding: "12px 14px", backgroundColor: "#0d0d0d",
-    border: "1px solid", borderRadius: 6,
-  },
+  weaponPrinciple: { padding: "12px 14px", backgroundColor: "#0d0d0d", border: "1px solid", borderRadius: 6 },
   weaponPrincipleLabel: { display: "block", fontSize: 8, color: "#555", letterSpacing: "1.5px", marginBottom: 6 },
-  weaponPrincipleText:  { margin: 0, fontSize: 13, color: "#aaa", fontStyle: "italic", lineHeight: 1.6 },
-  coachBox: {
-    padding: "14px 16px", backgroundColor: "#111",
-    border: "1px solid #f39c1233", borderRadius: 8,
-  },
-  coachBoxHeader:      { display: "flex", alignItems: "center", gap: 8, marginBottom: 10 },
-  coachBoxIcon:        { fontSize: 18 },
-  coachBoxName:        { fontSize: 14, fontWeight: 700 },
-  coachBoxRole:        { fontSize: 10, color: "#555", marginLeft: 4 },
-  coachBoxText:        { margin: 0, fontSize: 13, color: "#bbb", lineHeight: 1.8 },
+  weaponPrincipleText: { margin: 0, fontSize: 13, color: "#aaa", fontStyle: "italic", lineHeight: 1.6 },
+  coachBox: { padding: "14px 16px", backgroundColor: "#111", border: "1px solid #f39c1233", borderRadius: 8 },
+  coachBoxHeader: { display: "flex", alignItems: "center", gap: 8, marginBottom: 10 },
+  coachBoxIcon: { fontSize: 18 },
+  coachBoxName: { fontSize: 14, fontWeight: 700 },
+  coachBoxRole: { fontSize: 10, color: "#555", marginLeft: 4 },
+  coachBoxText: { margin: 0, fontSize: 13, color: "#bbb", lineHeight: 1.8 },
   coachBoxPlaceholder: { margin: 0, fontSize: 12, color: "#555", fontStyle: "italic", lineHeight: 1.7 },
   loadingText: { margin: 0, fontSize: 12, color: "#555", fontStyle: "italic" },
-  btn: {
-    padding: "10px 22px", backgroundColor: "#c0392b",
-    color: "#fff", border: "none", borderRadius: 6,
-    fontSize: 13, fontFamily: "'IBM Plex Mono', monospace",
-    fontWeight: 700, cursor: "pointer", alignSelf: "flex-start",
-  },
+  btn: { padding: "10px 22px", backgroundColor: "#c0392b", color: "#fff", border: "none", borderRadius: 6, fontSize: 13, fontFamily: "'IBM Plex Mono', monospace", fontWeight: 700, cursor: "pointer", alignSelf: "flex-start" },
 };
