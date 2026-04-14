@@ -7,7 +7,7 @@
  */
 
 import { useState, useEffect, useCallback, useRef } from "react";
-import { askVlad } from "../coaches/vlad.jsx";
+import askVlad from "../coaches/vlad.jsx";
 
 // ── Helpers ──────────────────────────────────────────────────────────────────
 
