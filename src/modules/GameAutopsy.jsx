@@ -1,6 +1,4 @@
 import React, { useState } from "react";
-// FIXED: Path redirected to standard shadcn structure
-import { Card } from "../components/ui/card.jsx";
 import askVlad from "../coaches/vlad.jsx";
 import askFabiano from "../coaches/fabiano.jsx";
 import askHikaru from "../coaches/hikaru.jsx";
@@ -34,9 +32,9 @@ const GameAutopsy = () => {
 
   return (
     <div className="flex flex-col gap-4 p-4 bg-black text-white min-h-screen font-sans">
-      <Card className="p-6 bg-zinc-900 border-zinc-800 shadow-2xl rounded-none">
+      <div className="p-6 bg-zinc-900 border border-zinc-800 shadow-2xl">
         <h2 className="text-2xl font-black tracking-tighter uppercase italic mb-6 text-white">Post-Game Autopsy</h2>
-        
+
         <div className="space-y-4 mb-6">
           <textarea
             value={pgn}
@@ -44,10 +42,10 @@ const GameAutopsy = () => {
             placeholder="Paste PGN here for tactical breakdown..."
             className="w-full h-32 bg-black border border-zinc-800 p-3 font-mono text-sm text-zinc-300 focus:outline-none focus:border-white transition-all"
           />
-          
+
           <div className="grid grid-cols-2 gap-2">
             {['vlad', 'fabiano', 'hikaru', 'magnus'].map((coach) => (
-              <button 
+              <button
                 key={coach}
                 onClick={() => setActiveCoach(coach)}
                 className={`py-3 text-[10px] font-bold uppercase tracking-widest transition-all ${
@@ -68,10 +66,10 @@ const GameAutopsy = () => {
           </button>
         </div>
 
-        <div className="bg-black border border-zinc-800 p-5 rounded-none min-h-[300px] font-mono text-sm text-zinc-300 leading-relaxed whitespace-pre-wrap">
+        <div className="bg-black border border-zinc-800 p-5 min-h-[300px] font-mono text-sm text-zinc-300 leading-relaxed whitespace-pre-wrap">
           {analysis || "Awaiting target PGN for mission debrief."}
         </div>
-      </Card>
+      </div>
     </div>
   );
 };
