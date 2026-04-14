@@ -303,9 +303,7 @@ export default function MiddlegameMat() {
         <div style={styles.gentlemanLayout}>
           <div style={styles.gentlemanIntro}>
             <p style={styles.gentlemanIntroText}>
-              The cage is complete. Now begins the Gentleman Phase --
-              quietly rerouting the knight from f1 toward g3 and then f5.
-              Black sees nothing dangerous. The spring loads in silence.
+The cage is complete. Now begins the coil loading phase -- quietly rerouting the knight from f1 toward g3 and then f5. Black sees nothing dangerous. The gentleman loads the spring in silence.
             </p>
           </div>
           <div style={styles.gentlemanSteps}>
