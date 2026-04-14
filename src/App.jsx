@@ -27,7 +27,6 @@ const STAGES = [
   { min: 1000, max: 1400, range: "1000-1400", label: "Club Player",   mission: "Piece activity - Pawn structure",    color: "#9b59b6" },
   { min: 1400, max: 1800, range: "1400-1800", label: "Advanced",      mission: "Deep prep - Technique",              color: "#c8932a" },
   { min: 1800, max: 2000, range: "1800-2000", label: "Expert",        mission: "Candidate moves - Precision",        color: "#1abc9c" },
-  { min: 2000, max: 9999, range: "2000+",     label: "Master",        mission: "Grandmaster execution",              color: "#c0392b" },
 ];
 
 function getStage(elo) {
