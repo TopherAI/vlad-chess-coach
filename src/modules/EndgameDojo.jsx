@@ -123,14 +123,12 @@ export default function EndgameDojo() {
   const [solvedPositions, setSolvedPositions]   = useState([]);
   const [magnusNote, setMagnusNote]             = useState(null);
   const [magnusLoading, setMagnusLoading]       = useState(false);
-  const [showKey, setShowKey]                   = useState(false);
 
   const totalPositions = ENDGAME_CATEGORIES.reduce((sum, c) => sum + c.positions.length, 0);
   const totalSolved    = solvedPositions.length;
 
   const handleSelectPosition = useCallback(async (position) => {
     setSelectedPosition(position);
-    setShowKey(false);
     setMagnusNote(null);
     setMagnusLoading(true);
     try {
@@ -215,14 +213,10 @@ export default function EndgameDojo() {
             <p style={styles.goalLabel}>GOAL</p>
             <p style={styles.goalText}>{selectedPosition.goal}</p>
           </div>
-          <button style={styles.btnGhost} onClick={() => setShowKey(v => !v)}>
-            {showKey ? "Hide Key Concept" : "Show Key Concept"}
-          </button>
-          {showKey && (
-            <div style={styles.keyBox}>
-              <p style={styles.keyText}>{selectedPosition.key_concept}</p>
-            </div>
-          )}
+          <div style={styles.keyBox}>
+            <p style={styles.keyLabel}>KEY CONCEPT</p>
+            <p style={styles.keyText}>{selectedPosition.key_concept}</p>
+          </div>
           {!solvedPositions.includes(selectedPosition.id) ? (
             <button style={styles.btnGreen} onClick={handleMarkSolved}>Mark Solved</button>
           ) : (
@@ -285,8 +279,9 @@ const styles = {
   goalBox: { padding: "10px 12px", backgroundColor: "#0a150a", border: "1px solid #1a2e1a", borderRadius: 4 },
   goalLabel: { margin: "0 0 4px", fontSize: 9, color: "#2a5a2a", letterSpacing: "1px" },
   goalText: { margin: 0, fontSize: 13, color: "#8aaf8a" },
-  keyBox: { padding: "10px 12px", backgroundColor: "#1a1200", border: "1px solid #3d2e00", borderRadius: 4 },
-  keyText: { margin: 0, fontSize: 12, color: "#8a6a2a", lineHeight: 1.7 },
+  keyBox: { padding: "10px 12px", backgroundColor: "#0a150a", border: "1px solid #1a2e1a", borderRadius: 4 },
+  keyLabel: { margin: "0 0 4px", fontSize: 9, color: "#2a5a2a", letterSpacing: "1px" },
+  keyText: { margin: 0, fontSize: 13, color: "#8aaf8a" },
   solvedConfirm: { padding: "10px 16px", backgroundColor: "#0f2010", border: "1px solid #1e4d20", borderRadius: 6, fontSize: 13, color: "#27ae60", textAlign: "center" },
   magnusReminder: { padding: "14px 16px", backgroundColor: "#0a1200", border: "1px solid #1a2e00", borderRadius: 6 },
   magnusReminderTitle: { margin: "0 0 6px", fontSize: 9, color: "#2a4a2a", letterSpacing: "1.5px" },
