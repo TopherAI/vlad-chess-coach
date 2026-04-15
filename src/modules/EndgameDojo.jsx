@@ -114,7 +114,7 @@ function EndgameCard({ endgame, onAskMagnus, isLoading }) {
 }
 
 // ─── EndgameDojo ──────────────────────────────────────────────────────────────
-export function EndgameDojo() {
+export default function EndgameDojo() {
   const [activeEndgame, setActiveEndgame] = useState(null);
   const [response, setResponse] = useState(null);
   const [loading, setLoading] = useState(false);
