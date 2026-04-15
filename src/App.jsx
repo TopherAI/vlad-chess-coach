@@ -9,12 +9,12 @@ import EndgameDojo from "./modules/EndgameDojo.jsx";
 
 const NAV = [
   { id: "dashboard",  label: "Dashboard",      icon: "🏠" },
-  { id: "profile",    label: "Profile",         icon: "👤" },
   { id: "autopsy",    label: "Game Autopsy",   icon: "🔬" },
   { id: "drills",     label: "Drill Sergeant", icon: "⚔️" },
   { id: "opening",    label: "Opening Lab",    icon: "🏛️" },
   { id: "middlegame", label: "Middlegame Mat", icon: "🗡️" },
   { id: "endgame",    label: "Endgame Dojo",   icon: "👑" },
+  { id: "profile",    label: "Profile",         icon: "👤" },
 ];
 
 const TARGET = 2000;
