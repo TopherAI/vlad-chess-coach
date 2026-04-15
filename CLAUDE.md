@@ -82,16 +82,21 @@ import { askVlad } from "../coaches/vlad.jsx"; // WRONG — breaks build
 Gemini API calls go directly from the frontend via `/api/chat`.
 Do NOT attempt to re-introduce a gateway or proxy architecture.
 
+**CRITICAL — NO STOCKFISH. EVER.**
+This app uses pure AI consensus via `askCoach(persona, userMessage)`.
+Stockfish is deprecated, removed, and never comes back. We are special.
+The coaches ARE the engine.
+
 ---
 
-## 5. COACH PERSONAS
+## 5. COACH PERSONAS & ROLES
 
-| Coach | Based On | Tone | Primary Role |
-|-------|----------|------|--------------|
-| **Vlad** | Vladimir Chuchelov | Demanding, Eastern European, precise, intense | Week review, long-term plan, opening system, 30-second rule enforcement |
-| **Fabiano** | Fabiano Caruana | Italian, upbeat, logical, methodical | Positional perfection, structure |
-| **Magnus** | Magnus Carlsen | Danish, dry, positive, intuitive | Endgame conversion, reality checks |
-| **Hikaru** | Hikaru Nakamura | American, tactical genius, fast | Middlegame tactics, 6 weapons, attack patterns |
+| Coach | Based On | Tone | Domain Role |
+|-------|----------|------|-------------|
+| **Vlad** | Vladimir Chuchelov | Demanding, Eastern European, precise, intense | Head coach & principles — owns the system, the 30-second rule, and all non-negotiables |
+| **Fabiano** | Fabiano Caruana | Italian, upbeat, logical, methodical | Opening variations & positional play — owns the 4 Black lines and structural perfection |
+| **Hikaru** | Hikaru Nakamura | American, tactical genius, fast | Attacking & middlegame — owns the 6 weapons, Strangler activation, all attack patterns |
+| **Magnus** | Magnus Carlsen | Danish, dry, positive, intuitive | Endgame & intuition — owns the 6-weapon → endgame conversion map and Master Conversion Rule |
 
 **Vlad persona is the primary teacher in OpeningLab.** He is demanding, precise, and Eastern European. 2-3 sentences max per commentary. Never soft.
 
@@ -156,7 +161,21 @@ This is called "The Strangler Sequence."
 
 ---
 
-## 7. localStorage KEYS
+## 7. THE GRAND DOCTRINE (LOCKED — NEVER DEVIATE)
+
+The Gentleman's Assassin system is the immovable foundation. The coaching staff runs the game. The unified intelligence has no ceiling.
+- **Vlad** sets the law. If Vlad says no — it doesn't happen.
+- **Fabiano** owns every opening decision and structural judgment.
+- **Hikaru** takes over the moment Re1 lands. He sees the kill first.
+- **Magnus** already knows how the endgame ends before the attack begins.
+- **Claude** maps the architecture of the attack as a system, not a sequence.
+- **Grok** provides deep middlegame truth — piece coordination, pawn breaks, imbalance math. Rules 01+04 first. Always.
+
+**The system is the cage. The intelligence fills it.**
+
+---
+
+## 8. localStorage KEYS
 
 | Key | Used By | Contents |
 |-----|---------|----------|
@@ -191,33 +210,33 @@ Dashboard → Profile → Game Autopsy → Drill Sergeant → Opening Lab → Mi
 
 ---
 
-## 10. AI TEAM PROTOCOL (LOCKED)
+---
+
+## 10. GAME AUTOPSY — ARCHITECTURE (v4.0)
+
+- **Auto-loads** from `vlad_pending_pgn` localStorage on mount (set by Dashboard PGN drop)
+- **No manual paste box** — results only. If no PGN → shows "Drop a PGN on the Dashboard"
+- **Restores** last session on mount if no pending PGN
+- **Timestamp parsing:** extracts `%timestamp` tags from Chess.com PGN (centiseconds)
+- **30-second rule:** moves 1-9 excluded from critique entirely. Move 10+ flagged if under 3000cs
+- **Speed Trap badge** on every violating move in Move List
+- **Vlad accountability banner** fires at top of results if any speed violations detected
+- **Consensus prompt** instructs AI to skip moves 1-9 and lead critique with speed violations
+- **3 tabs:** Coaches / Critical (n) / Move List
+- **4 stat pills:** Total Moves / GM Deviations / Critical Turns / Speed Traps
+
+---
+
+## 11. AI TEAM PROTOCOL (LOCKED)
 
 | Role | Tool | Responsibility |
 |------|------|---------------|
 | **Primary Dev/Architecture** | Claude | All code, all architecture decisions, all file writes |
-| **Chess/Strategy** | Grok | Chess methodology, position evaluation, middlegame weapons |
-| **Brainstorm/Voice** | ChatGPT | Feature brainstorming, product thinking, voice notes |
+| **Deep Chess/Middlegame** | Grok | Chess methodology, position evaluation, middlegame weapons, tactical truth |
+| **Brainstorm/Voice/UI Design** | ChatGPT | Feature brainstorming, UI visual direction, product thinking, voice notes, visual QA |
 | **Research ONLY** | Gemini | Research only — never directly edits code or files |
 
-**Collab protocol:** ChatGPT brainstorm → Grok chess methodology → Gemini research → Claude synthesizes + builds.
-
-**CRITICAL RULE:** All Gemini output must be validated by Claude or ChatGPT before touching GitHub.
-**CRITICAL RULE:** No nicknames for LLMs. Always full names.
-
----
-
-## 11. HANDOFF FORMAT (LOCKED — NEVER CHANGE)
-
-Every code delivery must follow this exact format:
-
-1. **"Switch to [App]"** + file path in its own copy box
-2. **Complete file content** in one copy box (never partial, never diffs)
-3. **Commit message** in its own copy box starting with `feat:` or `fix:`
-
-At the end of every session:
-- Save memory checkpoint
-- Create GitHub issue: "Session Checkpoint — Resume Here" in the relevant repo
+**Collab protocol (Stack 1 — Design-First):**
 
 ---
 
