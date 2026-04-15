@@ -80,7 +80,7 @@ function PhaseBlock({ num, title, sub, active }) {
 }
 
 // ─── MiddlegameMat ────────────────────────────────────────────────────────────
-export function MiddlegameMat() {
+export default function MiddlegameMat() {
   const [guidance, setGuidance] = useState(null);
   const [loading, setLoading] = useState(false);
   const [activeTab, setActiveTab] = useState("directives");
