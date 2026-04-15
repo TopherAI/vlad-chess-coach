@@ -1,7 +1,8 @@
 /**
  * src/modules/OpeningLab.jsx
  * vlad-chess-coach — Opening Lab Module (v3.0 Gentleman's Assassin)
- * NEW: MY OPENING SYSTEM — 9-move universal cage + 4 Black response lines
+ * Pure AI consensus via askCoach(persona, userMessage). No Stockfish. We are special.
+ * 9-move universal cage + 4 Black response lines
  * + Phase 2 Nbd2→Nf1→Ng3→Ba2→Nh5/Nf5 kingside attack map
  * Standard: Braceless default imports for Vercel stability.
  */
@@ -366,10 +367,10 @@ export default function OpeningLab() {
       {/* ── TOP NAV ── */}
       <div style={S.topNav}>
         {[
-          { id: "system",   label: "9-MOVE SYSTEM",   icon: "🏗️" },
-          { id: "lines",    label: "4 RESPONSES",     icon: "♟️" },
-          { id: "checklist",label: "ASSASSIN CHECK",  icon: "⚔️" },
-          { id: "quiz",     label: "QUIZ",             icon: "🎯" },
+          { id: "system",    label: "9-MOVE SYSTEM",  icon: "🏗️" },
+          { id: "lines",     label: "4 RESPONSES",    icon: "♟️" },
+          { id: "checklist", label: "ASSASSIN CHECK", icon: "⚔️" },
+          { id: "quiz",      label: "QUIZ",            icon: "🎯" },
         ].map(v => (
           <button
             key={v.id}
@@ -818,8 +819,6 @@ const S = {
     fontFamily: "'IBM Plex Mono', monospace",
     maxWidth: 960, margin: "0 auto",
   },
-
-  // Header
   header: { display: "flex", justifyContent: "space-between", alignItems: "center", borderBottom: "1px solid #222", paddingBottom: 20 },
   headerLeft: { display: "flex", alignItems: "center", gap: 14 },
   headerIcon: { fontSize: 36 },
@@ -830,18 +829,12 @@ const S = {
   progressLabel: { fontSize: 10, color: "#555" },
   progressBar: { height: 3, backgroundColor: "#1a1a1a" },
   progressFill: { height: "100%", backgroundColor: "#c0392b", transition: "width 0.4s" },
-
-  // Vlad quote
   vladQuote: { padding: "12px 16px", backgroundColor: "#0f0a00", border: "1px solid #3d2800", display: "flex", justifyContent: "space-between", alignItems: "center", gap: 16 },
   vladQuoteText: { fontSize: 12, color: "#8a6a2a", fontStyle: "italic", flex: 1 },
   vladQuoteAttr: { fontSize: 10, color: "#5a4010", whiteSpace: "nowrap" },
-
-  // Top nav
   topNav: { display: "flex", gap: 8, flexWrap: "wrap" },
   topNavBtn: { padding: "9px 16px", backgroundColor: "#111", border: "1px solid #222", color: "#555", fontSize: 11, fontWeight: 700, cursor: "pointer", display: "flex", alignItems: "center", gap: 7, letterSpacing: "0.5px", fontFamily: "'IBM Plex Mono', monospace" },
   topNavBtnActive: { backgroundColor: "#1a0808", border: "1px solid #c0392b", color: "#e8e8e8" },
-
-  // System view
   systemLayout: { display: "flex", gap: 24, flexWrap: "wrap" },
   moveList: { display: "flex", flexDirection: "column", gap: 6, width: 280, minWidth: 240 },
   moveListHeader: { display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 4 },
@@ -857,8 +850,6 @@ const S = {
   systemProgressBar: { height: 3, backgroundColor: "#1a1a1a" },
   systemProgressFill: { height: "100%", backgroundColor: "#27ae60", transition: "width 0.4s" },
   systemProgressLabel: { fontSize: 10, color: "#555" },
-
-  // Move detail
   moveDetail: { flex: 1, display: "flex", flexDirection: "column", gap: 14, minWidth: 280 },
   moveDetailHeader: { display: "flex", justifyContent: "space-between", alignItems: "baseline", paddingBottom: 14, borderBottom: "1px solid #1a1a1a" },
   moveDetailMove: { fontSize: 36, fontWeight: 700, color: "#fff" },
@@ -879,8 +870,6 @@ const S = {
   uciText: { fontSize: 12, color: "#666", fontFamily: "monospace" },
   studyBtn: { padding: "12px", border: "none", color: "#fff", fontWeight: 700, cursor: "pointer", fontFamily: "'IBM Plex Mono', monospace", fontSize: 12 },
   nextMoveBtn: { padding: "10px", backgroundColor: "transparent", border: "1px solid #222", color: "#555", cursor: "pointer", fontFamily: "'IBM Plex Mono', monospace", fontSize: 11 },
-
-  // Lines view
   linesLayout: { display: "flex", flexDirection: "column", gap: 16 },
   lineSelectorGrid: { display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(200px, 1fr))", gap: 10 },
   lineCard: { padding: "14px 16px", cursor: "pointer", display: "flex", gap: 12, alignItems: "flex-start", transition: "border-color 0.15s" },
@@ -895,8 +884,6 @@ const S = {
   lineDetailDesc: { display: "block", fontSize: 12, color: "#888", lineHeight: 1.6 },
   lineTabs: { display: "flex", borderBottom: "1px solid #1a1a1a", gap: 0 },
   lineTab: { padding: "9px 16px", background: "transparent", border: "none", borderBottom: "2px solid transparent", color: "#555", fontSize: 10, cursor: "pointer", fontFamily: "'IBM Plex Mono', monospace", letterSpacing: "0.5px" },
-
-  // Phase 2
   phase2Layout: { display: "flex", flexDirection: "column", gap: 10 },
   phase2Header: { padding: "12px 14px", backgroundColor: "#0a0a12", border: "1px solid #1a1a2e", display: "flex", flexDirection: "column", gap: 4 },
   phase2Title: { fontSize: 12, color: "#6a6aaa", fontWeight: 700 },
@@ -906,8 +893,6 @@ const S = {
   phase2StepContent: { display: "flex", flexDirection: "column", gap: 3 },
   phase2StepMove: { fontSize: 13, fontWeight: 700, color: "#ccc" },
   phase2StepNote: { fontSize: 11, color: "#666" },
-
-  // Deviations
   deviationsLayout: { display: "flex", flexDirection: "column", gap: 10 },
   deviationCard: { display: "flex", gap: 12, alignItems: "center", padding: "12px 14px", backgroundColor: "#0d0d0d", border: "1px solid #1a1a1a", flexWrap: "wrap" },
   deviationTrigger: { display: "flex", flexDirection: "column", gap: 3, flex: 1, minWidth: 140 },
@@ -917,19 +902,14 @@ const S = {
   deviationResponse: { display: "flex", flexDirection: "column", gap: 3, flex: 2, minWidth: 180 },
   deviationResponseLabel: { fontSize: 8, color: "#3a6b3a", letterSpacing: "1px" },
   deviationResponseText: { fontSize: 12, color: "#8a8", fontWeight: 600 },
-
-  // Vlad coaching
   vladCoachingBox: { padding: "20px", backgroundColor: "#0f0a00", border: "1px solid #3d2800" },
   vladCoachingHeader: { display: "flex", alignItems: "center", gap: 8, marginBottom: 14 },
   vladCoachingIcon: { fontSize: 18 },
   vladCoachingTitle: { fontSize: 10, color: "#8a6a2a", letterSpacing: "1.5px", fontWeight: 700 },
   vladCoachingText: { fontSize: 13, color: "#c8a85a", lineHeight: 1.7, margin: 0 },
-
   lineSelectPrompt: { display: "flex", flexDirection: "column", alignItems: "center", gap: 10, padding: "40px", color: "#444" },
   lineSelectPromptIcon: { fontSize: 28 },
   lineSelectPromptText: { fontSize: 13 },
-
-  // Checklist view
   checklistLayout: { display: "flex", flexDirection: "column", gap: 14 },
   checklistIntro: { padding: "14px 18px", backgroundColor: "#0f0a00", border: "1px solid #3d2800" },
   checklistRule: { margin: 0, fontSize: 13, color: "#8a6a2a", fontStyle: "italic" },
@@ -949,8 +929,6 @@ const S = {
   strikeStepNum: { fontSize: 12, color: "#4a4a8a", width: 16, flexShrink: 0 },
   strikeStepMove: { display: "block", fontSize: 13, color: "#ccc", fontWeight: 600 },
   strikeStepNote: { display: "block", fontSize: 10, color: "#555", marginTop: 3 },
-
-  // Quiz view
   quizLayout: { display: "flex", flexDirection: "column", gap: 20 },
   quizIntro: { display: "flex", flexDirection: "column", alignItems: "center", gap: 16, padding: "40px 20px", textAlign: "center" },
   quizIntroIcon: { fontSize: 40 },
