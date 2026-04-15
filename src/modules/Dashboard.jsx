@@ -144,7 +144,7 @@ function CampaignStage({ range, title, status }) {
 }
 
 // ─── Dashboard ────────────────────────────────────────────────────────────────
-export function Dashboard() {
+function Dashboard() {
   return (
     <div className="space-y-8 pb-12 animate-fade-in">
 
