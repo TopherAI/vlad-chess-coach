@@ -1,8 +1,8 @@
-import { GameAutopsy } from "./modules/GameAutopsy.jsx";
-import { DrillSergeant } from "./modules/DrillSergeant.jsx";
-import { OpeningLab } from "./modules/OpeningLab.jsx";
-import { MiddlegameMat } from "./modules/MiddlegameMat.jsx";
-import { EndgameDojo } from "./modules/EndgameDojo.jsx";
+import GameAutopsy from "./modules/GameAutopsy.jsx";
+import DrillSergeant from "./modules/DrillSergeant.jsx";
+import OpeningLab from "./modules/OpeningLab.jsx";
+import MiddlegameMat from "./modules/MiddlegameMat.jsx";
+import EndgameDojo from "./modules/EndgameDojo.jsx";
 
 // ── Constants ─────────────────────────────────────────────────────────────────
 
