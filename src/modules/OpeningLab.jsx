@@ -138,7 +138,7 @@ function InfoBox({ label, color, content }) {
 }
 
 // ─── OpeningLab ───────────────────────────────────────────────────────────────
-export function OpeningLab() {
+export default function OpeningLab() {
   const [current, setCurrent] = useState(0);
   const [studied, setStudied] = useState(new Set());
   const [fabQuestion, setFabQuestion] = useState("");
