@@ -1,8 +1,7 @@
-[CLAUDE (2).md](https://github.com/user-attachments/files/26699362/CLAUDE.2.md)
 # VLAD CHESS COACH — MASTER CONTEXT DOCUMENT
 > **FOR ANY AI READING THIS:** This is the single source of truth for the vlad-chess-coach project.
 > Read this entire file before touching any code. Every architectural decision is documented here.
-> Last updated: April 13, 2026
+> Last updated: April 14, 2026
 
 ---
 
