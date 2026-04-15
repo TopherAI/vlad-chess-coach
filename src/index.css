@@ -1,0 +1,191 @@
+@import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&family=Syne:wght@600;700;800&family=Inter:wght@400;500;600;700&display=swap');
+@import "tailwindcss";
+
+@theme {
+  --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
+  --font-display: "Syne", ui-sans-serif, system-ui, sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, monospace;
+
+  /* Core palette */
+  --color-vlad-bg:       #090B10;
+  --color-vlad-surface:  #101420;
+  --color-vlad-surface2: #171D2E;
+  --color-vlad-surface3: #1F2840;
+  --color-vlad-border:   #263050;
+  --color-vlad-border2:  #324070;
+
+  --color-vlad-text:    #EDF0F7;
+  --color-vlad-sub:     #8896B0;
+  --color-vlad-muted:   #4E5A70;
+
+  /* Accent palette */
+  --color-vlad-ember:      #E04B34;
+  --color-vlad-emberHov:   #F05540;
+  --color-vlad-emberDeep:  #B03828;
+  --color-vlad-amber:      #D4A020;
+  --color-vlad-amberHov:   #E8B030;
+  --color-vlad-green:      #5FA840;
+  --color-vlad-blue:       #4A80C0;
+
+  --radius-xl2: 16px;
+  --radius-xl3: 22px;
+
+  --shadow-panel: 0 8px 24px rgba(0,0,0,0.36);
+  --shadow-float: 0 16px 40px rgba(0,0,0,0.44);
+}
+
+/* ─── BASE ───────────────────────────────────────────── */
+@layer base {
+  html { font-size: 14px; }
+
+  body {
+    @apply min-h-screen bg-vlad-bg text-vlad-text font-sans antialiased;
+    background-image:
+      radial-gradient(ellipse 60% 40% at 0% 0%, rgba(224,75,52,0.07) 0%, transparent 60%),
+      radial-gradient(ellipse 40% 30% at 100% 100%, rgba(74,128,192,0.05) 0%, transparent 60%);
+    selection-background: rgba(224,75,52,0.3);
+  }
+
+  * { box-sizing: border-box; }
+
+  ::-webkit-scrollbar { width: 5px; height: 5px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { @apply bg-vlad-surface3 rounded-full; }
+  ::-webkit-scrollbar-thumb:hover { @apply bg-vlad-border; }
+}
+
+/* ─── COMPONENTS ─────────────────────────────────────── */
+@layer components {
+
+  /* Panels */
+  .panel {
+    @apply rounded-xl2 border border-vlad-border bg-vlad-surface;
+    box-shadow: inset 0 1px 0 rgba(255,255,255,0.03), var(--shadow-panel);
+  }
+  .panel-hover {
+    @apply transition-all duration-200 cursor-pointer;
+  }
+  .panel-hover:hover {
+    @apply -translate-y-0.5 border-vlad-border2;
+    box-shadow: inset 0 1px 0 rgba(255,255,255,0.04), var(--shadow-float);
+  }
+
+  /* Typography */
+  .heading-xl  { @apply font-display text-4xl font-bold tracking-tight text-vlad-text; }
+  .heading-lg  { @apply font-display text-2xl font-bold tracking-tight text-vlad-text; }
+  .heading-md  { @apply font-display text-lg font-bold tracking-tight text-vlad-text; }
+  .section-label {
+    @apply font-mono text-[10px] font-bold uppercase tracking-[0.22em] text-vlad-muted;
+  }
+  .body-muted { @apply text-sm text-vlad-sub; }
+
+  /* Buttons */
+  .btn {
+    @apply inline-flex items-center justify-center gap-2 rounded-xl px-4 py-2.5
+           font-mono text-xs font-bold uppercase tracking-widest
+           transition-all duration-150 border border-transparent;
+  }
+  .btn-primary {
+    @apply btn bg-vlad-ember text-white border-vlad-ember;
+  }
+  .btn-primary:hover  { @apply bg-vlad-emberHov border-vlad-emberHov; }
+  .btn-amber  {
+    @apply btn bg-vlad-amber text-vlad-bg border-vlad-amber;
+  }
+  .btn-amber:hover { @apply bg-vlad-amberHov; }
+  .btn-secondary {
+    @apply btn bg-vlad-surface2 text-vlad-text border-vlad-border;
+  }
+  .btn-secondary:hover { @apply bg-vlad-surface3 border-vlad-border2; }
+  .btn-ghost {
+    @apply btn bg-transparent text-vlad-sub border-transparent;
+  }
+  .btn-ghost:hover { @apply bg-vlad-surface2 text-vlad-text border-vlad-border; }
+  .btn:disabled { @apply opacity-40 cursor-not-allowed; }
+
+  /* Badges */
+  .badge        { @apply inline-flex items-center rounded-full px-2.5 py-0.5 font-mono text-[10px] font-bold uppercase tracking-wider; }
+  .badge-ember  { @apply badge bg-vlad-ember/15 text-vlad-ember; }
+  .badge-amber  { @apply badge bg-vlad-amber/15 text-vlad-amber; }
+  .badge-green  { @apply badge bg-vlad-green/15 text-vlad-green; }
+  .badge-blue   { @apply badge bg-vlad-blue/15 text-vlad-blue; }
+  .badge-muted  { @apply badge bg-vlad-surface3 text-vlad-sub; }
+
+  /* Nav */
+  .nav-item {
+    @apply flex items-center gap-3 rounded-xl px-3 py-2.5
+           font-sans text-sm font-medium text-vlad-sub
+           transition-all duration-150;
+  }
+  .nav-item:hover   { @apply bg-vlad-surface2 text-vlad-text; }
+  .nav-item-active  {
+    @apply bg-vlad-surface2 text-vlad-text border border-vlad-border;
+    box-shadow: inset 3px 0 0 var(--color-vlad-ember);
+    border-radius: 0 12px 12px 0;
+  }
+
+  /* Progress */
+  .progress-track { @apply h-1.5 overflow-hidden rounded-full bg-vlad-surface3; }
+  .progress-fill  { @apply h-full rounded-full transition-all duration-500; }
+
+  /* Form */
+  .form-input {
+    @apply w-full rounded-xl border border-vlad-border bg-vlad-surface2
+           px-3.5 py-2.5 font-mono text-xs text-vlad-text outline-none
+           transition-colors duration-150 placeholder:text-vlad-muted;
+  }
+  .form-input:focus { @apply border-vlad-border2; }
+  .form-label {
+    @apply block font-mono text-[10px] font-bold uppercase tracking-[0.18em] text-vlad-muted mb-1.5;
+  }
+
+  /* Chat messages */
+  .msg {
+    @apply max-w-[85%] rounded-xl px-4 py-3 text-sm leading-relaxed;
+  }
+  .msg-coach {
+    @apply self-start bg-vlad-surface2 border border-vlad-border text-vlad-text;
+  }
+  .msg-user {
+    @apply self-end bg-vlad-ember text-white;
+    border-radius: 12px 12px 2px 12px;
+  }
+  .msg-thinking { @apply text-vlad-muted italic; }
+
+  /* Stat number */
+  .metric-big {
+    @apply font-display text-5xl font-bold tracking-tight;
+  }
+
+  /* Accent left bar */
+  .accent-bar {
+    @apply absolute left-0 top-0 bottom-0 w-[3px] bg-vlad-surface3
+           transition-colors duration-200;
+  }
+
+  /* Coach avatar circle */
+  .coach-ring {
+    @apply w-10 h-10 rounded-full flex items-center justify-center
+           border border-vlad-border bg-vlad-surface2 text-lg flex-shrink-0;
+  }
+}
+
+/* ─── ANIMATIONS ─────────────────────────────────────── */
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(6px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+@keyframes pulse-dot {
+  0%, 100% { opacity: 0.3; }
+  50%       { opacity: 1; }
+}
+.animate-fade-in   { animation: fadeIn 0.2s ease-out forwards; }
+.animate-pulse-dot { animation: pulse-dot 1.2s ease-in-out infinite; }
+
+/* ─── LOADING DOTS ───────────────────────────────────── */
+.loading-dots span {
+  display: inline-block;
+  animation: pulse-dot 1.2s ease-in-out infinite;
+}
+.loading-dots span:nth-child(2) { animation-delay: 0.2s; }
+.loading-dots span:nth-child(3) { animation-delay: 0.4s; }
