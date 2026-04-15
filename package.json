@@ -1,7 +1,7 @@
 {
   "name": "vlad-chess-coach",
   "version": "1.0.0",
-  "description": "AI chess coaching app — TopherBettis 609 → 2000. Powered by GM Vlad Chuchelov methodology, Stockfish, and Gemini.",
+  "description": "AI chess coaching app — TopherBettis 609 → 2000. Powered by GM Vlad Chuchelov methodology and multi-coach AI consensus.",
   "private": true,
   "type": "module",
   "scripts": {
@@ -13,10 +13,15 @@
   "dependencies": {
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
-    "stockfish.wasm": "^0.10.0"
+    "react-router-dom": "^6.23.1",
+    "lucide-react": "^0.383.0",
+    "clsx": "^2.1.1",
+    "tailwind-merge": "^2.3.0"
   },
   "devDependencies": {
     "@vitejs/plugin-react": "^4.2.1",
+    "@tailwindcss/vite": "^4.0.0",
+    "tailwindcss": "^4.0.0",
     "eslint": "^8.57.0",
     "eslint-plugin-react": "^7.34.1",
     "vite": "^5.2.0"
@@ -28,10 +33,9 @@
     "chess",
     "ai",
     "coaching",
-    "stockfish",
-    "gemini",
     "italian-cage",
-    "vlad-chuchelov"
+    "vlad-chuchelov",
+    "gentleman-assassin"
   ],
   "author": "TopherAI (github.com/TopherAI)",
   "license": "UNLICENSED"
