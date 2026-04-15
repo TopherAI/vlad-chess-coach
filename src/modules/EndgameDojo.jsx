@@ -1,8 +1,8 @@
 /**
  * src/modules/EndgameDojo.jsx
- * vlad-chess-coach -- Endgame Dojo Module
+ * vlad-chess-coach — Endgame Dojo Module
  * Magnus-voiced endgame conversion training.
- * No Stockfish -- uses custom AI consensus via coach personas.
+ * Pure AI consensus via askCoach(persona, userMessage). No Stockfish. We are special.
  */
 
 import { useState, useCallback } from "react";
@@ -15,9 +15,9 @@ const ENDGAME_CATEGORIES = [
     icon: "♙",
     description: "Passed pawn promotion. The ladder. The box.",
     positions: [
-      { id: "kp-1", title: "Opposition & Pawn Promotion", fen: "8/8/8/8/8/4K3/4P3/4k3 w - - 0 1", goal: "Promote the pawn", key_concept: "Opposition -- your king must lead the pawn", difficulty: "beginner" },
-      { id: "kp-2", title: "King in the Square", fen: "8/8/8/3p4/8/8/8/4K3 b - - 0 1", goal: "Stop the passed pawn", key_concept: "The square rule -- can your king catch the pawn?", difficulty: "beginner" },
-      { id: "kp-3", title: "Pawn Breakthrough", fen: "8/ppp5/8/PPP5/8/8/8/4K2k w - - 0 1", goal: "Create a passed pawn", key_concept: "Pawn breaks -- one pawn sacrificed to create a passer", difficulty: "intermediate" },
+      { id: "kp-1", title: "Opposition & Pawn Promotion", fen: "8/8/8/8/8/4K3/4P3/4k3 w - - 0 1", goal: "Promote the pawn", key_concept: "Opposition — your king must lead the pawn", difficulty: "beginner" },
+      { id: "kp-2", title: "King in the Square", fen: "8/8/8/3p4/8/8/8/4K3 b - - 0 1", goal: "Stop the passed pawn", key_concept: "The square rule — can your king catch the pawn?", difficulty: "beginner" },
+      { id: "kp-3", title: "Pawn Breakthrough", fen: "8/ppp5/8/PPP5/8/8/8/4K2k w - - 0 1", goal: "Create a passed pawn", key_concept: "Pawn breaks — one pawn sacrificed to create a passer", difficulty: "intermediate" },
     ],
   },
   {
@@ -26,9 +26,9 @@ const ENDGAME_CATEGORIES = [
     icon: "♖",
     description: "Rook coordination. Back rank. Lucena & Philidor.",
     positions: [
-      { id: "kr-1", title: "Philidor Defense (Drawing)", fen: "4k3/8/8/8/r7/8/4K3/4R3 w - - 0 1", goal: "Hold the draw as the defending side", key_concept: "Philidor position -- rook on 6th rank until king advances", difficulty: "intermediate" },
-      { id: "kr-2", title: "Lucena Position (Winning)", fen: "1K1k4/1P6/8/8/8/8/r7/2R5 w - - 0 1", goal: "Convert the Lucena -- build the bridge", key_concept: "Bridge building -- rook cuts off the king then supports promotion", difficulty: "intermediate" },
-      { id: "kr-3", title: "Rook Behind Passed Pawn", fen: "8/8/8/8/r7/8/PP6/1K2k3 b - - 0 1", goal: "Activate rook behind the passed pawn", key_concept: "Rook belongs BEHIND the passed pawn -- always", difficulty: "beginner" },
+      { id: "kr-1", title: "Philidor Defense (Drawing)", fen: "4k3/8/8/8/r7/8/4K3/4R3 w - - 0 1", goal: "Hold the draw as the defending side", key_concept: "Philidor position — rook on 6th rank until king advances", difficulty: "intermediate" },
+      { id: "kr-2", title: "Lucena Position (Winning)", fen: "1K1k4/1P6/8/8/8/8/r7/2R5 w - - 0 1", goal: "Convert the Lucena — build the bridge", key_concept: "Bridge building — rook cuts off the king then supports promotion", difficulty: "intermediate" },
+      { id: "kr-3", title: "Rook Behind Passed Pawn", fen: "8/8/8/8/r7/8/PP6/1K2k3 b - - 0 1", goal: "Activate rook behind the passed pawn", key_concept: "Rook belongs BEHIND the passed pawn — always", difficulty: "beginner" },
     ],
   },
   {
@@ -38,7 +38,7 @@ const ENDGAME_CATEGORIES = [
     description: "Two-bishop endgame. TopherBettis is actively mastering this.",
     positions: [
       { id: "kb-1", title: "Two Bishops vs King", fen: "8/8/8/8/8/2B5/1B6/4K2k w - - 0 1", goal: "Force checkmate with two bishops", key_concept: "Drive king to corner. Bishops control color complexes.", difficulty: "intermediate" },
-      { id: "kb-2", title: "Bishop Pair Advantage", fen: "8/5p2/6p1/6P1/5P2/2B5/1B6/2K2k2 w - - 0 1", goal: "Convert bishop pair advantage in pawn endgame", key_concept: "Bishop pair dominates in open positions -- activate both", difficulty: "intermediate" },
+      { id: "kb-2", title: "Bishop Pair Advantage", fen: "8/5p2/6p1/6P1/5P2/2B5/1B6/2K2k2 w - - 0 1", goal: "Convert bishop pair advantage in pawn endgame", key_concept: "Bishop pair dominates in open positions — activate both", difficulty: "intermediate" },
     ],
   },
   {
@@ -132,7 +132,7 @@ export default function EndgameDojo() {
     setMagnusNote(null);
     setMagnusLoading(true);
     try {
-      const context = `Endgame position: ${position.title}. FEN: ${position.fen}. Goal: ${position.goal}. Key concept: ${position.key_concept}. Player: TopherBettis, 617 ELO. Give 2-3 sentences of coaching in Magnus's voice -- confident, precise, no fluff.`;
+      const context = `Endgame position: ${position.title}. FEN: ${position.fen}. Goal: ${position.goal}. Key concept: ${position.key_concept}. Player: TopherBettis, 617 ELO. Give 2-3 sentences of coaching in Magnus's voice — confident, precise, no fluff.`;
       const note = await askMagnus(context);
       setMagnusNote(note);
     } catch {
@@ -157,7 +157,7 @@ export default function EndgameDojo() {
           <span style={styles.headerIcon}>👑</span>
           <div>
             <h1 style={styles.headerTitle}>Endgame Dojo</h1>
-            <p style={styles.headerSub}>Magnus mode -- Convert what should be converted</p>
+            <p style={styles.headerSub}>Magnus mode — Convert what should be converted</p>
           </div>
         </div>
         <div style={styles.statBox}>
@@ -182,7 +182,7 @@ export default function EndgameDojo() {
 
       {selectedCategory && (
         <div style={styles.positionSection}>
-          <p style={styles.sectionTitle}>{selectedCategory.label} -- POSITIONS</p>
+          <p style={styles.sectionTitle}>{selectedCategory.label} — POSITIONS</p>
           <div style={styles.positionList}>
             {selectedCategory.positions.map(pos => (
               <PositionCard
@@ -231,6 +231,7 @@ export default function EndgameDojo() {
           The game isn't over until it's over. No draws from winning positions. Convert what should be converted.
         </p>
       </div>
+
     </div>
   );
 }
