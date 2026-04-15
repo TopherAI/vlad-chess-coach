@@ -145,7 +145,7 @@ function QuickChat() {
 }
 
 // ─── GameAutopsy ──────────────────────────────────────────────────────────────
-export function GameAutopsy() {
+export default function GameAutopsy() {
   const [analyses, setAnalyses] = useState({ vlad: null, magnus: null, hikaru: null, fabiano: null });
   const [loading, setLoading] = useState({ vlad: false, magnus: false, hikaru: false, fabiano: false });
   const [ran, setRan] = useState(false);
