@@ -83,19 +83,26 @@ Keep responses under 200 words. Always reference a specific move or concrete lin
 
 // ─── API call ─────────────────────────────────────────────────────────────────
 async function callClaude(system, messages) {
-  const res = await fetch("https://api.anthropic.com/v1/messages", {
+  const gatewayUrl = import.meta.env.VITE_GATEWAY_URL;
+  const apiKey = import.meta.env.VITE_GATEWAY_API_KEY;
+
+  // Flatten system prompt + conversation into a single content string
+  const history = messages
+    .map((m) => `${m.role === "user" ? "User" : "Assistant"}: ${m.content}`)
+    .join("\n\n");
+  const content = `${system}\n\n---\n\n${history}`;
+
+  const res = await fetch(`${gatewayUrl}/process`, {
     method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({
-      model: "claude-sonnet-4-20250514",
-      max_tokens: 1000,
-      system,
-      messages,
-    }),
+    headers: {
+      "Content-Type": "application/json",
+      "x-api-key": apiKey,
+    },
+    body: JSON.stringify({ content, role: "user", task_type: "chess_coaching" }),
   });
-  if (!res.ok) throw new Error(`API error ${res.status}`);
+  if (!res.ok) throw new Error(`Gateway error ${res.status}`);
   const data = await res.json();
-  return data.content?.[0]?.text ?? "No response received.";
+  return data.text ?? "No response received.";
 }
 
 // ─── Hook ─────────────────────────────────────────────────────────────────────
