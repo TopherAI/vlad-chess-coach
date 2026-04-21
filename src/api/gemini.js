@@ -1,13 +1,20 @@
 export const askCoach = async (persona, userMessage) => {
+  const gatewayUrl = import.meta.env.VITE_GATEWAY_URL;
+  const gatewayKey = import.meta.env.VITE_GATEWAY_API_KEY;
   try {
-    const response = await fetch('/api/chat', {
+    const response = await fetch(`${gatewayUrl}/process`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: {
+        'Content-Type': 'application/json',
+        'x-api-key': gatewayKey,
+      },
       body: JSON.stringify({
-        message: `${persona}\n\nUser: ${userMessage}`
+        content: `${persona}\n\nUser: ${userMessage}`,
+        role: 'user',
+        task_type: 'chess_coaching',
       }),
     });
-    
+
     if (!response.ok) throw new Error('Network response failure');
     const data = await response.json();
     return data.text;
