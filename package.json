@@ -11,12 +11,15 @@
     "lint": "eslint src --ext .js,.jsx --report-unused-disable-directives --max-warnings 0"
   },
   "dependencies": {
+    "@google/genai": "^1.50.1",
     "chess.js": "^1.4.0",
     "clsx": "^2.1.1",
+    "firebase": "^12.12.1",
     "lucide-react": "^0.383.0",
     "react": "^18.2.0",
     "react-chessboard": "^4.7.3",
     "react-dom": "^18.2.0",
+    "react-markdown": "^10.1.0",
     "react-router-dom": "^6.23.1",
     "tailwind-merge": "^2.3.0"
   },
