@@ -215,7 +215,10 @@ export default function GameAutopsy() {
         <div className="panel px-4 py-2 font-mono text-[12px] font-bold text-vlad-green">
           1–0
         </div>
-        <div className="panel px-4 py-2 font-mono text-[12px] font-bold text-vlad-sub cursor-pointer hover:text-vlad-text transition-colors">
+        <div
+          className="panel px-4 py-2 font-mono text-[12px] font-bold text-vlad-sub cursor-pointer hover:text-vlad-text transition-colors"
+          onClick={handleNewGame}
+        >
           + New Game
         </div>
       </div>
