@@ -11,19 +11,21 @@
     "lint": "eslint src --ext .js,.jsx --report-unused-disable-directives --max-warnings 0"
   },
   "dependencies": {
+    "chess.js": "^1.4.0",
+    "clsx": "^2.1.1",
+    "lucide-react": "^0.383.0",
     "react": "^18.2.0",
+    "react-chessboard": "^4.7.3",
     "react-dom": "^18.2.0",
     "react-router-dom": "^6.23.1",
-    "lucide-react": "^0.383.0",
-    "clsx": "^2.1.1",
     "tailwind-merge": "^2.3.0"
   },
   "devDependencies": {
-    "@vitejs/plugin-react": "^4.2.1",
     "@tailwindcss/vite": "^4.0.0",
-    "tailwindcss": "^4.0.0",
+    "@vitejs/plugin-react": "^4.2.1",
     "eslint": "^8.57.0",
     "eslint-plugin-react": "^7.34.1",
+    "tailwindcss": "^4.0.0",
     "vite": "^5.2.0"
   },
   "engines": {
