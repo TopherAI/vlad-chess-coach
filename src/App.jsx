@@ -28,7 +28,7 @@ const repertoire = [
     name: 'Petrov (The Refusal)',
     description: 'e4 Nf3 Bc4 d3 Nxe5 Bb3 Bf4 O-O Re1 a4 h3',
     moves: ["e4","e5","Nf3","Nf6","Bc4","Nxe4","d3","Nf6","Nxe5","d5","Bb3","Bd6","Bf4","O-O","O-O","Re8","Re1","a6","a4","h6","h3"],
-    attempts: 25, perfectSessions: 25
+    attempts: 40, perfectSessions: 40
   },
   {
     id: 'duras-gambit',
