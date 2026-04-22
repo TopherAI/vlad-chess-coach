@@ -92,7 +92,7 @@ async function callClaude(system, messages) {
     .join("\n\n");
   const content = `${system}\n\n---\n\n${history}`;
 
-  const res = await fetch(`${gatewayUrl}/process`, {
+  const res = await fetch(gatewayUrl, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
