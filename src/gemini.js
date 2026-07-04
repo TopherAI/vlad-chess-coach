@@ -1,8 +1,25 @@
-import { GoogleGenAI, Type, ThinkingLevel } from '@google/genai';
+import { GoogleGenAI, Type } from '@google/genai';
 
-const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
+// GoogleGenAI's constructor throws synchronously if apiKey is missing
+// ("An API Key must be set when running in a browser") — instantiating it
+// at module scope would crash every import of this file, not just AI calls,
+// whenever VITE_GEMINI_API_KEY isn't configured. Build it lazily instead so
+// a missing key only degrades the AI features, not the whole app.
+let aiClient = null;
+function getClient() {
+  if (aiClient) return aiClient;
+  const apiKey = process.env.GEMINI_API_KEY;
+  if (!apiKey) return null;
+  aiClient = new GoogleGenAI({ apiKey });
+  return aiClient;
+}
 
 export async function generateCoverImage(openingName, aspectRatio = '1:1') {
+  const ai = getClient();
+  if (!ai) {
+    console.warn('generateCoverImage: VITE_GEMINI_API_KEY not configured');
+    return null;
+  }
   try {
     const response = await ai.models.generateImages({
       model: 'imagen-3.0-generate-002',
@@ -20,6 +37,8 @@ export async function generateCoverImage(openingName, aspectRatio = '1:1') {
 }
 
 export async function getAICoachTip(openingName, currentMoves) {
+  const ai = getClient();
+  if (!ai) return 'Focus on controlling the center and developing your pieces.';
   try {
     const response = await ai.models.generateContent({
       model: 'gemini-2.0-flash',
@@ -33,6 +52,8 @@ export async function getAICoachTip(openingName, currentMoves) {
 }
 
 export async function sendMessageToCaruana(chatHistory, message, fenToAnalyze, openingName) {
+  const ai = getClient();
+  if (!ai) return '*Sigh* I seem to be having connection issues. Let me look at the board again in a moment.';
   try {
     const contents = [
       ...chatHistory,
@@ -53,6 +74,8 @@ export async function sendMessageToCaruana(chatHistory, message, fenToAnalyze, o
 }
 
 export async function getDeepAnalysis(openingName, moves) {
+  const ai = getClient();
+  if (!ai) return 'Analysis unavailable — VITE_GEMINI_API_KEY not configured.';
   try {
     const response = await ai.models.generateContent({
       model: 'gemini-2.0-flash',
@@ -66,6 +89,11 @@ export async function getDeepAnalysis(openingName, moves) {
 }
 
 export async function analyzePgnAndExpandRepertoire(pgn) {
+  const ai = getClient();
+  if (!ai) {
+    console.warn('analyzePgnAndExpandRepertoire: VITE_GEMINI_API_KEY not configured');
+    return null;
+  }
   try {
     const response = await Promise.race([
       ai.models.generateContent({

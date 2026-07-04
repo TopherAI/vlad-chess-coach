@@ -1,7 +1,7 @@
-# VLAD CHESS COACH — MASTER CONTEXT DOCUMENT
-> **FOR ANY AI READING THIS:** This is the single source of truth for the vlad-chess-coach project.
+# CHESSAI (formerly VLAD CHESS COACH) — MASTER CONTEXT DOCUMENT
+> **FOR ANY AI READING THIS:** This is the single source of truth for this project.
 > Read this entire file before touching any code. Every architectural decision is documented here.
-> Last updated: April 14, 2026
+> Last updated: 2026-07-03 — CHESSai architecture port (see §20)
 
 ---
 
@@ -9,7 +9,8 @@
 
 | Field | Value |
 |-------|-------|
-| **App** | Vlad Chess Coach |
+| **App (UI brand)** | CHESSai — ported in from a Google Opal app of the same name, replacing the old "Vlad Chess Coach" multi-page UI (§20) |
+| **Repo name** | vlad-chess-coach (unchanged — the repo was not renamed, only the in-app branding) |
 | **Live URL** | https://vlad-chess-coach.vercel.app |
 | **Repo** | https://github.com/TopherAI/vlad-chess-coach |
 | **Owner** | TopherBettis (Topher) — ELO 617, target 2000 |
@@ -20,12 +21,11 @@
 ## 2. STACK & DEPLOYMENT
 
 ```
-React + Vite
+React + Vite + TypeScript (App.tsx, tsconfig.json added 2026-07-03)
 Vercel (auto-deploy on push to main)
-GitHub web interface only — NO terminal, NO local clone
 ```
 
-**Workflow rule (LOCKED):** GitHub web interface only.
+**Workflow rule (STALE as of 2026-07-03 — see §20):** This file previously locked the workflow to "GitHub web interface only — NO terminal, NO local clone," written for a period when this repo was edited by pasting into GitHub's web editor with no local/agentic tool access. The 2026-07-03 CHESSai port was done via Claude Code (terminal + local file access) at Topher's explicit direction, which already broke this rule in practice. Treat the web-only rule as no longer authoritative; confirm with Topher before assuming either workflow going forward.
 - Click folder → click file → click pencil → edit → commit
 - Never use `/blob/` in URLs when giving navigation instructions. Always say: click the folder, click the file, click the pencil.
 - Always give complete file paths (e.g. `src/modules/OpeningLab.jsx`), never just filenames.
@@ -33,59 +33,54 @@ GitHub web interface only — NO terminal, NO local clone
 
 ---
 
-## 3. FILE MAP
+## 3. FILE MAP (rewritten 2026-07-03 — see §20)
 
 ```
 src/
-├── App.jsx                    # Shell + nav + Dashboard + ELO fetch from chess.com
+├── App.tsx                    # Single-file CHESSai shell: 5-section nav (Opening/Middlegame/
+│                               # Endgame/Autopsy/Engine Lab), belt/ELO system, Opening + Middlegame
+│                               # fully built; Endgame/Autopsy/Engine Lab are ModulePlaceholder stubs
+├── firebase.js                # Real Firebase init (auth/db/logout/loginWithGoogle) + OperationType/
+│                               # handleFirestoreError. App.tsx's Local Stub Auth bypasses real login
+│                               # for now (hardcodes uid: 'local'), so cloud-sync branches are dormant.
+├── gemini.js                  # Real @google/genai calls — generateCoverImage, getAICoachTip,
+│                               # sendMessageToCaruana, getDeepAnalysis, analyzePgnAndExpandRepertoire
+│                               # (the only one actually called by App.tsx's PGN import flow).
+│                               # Client is built lazily — a missing VITE_GEMINI_API_KEY degrades AI
+│                               # features gracefully instead of crashing the whole app on import.
+├── useStockfish.js             # Real Stockfish hook — Web Worker + UCI protocol (see below)
 ├── api/
-│   └── gemini.js              # SOLE API utility — askCoach(persona, userMessage)
-├── coaches/
-│   ├── vlad.jsx               # Demanding Eastern European — Vladimir Chuchelov
-│   ├── fabiano.jsx            # Italian upbeat logical — Fabiano Caruana
-│   ├── magnus.jsx             # Danish dry positive — Magnus Carlsen
-│   └── hikaru.jsx             # American tactical genius — Hikaru Nakamura
-├── modules/
-│   ├── GameAutopsy.jsx        # PGN auto-load → AI consensus + timestamp/speed analysis
-│   ├── DrillSergeant.jsx      # Auto-loads from vlad_critical_list localStorage
-│   ├── OpeningLab.jsx         # Gentleman's Assassin system trainer (v3.0)
-│   ├── MiddlegameMat.jsx      # 6 Assassin weapons + Hikaru coaching
-│   ├── EndgameDojo.jsx        # Magnus-voiced conversion training
-│   └── VideoLibrary.jsx       # Chuchelov video library — 220 videos, concept-tagged
-└── engine/
-    └── stockfish.js           # DEPRECATED — not used. Custom AI consensus only.
+│   └── chesscom.js            # Standalone Chess.com public API stats utility (unused by current
+│                               # App.tsx, kept for a future Dashboard/profile feature)
+├── utils/
+│   ├── pgnParser.js           # chess.js v1.x-correct PGN/FEN utilities (fixed 2026-07-02 — was
+│                               # written against the old snake_case 0.x API). Not currently imported.
+│   └── srs.js                 # Spaced-repetition scheduler (Leitner levels 0-8), additive to
+│                               # App.tsx's own attempts/perfectSessions/belt system
+└── main.jsx / index.css       # Entry point (imports App.tsx) / Tailwind v4 + Inter/JetBrains Mono
+
+public/
+├── stockfish.js                # Real Stockfish WASM build (niklasf/stockfish.wasm), pre-existing
+│                                # but unused until 2026-07-03
+└── stockfish-worker.js         # New — UCI glue between the main thread and stockfish.js
 ```
+
+**Deleted 2026-07-03** (superseded by the CHESSai single-file architecture): `src/App.jsx`, `src/modules/*` (GameAutopsy, DrillSergeant, OpeningLab, MiddlegameMat, EndgameDojo, VideoLibrary, Dashboard, Profile), `src/coaches/*` (vlad, fabiano, magnus, hikaru, CoachPage), `src/components/Sidebar.jsx`, `src/lib/useCoach.js`, `src/memory/coachMemory.js`, `src/engine/stockfish.js` (deprecation stub, replaced by the real hook), `src/utils/conceptDetector.js` (depended on deleted VideoLibrary.jsx), `src/api/gemini.js` (old gateway-based `askCoach` pattern — superseded by root `src/gemini.js`).
 
 ---
 
-## 4. THE ONLY API CALL — READ THIS FIRST
+## 4. AI + ENGINE INTEGRATION — READ THIS FIRST (rewritten 2026-07-03 — see §20)
 
-**File:** `src/api/gemini.js`
-**Signature:** `askCoach(persona, userMessage)`
-**Transport:** POST to `/api/chat`
-**Returns:** `data.text` (string)
+**Gemini:** `src/gemini.js` — real `@google/genai` SDK calls, not a gateway/proxy. Requires `VITE_GEMINI_API_KEY` in `.env` (currently **not set locally** — verify presence with `[ -n "$VITE_GEMINI_API_KEY" ]`, never print the value). The client is instantiated lazily per call; without a key, AI functions log a warning and return a safe fallback rather than crashing.
 
 ```javascript
-// How every coach file uses it:
-import { askCoach } from "../api/gemini.js";
-const askVlad = (msg) => askCoach(VLAD_PERSONA_STRING, msg);
-export default askVlad;
+import { analyzePgnAndExpandRepertoire } from './gemini';
+const newVariation = await analyzePgnAndExpandRepertoire(pgnText); // { name, description, moves } | null
 ```
 
-**CRITICAL — IMPORT RULE (LOCKED):** All coach files use `export default`. Always import WITHOUT curly braces:
-```javascript
-import askVlad from "../coaches/vlad.jsx";     // CORRECT
-import { askVlad } from "../coaches/vlad.jsx"; // WRONG — breaks build
-```
+**Stockfish — UN-LOCKED 2026-07-03.** The prior rule below is superseded by explicit Topher authorization during the CHESSai port (§20): CHESSai's Engine Lab and live-play-vs-bot features require Stockfish. `src/useStockfish.js` + `public/stockfish-worker.js` wrap the real WASM engine already sitting in `public/stockfish.js` via the standard UCI protocol (`position fen ...`, `go movetime ...`, `setoption name UCI_LimitStrength/UCI_Elo` for bot difficulty calibration). This is a real, working engine, not AI-consensus roleplay — treat it as load-bearing.
 
-**CRITICAL:** There is no gateway, no Railway proxy, no separate backend.
-Gemini API calls go directly from the frontend via `/api/chat`.
-Do NOT attempt to re-introduce a gateway or proxy architecture.
-
-**CRITICAL — NO STOCKFISH. EVER.**
-This app uses pure AI consensus via `askCoach(persona, userMessage)`.
-Stockfish is deprecated, removed, and never comes back. We are special.
-The coaches ARE the engine.
+**Old rule (superseded, kept for history):** *"NO STOCKFISH. EVER. This app uses pure AI consensus via `askCoach(persona, userMessage)`. Stockfish is deprecated, removed, and never comes back. We are special. The coaches ARE the engine."* — `askCoach` and the persona coach files no longer exist (§20).
 
 ---
 
@@ -99,6 +94,8 @@ The coaches ARE the engine.
 | **Magnus** | Magnus Carlsen | Danish, dry, positive, intuitive | Endgame & intuition — owns the 6-weapon → endgame conversion map and Master Conversion Rule |
 
 **Vlad persona is the primary teacher in OpeningLab.** He is demanding, precise, and Eastern European. 2-3 sentences max per commentary. Never soft.
+
+**2026-07-03 update (§20):** The dedicated coach files (`vlad.jsx`/`fabiano.jsx`/`hikaru.jsx`/`magnus.jsx`) and the `askCoach` mechanism are deleted — there is no longer a callable per-persona AI function. The four personas survive as branding/flavor only: CHESSai's section subtitles ("Hikaru Mode" for Middlegame, "Carlsen Mode" for Endgame, "Caruana Lab" for Engine Lab) and the "VLAD TRIGGERS (RULE ENGINE)" blocks embedded in several repertoire lines' `theory` text in `App.tsx`.
 
 ---
 
@@ -175,15 +172,22 @@ The Gentleman's Assassin system is the immovable foundation. The coaching staff 
 
 ---
 
-## 8. localStorage KEYS
+## 8. localStorage KEYS (rewritten 2026-07-03 — see §20; old `vlad_*` keys from the deleted modules are gone)
 
 | Key | Used By | Contents |
 |-----|---------|----------|
-| `vlad_last_autopsy` | DrillSergeant | FEN positions from last game analysis |
-| `vlad_pending_pgn` | GameAutopsy | PGN dropped on dashboard, auto-runs on mount |
-| `vlad_autopsy_save` | GameAutopsy | Full session save (pgn, gameInfo, analysis, coaches) |
-| `vlad_critical_list` | DrillSergeant | Critical moments from last autopsy |
-| `vlad_profile` | App.jsx | Player profile (name, email, goal, style, openings) |
+| `chessai_active_section` | App.tsx | Last-viewed section (opening/middlegame/endgame/autopsy/engineLab) |
+| `chessai_theme` | App.tsx | `dark` \| `light` |
+| `chessai_opening_repertoire` | OpeningPhaseOne | Full `RepertoireLine[]` incl. `attempts`/`perfectSessions`/custom imported lines |
+| `chessai_middlegame_scenarios` | MiddlegamePhaseOne | Full `MiddlegameScenario[]` incl. `attempts`/`perfectSessions` |
+| `chessai_endgame_drills` | (reserved) | Endgame section is still a `ModulePlaceholder` stub — key unused so far |
+| `chessai_streak` | OpeningPhaseOne | Simple streak counter |
+| `chessai_calibrated_elo` | OpeningPhaseOne | Player's calibrated ELO vs. Stockfish bots (win +50 / loss −25) |
+| `chessai_streak_elo` | OpeningPhaseOne | Pre-calibration win-streak ELO estimate (+100/win until first loss) |
+| `chessai_local_backups` | OpeningPhaseOne | Rolling 7-deep history of manual JSON safety-backup exports |
+| `chessai_srs_${lineId}` | `src/utils/srs.js` | `{ level: 0-8, nextReview: ISO string }` — spaced-repetition schedule per repertoire line, additive to `perfectSessions` |
+
+**No cloud persistence is active.** `handleDownloadBackup()` (Download icon in the Opening trainer) is the only durability net today — it dumps every `chessai_*` key to a timestamped JSON and force-downloads it. Firebase (`src/firebase.js`) is real and wired, but `App.tsx`'s Local Stub Auth hardcodes `uid: 'local'`, so the Firestore sync branches never execute. Clearing browser storage between manual backups loses real progress.
 
 ---
 
@@ -387,6 +391,33 @@ Unified output → Claude builds → GitHub commit → Vercel deploy
 1. **Chess app commercialization:** Approach GM Vladimir Chuchelov with a profit-sharing arrangement after demonstrating ELO improvement. The app is the proof of concept.
 2. **Mortgage AI:** Topher is the leading AI mind in the US mortgage industry. Parallel track — Responsible AI Mortgage Agent repo under TopherAI org.
 3. **Oregon brokerage:** Starting a mortgage brokerage in Oregon — DFR/NMLS compliance active.
+
+---
+
+## 20. CHESSai ARCHITECTURE PORT (2026-07-03)
+
+**What happened:** Topher identified that `vlad-chess-coach`'s last commit (`3c6cb05`, 2026-04-22) had been superseded by a more advanced Google Opal app called "CHESSai" (first opened 2026-04-24, real backups as late as 2026-05-15) with Firebase Auth/Firestore, a Stockfish Engine Lab, Gemini-driven repertoire expansion, and a belt/ELO progression system. Directive: port CHESSai's UI/architecture into this repo (not a new repo), rebrand from "Vlad Chess Coach" to "CHESSai," and carry forward the SRS + PGN-parser hardening work already done this session.
+
+**Explicit overrides granted by Topher this session:**
+1. Lift the "NO STOCKFISH. EVER." lock (§4) — CHESSai's Engine Lab and live-play features require it.
+2. Build compatible replacements for `./firebase`, `./gemini`, `./useStockfish` myself rather than waiting on pasted source — though real source was later pasted and used where it existed (see below).
+
+**Key discoveries during the port (don't re-derive these):**
+- The actual Opal export (`~/Downloads/chessai/`) has `firebase.ts`/`gemini.ts`/`useStockfish.ts` explicitly labeled **"Phase 1 safe stubs"** — none of them do real work. `useStockfish` never becomes ready and never returns a move; `analyzePgnAndExpandRepertoire` always returns `null`; coach tips are hardcoded strings. The CHESSai app as exported was UI-complete but AI/engine-inert.
+- This repo already had a **real** `src/gemini.js` (root-level, distinct from the now-deleted `src/api/gemini.js`) using `@google/genai` directly with matching function signatures — used that instead of Opal's stub. Found and fixed a real bug in it: `GoogleGenAI`'s constructor throws synchronously when `apiKey` is missing, and it was instantiated at module scope — importing `App.tsx` would have crashed the entire app (not just AI features) since `VITE_GEMINI_API_KEY` isn't set locally. Fixed by making client construction lazy (see `getClient()` in `src/gemini.js`).
+- This repo already had a real Stockfish WASM build sitting unused at `public/stockfish.js` (niklasf/stockfish.wasm, referenced by `vite.config.js`'s `optimizeDeps.exclude` but never wired to anything). Built `public/stockfish-worker.js` + `src/useStockfish.js` as real UCI glue around it — this is genuinely new, working functionality, not present in either prior codebase.
+- CHESSai's pasted `App.tsx` had a real bug: `OpeningPhaseOne`'s `onDrop(args: any)` destructured a `{sourceSquare, targetSquare, piece}` object, but the installed `react-chessboard@4.7.3` actually calls `onPieceDrop(sourceSquare, targetSquare, piece)` with three positional arguments (confirmed against `node_modules/react-chessboard/dist/chessboard/types/index.d.ts`). As pasted, every piece drag on the Opening board would have silently failed. Fixed to match the installed library's real signature — `MiddlegamePhaseOne`'s `onDrop` already used the correct positional-args form, which is how the mismatch was caught.
+- `VITE_GEMINI_API_KEY` and all `VITE_FIREBASE_*` vars are **not set** in local `.env` (presence-only checked, values never read). AI features and any future real Firebase auth will need these before they do real work; until then they degrade gracefully rather than crashing.
+
+**SRS carried forward:** `src/utils/srs.js` (Leitner levels 0-8, built earlier this session against the old `OpeningLab.jsx`) was ported into the new `OpeningPhaseOne` unchanged in logic, wired into `completeSession()` alongside — not replacing — the existing `perfectSessions`/belt system. Its localStorage key was renamed from `vlad_openinglab_srs_${lineId}` to `chessai_srs_${lineId}` for naming consistency with the rest of the app (§8).
+
+**Full list of deleted/added files:** see §3 (File Map).
+
+**Not done / open items:**
+- `VITE_GEMINI_API_KEY` / `VITE_FIREBASE_*` need to be set for AI features and real auth to do anything live.
+- Real Google login was never wired — `App.tsx` still hardcodes Local Stub Auth (`uid: 'local'`); flipping this on is a deliberate future decision, not an oversight.
+- Endgame, Autopsy, and Engine Lab's actual UI (beyond the `useStockfish` plumbing) remain `ModulePlaceholder` stubs, same as they were in the Opal export.
+- The GitHub-web-only workflow rule (§2) is flagged stale but not resolved — confirm with Topher which workflow is now authoritative.
 
 ---
 

@@ -2,22 +2,17 @@
  * src/utils/pgnParser.js
  * vlad-chess-coach — PGN / FEN Utilities
  *
- * Standalone parsing utilities used by GameAutopsy, DrillSergeant,
- * OpeningLab, and EndgameDojo.
+ * Standalone parsing utilities. Not currently imported by any module
+ * (GameAutopsy hands raw PGN text to the AI coaches instead; DrillSergeant
+ * consumes precomputed FENs). Kept correct as reusable infrastructure.
  *
- * Requires chess.js loaded globally (CDN in index.html).
- * All functions fail gracefully if chess.js is unavailable.
+ * Uses the npm chess.js package (v1.x API — loadPgn/inCheck/isCheckmate),
+ * matching the version imported directly in App.jsx and OpeningLab.jsx.
+ * Do not reintroduce the old global-CDN chess.js (0.10.3, snake_case API) —
+ * two chess.js versions in one app is how silent parsing failures happen.
  */
 
-// ---------------------------------------------------------------------------
-// Guards
-// ---------------------------------------------------------------------------
-
-function requireChessJS() {
-  if (typeof Chess === "undefined") {
-    throw new Error("chess.js not loaded. Add CDN script to public/index.html.");
-  }
-}
+import { Chess } from "chess.js";
 
 // ---------------------------------------------------------------------------
 // PGN parsing
@@ -25,15 +20,18 @@ function requireChessJS() {
 
 /**
  * Parse a PGN string into a structured game object.
+ * Throws if chess.js cannot load the PGN (invalid syntax or illegal move).
+ * Note: chess.js's PGN parser only follows the mainline (first variation at
+ * each node) — parenthetical side-variations (RAV) are silently dropped by
+ * chess.js itself, not by this wrapper. No caller currently loads PGNs with
+ * variations, so a custom variation-tree flattener isn't built here.
  *
  * @param {string} pgn
  * @returns {ParsedGame}
  */
 export function parsePGN(pgn) {
-  requireChessJS();
   const game = new Chess();
-  const loaded = game.load_pgn(pgn.trim());
-  if (!loaded) throw new Error("Invalid PGN — chess.js could not load it.");
+  game.loadPgn(pgn.trim());
 
   const history = game.history({ verbose: true });
   const headers = game.header();
@@ -63,9 +61,8 @@ export function parsePGN(pgn) {
  * @returns {string[]} FEN array — index 0 = starting position
  */
 export function extractFENSequence(pgn) {
-  requireChessJS();
   const game = new Chess();
-  game.load_pgn(pgn.trim());
+  game.loadPgn(pgn.trim());
   const history = game.history({ verbose: true });
 
   const fens = [];
@@ -149,9 +146,8 @@ export function detectOpeningDeviation(uciMoves) {
  */
 export function isValidFEN(fen) {
   try {
-    requireChessJS();
-    const game = new Chess(fen);
-    return game.fen() === fen || true; // chess.js normalizes FEN
+    new Chess(fen); // throws on malformed/illegal FEN — that's the actual check
+    return true;
   } catch {
     return false;
   }
@@ -165,7 +161,6 @@ export function isValidFEN(fen) {
  */
 export function applyUCIMove(fen, uciMove) {
   try {
-    requireChessJS();
     const game = new Chess(fen);
     const result = game.move({
       from:      uciMove.slice(0, 2),
@@ -195,7 +190,8 @@ export function sideToMove(fen) {
  */
 export function moveNumberFromFEN(fen) {
   const parts = fen.split(" ");
-  return parseInt(parts[5]) ?? 1;
+  const n = parseInt(parts[5], 10);
+  return Number.isNaN(n) ? 1 : n; // `?? 1` doesn't catch NaN — parseInt never returns null/undefined
 }
 
 /**
@@ -205,8 +201,7 @@ export function moveNumberFromFEN(fen) {
  */
 export function isCheck(fen) {
   try {
-    requireChessJS();
-    return new Chess(fen).in_check();
+    return new Chess(fen).inCheck();
   } catch {
     return false;
   }
@@ -219,8 +214,7 @@ export function isCheck(fen) {
  */
 export function isCheckmate(fen) {
   try {
-    requireChessJS();
-    return new Chess(fen).in_checkmate();
+    return new Chess(fen).isCheckmate();
   } catch {
     return false;
   }
@@ -233,7 +227,6 @@ export function isCheckmate(fen) {
  */
 export function getLegalMoves(fen) {
   try {
-    requireChessJS();
     const game = new Chess(fen);
     return game.moves({ verbose: true }).map(m => m.from + m.to + (m.promotion ?? ""));
   } catch {

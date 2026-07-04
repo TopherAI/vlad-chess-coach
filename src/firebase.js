@@ -18,3 +18,14 @@ export const googleProvider = new GoogleAuthProvider();
 
 export const loginWithGoogle = () => signInWithPopup(auth, googleProvider);
 export const logout = () => signOut(auth);
+
+export const OperationType = {
+  READ: 'read',
+  WRITE: 'write',
+  UPDATE: 'update',
+  DELETE: 'delete',
+};
+
+export function handleFirestoreError(error, operationType, path) {
+  console.error(`Firestore ${operationType} failed at ${path}:`, error);
+}
