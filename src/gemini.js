@@ -88,6 +88,29 @@ export async function getDeepAnalysis(openingName, moves) {
   }
 }
 
+/// Generic single-persona coaching ask — used where a feature needs a
+/// specific coach's voice on a specific prompt (e.g. Endgame Dojo's "Ask
+/// Magnus") without a dedicated function like sendMessageToCaruana's chat
+/// history. Same lazy-client / graceful-fallback pattern as the rest of
+/// this file.
+export async function askCoach(personaDescription, promptText) {
+  const ai = getClient();
+  if (!ai) return `${personaDescription} is unavailable — VITE_GEMINI_API_KEY not configured.`;
+  try {
+    const response = await ai.models.generateContent({
+      model: 'gemini-2.0-flash',
+      contents: promptText,
+      config: {
+        systemInstruction: `You are ${personaDescription}. Keep your answers concise, analytical, and encouraging. 2-3 sentences max.`,
+      },
+    });
+    return response.text || `${personaDescription} has nothing to add right now.`;
+  } catch (error) {
+    console.error(`Error asking ${personaDescription}:`, error);
+    return `Couldn't reach ${personaDescription} — check your connection.`;
+  }
+}
+
 export async function analyzePgnAndExpandRepertoire(pgn) {
   const ai = getClient();
   if (!ai) {
