@@ -165,14 +165,14 @@ ELSE -> play **Be3**`,
     id: 'jerome-gambit',
     name: 'JEROME GAMBIT',
     description: 'Opening Lab — King Extraction Sac (ECO C50)',
-    theory: `**Italian Game, Jerome Gambit (ECO C50).** Core pattern: 4.Bxf7+ Kxf7 5.Nxe5+ … Qf3 Qf7#. Early king extraction via bishop sac on f7, then a tempo-gaining knight fork, then rapid queen infiltration to exploit the exposed king.
+    theory: `**Italian Game (ECO C50) — Jerome-style king extraction.** From a real game: TopherBettis vs arexniba84, Chess.com daily, 2026-07-02 — won by checkmate (chess.com/game/daily/994047672). Core pattern: 4.Bxf7+ Kxf7 5.Nxe5+ … Qf3 Qf7#.
 
-**Core Idea:** If Black declines the refutation 5...Nxe5! and instead retreats the king (5...Ke8), 6.Qf3 threatens mate on f7 (guarded by the e5 knight) and 7.Qf7# is checkmate.
+**Core Idea:** 3...Na5 attacks the bishop but abandons development and, critically, pulls Black's only knight off c6 — so after 5.Nxe5+ there is no ...Nxe5 recapture available (unlike the classical 3...Bc5 Jerome Gambit). Black's correct defense is 5...Nf6!, blocking the f-file before White's queen arrives. If Black plays passively instead (5...Ke8 6.Qf3 d6), 7.Qf7# is checkmate — f7 is guarded by the e5 knight, so the king cannot recapture.
 
 **Classification:** Tactical theme: king extraction. Attack pattern: queen infiltration. Conversion: checkmate / winning attack. Key concepts: f7 weakness, forcing moves, initiative, exposed king, tempo, mating attack.
 
 **CHESSai Metadata:** Category: Opening Lab. Pattern Type: Opening Sacrifice. Difficulty: Intermediate. Prerequisites: Italian Game fundamentals, tactical calculation.`,
-    moves: ['e4', 'e5', 'Nf3', 'Nc6', 'Bc4', 'Bc5', 'Bxf7+', 'Kxf7', 'Nxe5+', 'Ke8', 'Qf3', 'd6', 'Qf7#'],
+    moves: ['e4', 'e5', 'Nf3', 'Nc6', 'Bc4', 'Na5', 'Bxf7+', 'Kxf7', 'Nxe5+', 'Ke8', 'Qf3', 'd6', 'Qf7#'],
     attempts: 0,
     perfectSessions: 0
   },
