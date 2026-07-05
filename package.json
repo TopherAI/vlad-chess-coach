@@ -1,7 +1,7 @@
 {
-  "name": "vlad-chess-coach",
+  "name": "chessai-web",
   "version": "1.0.0",
-  "description": "AI chess coaching app — TopherBettis 609 → 2000. Powered by GM Vlad Chuchelov methodology and multi-coach AI consensus.",
+  "description": "AI chess coaching app — TopherBettis 609 → 2000. Web companion to the native CHESSai app, built around the Gentleman's Assassin opening system and multi-coach AI consensus.",
   "private": true,
   "type": "module",
   "scripts": {
@@ -42,8 +42,8 @@
     "ai",
     "coaching",
     "italian-cage",
-    "vlad-chuchelov",
-    "gentleman-assassin"
+    "gentleman-assassin",
+    "chessai"
   ],
   "author": "TopherAI (github.com/TopherAI)",
   "license": "UNLICENSED"

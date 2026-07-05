@@ -1,7 +1,9 @@
 // src/data/italianCage.js
-// The Italian Cage — Complete Knowledge Base for VLAD
-// Source: Gentleman’s Assassin Super Plan v3.0 + NotebookLM synthesis + Drill Sergeant FENs
-// Imported by all coach personas (Opening Lab, Drill Sergeant, Game Autopsy)
+// The Italian Cage — Complete Knowledge Base for CHESSai
+// Source: Gentleman's Assassin Super Plan v3.0 + NotebookLM synthesis + Drill Sergeant FENs
+// NOTE: not currently imported by any live module (pre-CHESSai-port artifact,
+// kept for reference — the coach personas it describes were deleted in the
+// 2026-07-03 CHESSai architecture port, see CLAUDE.md §20).
 
 export const CAGE_PHILOSOPHY = {
   name: "Gentleman's Assassin / Italian Cage (Giuoco Pianissimo)",

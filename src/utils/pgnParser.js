@@ -1,6 +1,6 @@
 /**
  * src/utils/pgnParser.js
- * vlad-chess-coach — PGN / FEN Utilities
+ * CHESSai-web — PGN / FEN Utilities
  *
  * Standalone parsing utilities. Not currently imported by any module
  * (GameAutopsy hands raw PGN text to the AI coaches instead; DrillSergeant
@@ -253,7 +253,7 @@ export function buildAnnotatedPGN(moves, headers = {}, comments = []) {
   }
 
   const headerStr = Object.entries({
-    Event:  "vlad-chess-coach Analysis",
+    Event:  "CHESSai Analysis",
     Site:   "Chess.com",
     Date:   new Date().toISOString().slice(0, 10).replace(/-/g, "."),
     White:  "?",

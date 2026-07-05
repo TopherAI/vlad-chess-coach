@@ -1,7 +1,7 @@
-# CHESSAI (formerly VLAD CHESS COACH) — MASTER CONTEXT DOCUMENT
+# CHESSai-web — MASTER CONTEXT DOCUMENT
 > **FOR ANY AI READING THIS:** This is the single source of truth for this project.
 > Read this entire file before touching any code. Every architectural decision is documented here.
-> Last updated: 2026-07-03 — CHESSai architecture port (see §20)
+> Last updated: 2026-07-04 — full identity rename off "Vlad Chess Coach" (§21)
 
 ---
 
@@ -9,10 +9,11 @@
 
 | Field | Value |
 |-------|-------|
-| **App (UI brand)** | CHESSai — ported in from a Google Opal app of the same name, replacing the old "Vlad Chess Coach" multi-page UI (§20) |
-| **Repo name** | vlad-chess-coach (unchanged — the repo was not renamed, only the in-app branding) |
-| **Live URL** | https://vlad-chess-coach.vercel.app |
-| **Repo** | https://github.com/TopherAI/vlad-chess-coach |
+| **App (UI brand)** | CHESSai — web companion to the native CHESSai iOS app (`~/TopherAI/CHESSai`). Formerly "Vlad Chess Coach" (§20/§21) |
+| **Repo name** | CHESSai-web (renamed 2026-07-04 from vlad-chess-coach — see §21) |
+| **Local path** | `~/TopherAI/CHESSai-web` |
+| **Live URL** | https://chessai-web.vercel.app (Vercel project renamed 2026-07-04; verify after next deploy — the old `vlad-chess-coach.vercel.app` may persist as a legacy alias) |
+| **Repo** | https://github.com/TopherAI/CHESSai-web |
 | **Owner** | TopherBettis (Topher) — ELO 617, target 2000 |
 | **Mission** | AI chess coaching app built around the Gentleman's Assassin opening system |
 
@@ -416,8 +417,30 @@ Unified output → Claude builds → GitHub commit → Vercel deploy
 **Not done / open items:**
 - `VITE_GEMINI_API_KEY` / `VITE_FIREBASE_*` need to be set for AI features and real auth to do anything live.
 - Real Google login was never wired — `App.tsx` still hardcodes Local Stub Auth (`uid: 'local'`); flipping this on is a deliberate future decision, not an oversight.
-- Endgame, Autopsy, and Engine Lab's actual UI (beyond the `useStockfish` plumbing) remain `ModulePlaceholder` stubs, same as they were in the Opal export.
+- **STALE as of 2026-07-04 (see §21):** Endgame, Autopsy, and Engine Lab are no longer `ModulePlaceholder` stubs — all three are real, working ports of the native app's equivalents. §3's File Map and this line are out of date; a full CLAUDE.md architecture refresh is a separate, not-yet-done task.
 - The GitHub-web-only workflow rule (§2) is flagged stale but not resolved — confirm with Topher which workflow is now authoritative.
+
+---
+
+## 21. FULL IDENTITY RENAME — "No Vlad Anywhere" (2026-07-04)
+
+**What happened:** Topher directed a full identity rename: "there is no VLAD. everything should be CHESSai," confirmed as scope "Full rename, and merge into one CHESSai identity" — pairing this repo with the native `~/TopherAI/CHESSai` app as its web counterpart.
+
+**Executed:**
+- GitHub repo renamed: `TopherAI/vlad-chess-coach` → `TopherAI/CHESSai-web` (via `gh repo rename`; GitHub redirects the old URL)
+- Local folder renamed: `~/TopherAI/vlad-chess-coach` → `~/TopherAI/CHESSai-web`
+- Git remote updated to the new GitHub URL
+- Vercel project renamed: `vlad-chess-coach` → `chessai-web` (same project ID `prj_XBtP9zm648VWWufrjRPBaW1CGUCZ`, so GitHub-integration deploys stay linked — but Vercel does not auto-migrate the production `.vercel.app` alias on rename; **verify the live URL after the next deploy**, `vlad-chess-coach.vercel.app` may persist as a legacy alias)
+- `package.json`: `name` → `chessai-web`, description and keywords de-branded from "Vlad"
+- Live-code "Vlad" references fixed: `src/api/chesscom.js` (USER_AGENT string + comments), `src/utils/pgnParser.js` (header comment + PGN `Event` string), `src/data/repertoire.ts` ("VLAD TRIGGERS" → "TRIGGERS" in all 5 occurrences), `scripts/update-session.js` (SESSION LOG header), `data/italianCage.js` (header comment; also flagged as unused/pre-port artifact)
+- Root `~/TopherAI/CLAUDE.md` and `ai-gateway/docs/topherai-ecosystem-manifest.md` updated to point at the new path/repo name
+
+**Deliberately NOT touched (real-person attribution, not app branding):**
+References to the real GM **Vladimir Chuchelov** — the actual chess coach whose methodology and video content this app is built on (e.g. commercialization plans to approach him for a partnership, video library attribution noting Topher does NOT own that IP) — are factual attribution, not the in-app "Vlad" persona/brand, and were left alone.
+
+**Not done — flagged, not resolved:**
+- `VLAD.md`, `README.md`, `Prompt.md`, `SESSION-LOG.md`, `Coach-memory.json`, `data/gentlemans-assassin.json` are pre-CHESSai-port artifacts that describe already-deleted architecture (the old `src/coaches/*` persona files, per §20's own deletion list) and still reference the old repo name/URL throughout. Left as historical record pending Topher's call on delete vs. archive vs. rewrite — a full rewrite of dead-architecture docs was judged out of scope for an identity rename.
+- This file (`CLAUDE.md`) has other stale sections beyond naming (see the Not-done note above this section) — a full content refresh is a separate task.
 
 ---
 

@@ -17,7 +17,7 @@ let existing = '';
 if (fs.existsSync(logPath)) {
   existing = fs.readFileSync(logPath, 'utf8');
 } else {
-  existing = '# SESSION LOG — vlad-chess-coach\n\n';
+  existing = '# SESSION LOG — CHESSai-web\n\n';
 }
 
 const lines = existing.split('\n');

@@ -1,6 +1,6 @@
 /**
  * src/api/chesscom.js
- * vlad-chess-coach — Chess.com Public API Integration
+ * CHESSai-web — Chess.com Public API Integration
  *
  * Fetches games, stats, and performance data for TopherBettis.
  * Uses Chess.com's public REST API (no auth required).
@@ -14,14 +14,14 @@
 
 const BASE_URL   = "https://api.chess.com/pub";
 const PLAYER     = "TopherBettis";
-const USER_AGENT = "vlad-chess-coach/1.0 (github.com/TopherAI/vlad-chess-coach)";
+const USER_AGENT = "chessai-web/1.0 (github.com/TopherAI/CHESSai-web)";
 
 // Chess.com requires a User-Agent header
 const HEADERS = {
   "User-Agent": USER_AGENT,
 };
 
-// Time controls we care about (Vlad prescribes 15|10)
+// Time controls we care about (15|10 is the prescribed training time control)
 const TARGET_TIME_CONTROLS = ["900+10", "600", "600+5", "900", "1800"];
 
 // ---------------------------------------------------------------------------
@@ -264,7 +264,7 @@ export function computePerformance(games) {
 }
 
 /**
- * Filter games to target time controls only (Vlad's 15|10 prescription).
+ * Filter games to target time controls only (the prescribed 15|10 training time control).
  * @param {Game[]} games
  * @returns {Game[]}
  */
@@ -351,12 +351,12 @@ export function getCurrentStreak(games) {
 }
 
 // ---------------------------------------------------------------------------
-// Export summary for Vlad debrief injection
+// Export summary for coach debrief injection
 // ---------------------------------------------------------------------------
 
 /**
- * Build a Vlad-ready context string from recent performance.
- * Gets injected into the Vlad prompt alongside game analysis.
+ * Build a coach-ready context string from recent performance.
+ * Gets injected into the coaching prompt alongside game analysis.
  * @param {PerformanceStats} perf
  * @param {{ type: string, count: number }} streak
  * @returns {string}

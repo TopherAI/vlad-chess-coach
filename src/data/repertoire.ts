@@ -81,7 +81,7 @@ ELSE -> play **Be3**`,
     description: 'Refusal Cage',
     theory: `**Core Philosophy:** Cage complete at move 9. Extra central control; Black’s knight retreat keeps it quiet.
 
-### VLAD TRIGGERS (RULE ENGINE)
+### TRIGGERS (RULE ENGINE)
 - **NF5_TRIGGER:** IF knight reaches f5 in <=2 moves AND no tactic refutes THEN execute Nf1 -> Ng3 -> Nf5
 - **D4_TRIGGER:** IF center is loose AND activity improves immediately AND knight tour survives THEN play d4 ELSE reject
 - **ATTACK_TRIGGER:** IF king is castled AND you have Ng3/Nf5 + queen access THEN launch Ng5 / Qg4 / Re3-g3
@@ -96,7 +96,7 @@ ELSE -> play **Be3**`,
     description: 'Bowdler Cage',
     theory: `**Core Philosophy:** Cage complete at move 9. a4 completely kills …b5 dreams. Classic slow Italian vs Sicilian.
 
-### VLAD TRIGGERS (RULE ENGINE)
+### TRIGGERS (RULE ENGINE)
 - **NF5_TRIGGER:** IF knight reaches f5 in <=2 moves AND no tactic refutes THEN execute Nf1 -> Ng3 -> Nf5
 - **D4_TRIGGER:** IF center is loose AND activity improves immediately AND knight tour survives THEN play d4 ELSE reject
 - **ATTACK_TRIGGER:** IF king is castled AND you have Ng3/Nf5 + queen access THEN launch Ng5 / Qg4 / Re3-g3
@@ -111,7 +111,7 @@ ELSE -> play **Be3**`,
     description: 'Hillbilly Cage OR 2 Knights',
     theory: `**Core Philosophy:** Cage complete at move 9 (after early Bb3 retreat). Light-square bishop stays active; structure identical to main Cage.
 
-### VLAD TRIGGERS (RULE ENGINE)
+### TRIGGERS (RULE ENGINE)
 - **NF5_TRIGGER:** IF knight reaches f5 in <=2 moves AND no tactic refutes THEN execute Nf1 -> Ng3 -> Nf5
 - **D4_TRIGGER:** IF center is loose AND activity improves immediately AND knight tour survives THEN play d4 ELSE reject
 - **ATTACK_TRIGGER:** IF king is castled AND you have Ng3/Nf5 + queen access THEN launch Ng5 / Qg4 / Re3-g3
@@ -126,7 +126,7 @@ ELSE -> play **Be3**`,
     description: '2 Knights or Advanced French',
     theory: `**Core Philosophy:** Cage complete at move 9. Closed center keeps it extremely quiet — exactly the slow squeeze you want.
 
-### VLAD TRIGGERS (RULE ENGINE)
+### TRIGGERS (RULE ENGINE)
 - **NF5_TRIGGER:** IF knight reaches f5 in <=2 moves AND no tactic refutes THEN execute Nf1 -> Ng3 -> Nf5
 - **D4_TRIGGER:** IF center is loose AND activity improves immediately AND knight tour survives THEN play d4 ELSE reject
 - **ATTACK_TRIGGER:** IF king is castled AND you have Ng3/Nf5 + queen access THEN launch Ng5 / Qg4 / Re3-g3
@@ -141,7 +141,7 @@ ELSE -> play **Be3**`,
     description: 'Scandi',
     theory: `**Core Philosophy:** Cage complete at move 9. Early queen retreat lets you build the full structure with zero drama.
 
-### VLAD TRIGGERS (RULE ENGINE)
+### TRIGGERS (RULE ENGINE)
 - **NF5_TRIGGER:** IF knight reaches f5 in <=2 moves AND no tactic refutes THEN execute Nf1 -> Ng3 -> Nf5
 - **D4_TRIGGER:** IF center is loose AND activity improves immediately AND knight tour survives THEN play d4 ELSE reject
 - **ATTACK_TRIGGER:** IF king is castled AND you have Ng3/Nf5 + queen access THEN launch Ng5 / Qg4 / Re3-g3
@@ -158,6 +158,21 @@ ELSE -> play **Be3**`,
 
 **Core Idea:** 3...Na5 attacks the bishop but ignores development and the center. 4.Bxf7+! sacs the bishop to drag the king out — 4...Kxf7 5.Nxe5+ forks the king and wins the e5 pawn with check. If Black plays passively instead of blocking with ...Nf6, 6.Qf3 (threatening Qxf7#/Qf7#) followed by 7.Qf7# delivers mate.`,
     moves: ['e4', 'e5', 'Nf3', 'Nc6', 'Bc4', 'Na5', 'Bxf7+', 'Kxf7', 'Nxe5+', 'Ke8', 'Qf3', 'd6', 'Qf7#'],
+    attempts: 0,
+    perfectSessions: 0
+  },
+  {
+    id: 'jerome-gambit',
+    name: 'JEROME GAMBIT',
+    description: 'Opening Lab — King Extraction Sac (ECO C50)',
+    theory: `**Italian Game, Jerome Gambit (ECO C50).** Core pattern: 4.Bxf7+ Kxf7 5.Nxe5+ … Qf3 Qf7#. Early king extraction via bishop sac on f7, then a tempo-gaining knight fork, then rapid queen infiltration to exploit the exposed king.
+
+**Core Idea:** If Black declines the refutation 5...Nxe5! and instead retreats the king (5...Ke8), 6.Qf3 threatens mate on f7 (guarded by the e5 knight) and 7.Qf7# is checkmate.
+
+**Classification:** Tactical theme: king extraction. Attack pattern: queen infiltration. Conversion: checkmate / winning attack. Key concepts: f7 weakness, forcing moves, initiative, exposed king, tempo, mating attack.
+
+**CHESSai Metadata:** Category: Opening Lab. Pattern Type: Opening Sacrifice. Difficulty: Intermediate. Prerequisites: Italian Game fundamentals, tactical calculation.`,
+    moves: ['e4', 'e5', 'Nf3', 'Nc6', 'Bc4', 'Bc5', 'Bxf7+', 'Kxf7', 'Nxe5+', 'Ke8', 'Qf3', 'd6', 'Qf7#'],
     attempts: 0,
     perfectSessions: 0
   },
