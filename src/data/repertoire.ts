@@ -162,12 +162,12 @@ ELSE -> play **Be3**`,
     perfectSessions: 0
   },
   {
-    id: 'jerome-gambit',
-    name: 'JEROME GAMBIT',
+    id: 'topher-gambit',
+    name: 'TOPHER GAMBIT',
     description: 'Opening Lab — King Extraction Sac (ECO C50)',
-    theory: `**Italian Game (ECO C50) — Jerome-style king extraction.** From a real game: TopherBettis vs arexniba84, Chess.com daily, 2026-07-02 — won by checkmate (chess.com/game/daily/994047672). Core pattern: 4.Bxf7+ Kxf7 5.Nxe5+ … Qf3 Qf7#.
+    theory: `**Italian Game (ECO C50) — Topher Gambit: king extraction via Bxf7+.** Discovered and played by TopherBettis vs arexniba84, Chess.com daily, 2026-07-02 — won by checkmate (chess.com/game/daily/994047672). Core pattern: 4.Bxf7+ Kxf7 5.Nxe5+ … Qf3 Qf7#.
 
-**Core Idea:** 3...Na5 attacks the bishop but abandons development and, critically, pulls Black's only knight off c6 — so after 5.Nxe5+ there is no ...Nxe5 recapture available (unlike the classical 3...Bc5 Jerome Gambit). Black's correct defense is 5...Nf6!, blocking the f-file before White's queen arrives. If Black plays passively instead (5...Ke8 6.Qf3 d6), 7.Qf7# is checkmate — f7 is guarded by the e5 knight, so the king cannot recapture.
+**Core Idea:** 3...Na5 attacks the bishop but abandons development and, critically, pulls Black's only knight off c6 — so after 5.Nxe5+ there is no ...Nxe5 recapture available (unlike the classical 3...Bc5 Jerome Gambit this pattern is related to). Black's correct defense is 5...Nf6!, blocking the f-file before White's queen arrives. If Black plays passively instead (5...Ke8 6.Qf3 d6), 7.Qf7# is checkmate — f7 is guarded by the e5 knight, so the king cannot recapture.
 
 **Classification:** Tactical theme: king extraction. Attack pattern: queen infiltration. Conversion: checkmate / winning attack. Key concepts: f7 weakness, forcing moves, initiative, exposed king, tempo, mating attack.
 
