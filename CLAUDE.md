@@ -438,8 +438,9 @@ Unified output → Claude builds → GitHub commit → Vercel deploy
 **Deliberately NOT touched (real-person attribution, not app branding):**
 References to the real GM **Vladimir Chuchelov** — the actual chess coach whose methodology and video content this app is built on (e.g. commercialization plans to approach him for a partnership, video library attribution noting Topher does NOT own that IP) — are factual attribution, not the in-app "Vlad" persona/brand, and were left alone.
 
+**Resolved 2026-07-05:** Topher's call was archive. `VLAD.md`, `README.md`, `Prompt.md`, `SESSION-LOG.md`, `Coach-memory.json`, `data/gentlemans-assassin.json` — pre-CHESSai-port artifacts describing already-deleted architecture (the old `src/coaches/*` persona files, per §20's own deletion list) — moved to `archive/pre-chessai-port/` (git history preserved via `git mv`). Not rewritten; kept as historical record only.
+
 **Not done — flagged, not resolved:**
-- `VLAD.md`, `README.md`, `Prompt.md`, `SESSION-LOG.md`, `Coach-memory.json`, `data/gentlemans-assassin.json` are pre-CHESSai-port artifacts that describe already-deleted architecture (the old `src/coaches/*` persona files, per §20's own deletion list) and still reference the old repo name/URL throughout. Left as historical record pending Topher's call on delete vs. archive vs. rewrite — a full rewrite of dead-architecture docs was judged out of scope for an identity rename.
 - This file (`CLAUDE.md`) has other stale sections beyond naming (see the Not-done note above this section) — a full content refresh is a separate task.
 
 ---
